@@ -67,6 +67,7 @@ class ContentManager:
         self.sort_history = []  # Track last 5 sorts
         self.sort_directions = {}  # Track direction für jede Spalte
 
+
     # -------------------------
     # LOAD ALL JSONS
     # -------------------------
