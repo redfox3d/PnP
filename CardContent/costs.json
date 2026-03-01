@@ -1,0 +1,14 @@
+{
+    "Cost": [
+        {
+            "id": "Discard_cos",
+            "effect_text": "\\Discard{X}",
+            "rarity": 0,
+            "element_weights": {},
+            "conditions": {},
+            "reminder_text": "",
+            "complexity_multiplier": 1.0,
+            "complexity_additive": 0.0
+        }
+    ]
+}

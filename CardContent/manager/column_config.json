@@ -1,0 +1,9 @@
+{
+    "visible_columns": [
+        "type",
+        "id",
+        "rarity",
+        "effect_text",
+        "reminder_text"
+    ]
+}

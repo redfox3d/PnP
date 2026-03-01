@@ -1,0 +1,13 @@
+Ich möchte gerne Funktionen extern speichern.
+
+Ich prohgrammiere ein Kartenspiel und möchte inen Haufen Effekte in einer Json speichern.
+Diese möchte ich dann auslesen und an eine Klasse übergeben.
+Dabei möchte ich in der Lage sein in die Json eine Zeile wie zb:
+
+effect_text: "Discard {x} Cards, Draw {Y} Cards" zuschreiben, und diese dann funktionierend in eine Funktion laden, allerdings halt so, das man {x} auch in die Funktion geben kann.
+
+Heißt ich will eine Effekt Klasse haben, diese soll für jeden Effekt in einer json aufgerufen werden. Diese Effekte können in ihren Texten Buchstaben enthalten. Diese Buchstaben können als Variabeln angewählt werden.
+Also zum Beispiel hat jeder Effekt ein Cost Rating. Dieses soll sich aus einer Formel a + b*x + c*y + d*x^2 + e*y^2 + f*x^3 + g*x^3 berechnen. in dieser Formel soll für jede vorhandene Variabel (x, y, z,...) 3  konsante haben. (diese sollen auch beim init übergeben werden.
+Wenn ich jetzt zum Beispiel auf eine zufällige Effektklasse zugreife und Effekt_Class.Cost() mache, möchte ich das er intern kalkulieren kann.
+Außerdem möchte ich festlegen können bei welchem Element der Effekt wie häufig auftritt (50% bei Elmenet A, 20% Element B, 10% Element C,..."
+Ich möchte andere Bedingugnen in der Json haben. ALso zb das der Effekt nur bei Karten mit der und jener Manakost auftreten kann etc

@@ -1,0 +1,52 @@
+{
+    "commands": [
+        {
+            "name": "Discard",
+            "template": "\\Discard{x}",
+            "usage_count": 2,
+            "active": true
+        },
+        {
+            "name": "Surveil",
+            "template": "\\Surveil{x}",
+            "usage_count": 1,
+            "active": true
+        },
+        {
+            "name": "Scry",
+            "template": "\\Scry{x}",
+            "usage_count": 1,
+            "active": true
+        },
+        {
+            "name": "Rummage",
+            "template": "\\Rummage{x}",
+            "usage_count": 1,
+            "active": true
+        },
+        {
+            "name": "Pulverize",
+            "template": "\\Pulverize{x}",
+            "usage_count": 1,
+            "active": true
+        },
+        {
+            "name": "Grow",
+            "template": "\\Grow{x}",
+            "usage_count": 1,
+            "active": true
+        },
+        {
+            "name": "SelfHeal",
+            "template": "\\SelfHeal{x}",
+            "usage_count": 1,
+            "active": true
+        },
+        {
+            "name": "AddToHand",
+            "template": "\\AddToHand{x}",
+            "usage_count": 1,
+            "active": true
+        }
+    ]
+}
