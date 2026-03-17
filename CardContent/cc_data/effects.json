@@ -1,0 +1,81 @@
+{
+    "Effect": [
+        {
+            "id": "Draw",
+            "content_box": "{X}",
+            "content_text": "{X}",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "variables": {
+                "X": {
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "conditions": {}
+                }
+            },
+            "options": {}
+        },
+        {
+            "id": "Change_Card_Position",
+            "content_box": "[Add to Hand, Discard, Forget, Lose]",
+            "content_text": "Add to Hand",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "variables": {},
+            "options": {
+                "0": {
+                    "choices": [
+                        "Add to Hand",
+                        "Discard",
+                        "Forget",
+                        "Lose"
+                    ],
+                    "per_choice": {
+                        "Add to Hand": {
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "conditions": {}
+                        },
+                        "Discard": {
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "conditions": {}
+                        },
+                        "Forget": {
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "conditions": {}
+                        },
+                        "Lose": {
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
