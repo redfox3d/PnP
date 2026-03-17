@@ -50,7 +50,7 @@ class ContentData:
 
     def reload(self) -> None:
         print(f"[ContentData] reload() called, _DATA_DIR='{_DATA_DIR}'")
-        cc_data = os.path.join(_DATA_DIR, "cc_builder", "cc_data")
+        cc_data = os.path.join(_DATA_DIR, "CardContent", "cc_data")
         self.effects = load_json_list(os.path.join(cc_data, "effects.json"), "Effect")
         self.triggers = load_json_list(os.path.join(cc_data, "triggers.json"), "Trigger")
         self.conditions = load_json_list(os.path.join(cc_data, "conditions.json"), "Condition")

@@ -11,7 +11,7 @@ from card_builder import data as _data, models as _models
 
 _data.set_data_dir(BASE_DIR)
 
-CARDS_FILE = os.path.join(BASE_DIR, "cc_builder", "manager_data", "cards.json")
+CARDS_FILE = os.path.join(BASE_DIR, "CardContent", "manager_data", "cards.json")
 print(f"[main] cards file → '{CARDS_FILE}'  exists={os.path.exists(CARDS_FILE)}")
 _models.set_cards_file(CARDS_FILE)
 
