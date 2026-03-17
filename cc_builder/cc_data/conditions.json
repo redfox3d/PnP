@@ -1,0 +1,67 @@
+{
+    "Condition": [
+        {
+            "id": "Discard_con",
+            "effect_text": "you \\Discard{[any, 1, 2]}",
+            "rarity": 10,
+            "element_weights": {
+                "variables": 7,
+                "cost_formula": 7,
+                "element_weights": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "complexity_multiplier": 1,
+            "complexity_additive": 0,
+            "type": "",
+            "reminder_text": ""
+        },
+        {
+            "id": "Exile",
+            "effect_text": "If one of your cards is exiled",
+            "reminder_text": "",
+            "rarity": 10,
+            "element_weights": {
+                "Fire": 7,
+                "Metal": 7,
+                "Ice": 7,
+                "Nature": 7,
+                "Blood": 7,
+                "Meta": 7,
+                "Potion": 7,
+                "Skills": 7
+            },
+            "conditions": {},
+            "complexity_multiplier": 1.0,
+            "complexity_additive": 0.0,
+            "type": ""
+        },
+        {
+            "id": "Draw_Con",
+            "effect_text": "If you draw {X} or more cards",
+            "reminder_text": "",
+            "rarity": 10,
+            "element_weights": {
+                "Fire": 7,
+                "Metal": 7,
+                "Ice": 7,
+                "Nature": 7,
+                "Blood": 7,
+                "Meta": 7,
+                "Potion": 7,
+                "Skills": 7
+            },
+            "conditions": {},
+            "complexity_multiplier": 1.0,
+            "complexity_additive": 0.0,
+            "type": ""
+        }
+    ]
+}

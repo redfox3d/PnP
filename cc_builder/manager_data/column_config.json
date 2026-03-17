@@ -1,0 +1,23 @@
+{
+    "visible_columns": [
+        "type",
+        "id",
+        "rarity",
+        "effect_text",
+        "reminder_text"
+    ],
+    "column_order": [
+        "id",
+        "type",
+        "effect_text",
+        "reminder_text",
+        "rarity"
+    ],
+    "column_widths": {
+        "id": 275,
+        "type": 254,
+        "effect_text": 570,
+        "reminder_text": 570,
+        "rarity": 232
+    }
+}

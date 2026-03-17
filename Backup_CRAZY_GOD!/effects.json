@@ -27,7 +27,9 @@
                 "Ice": 0.2,
                 "Nature": 0.1,
                 "Blood": 0.1,
-                "Meta": 0.2
+                "Meta": 0.2,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {
                 "min_mana": 1,
@@ -60,7 +62,14 @@
             "element_weights": {
                 "Fire": 0.5,
                 "Water": 0.2,
-                "Air": 0.1
+                "Air": 0.1,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {
                 "min_mana": 3,
@@ -80,7 +89,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
@@ -97,7 +114,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
@@ -114,7 +139,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1.0,
@@ -131,7 +164,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
@@ -148,7 +189,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
@@ -165,7 +214,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
@@ -182,7 +239,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1.0,
@@ -199,7 +264,15 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
@@ -216,13 +289,41 @@
                 "cost_formula": 7,
                 "element_weights": 7,
                 "complexity_multiplier": 7,
-                "complexity_additive": 7
+                "complexity_additive": 7,
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "complexity_multiplier": 1,
             "complexity_additive": 0,
             "type": "",
             "reminder_text": ""
+        },
+        {
+            "id": "Self_Discard_Con",
+            "effect_text": "If this card is discarded",
+            "reminder_text": "",
+            "rarity": 10,
+            "element_weights": {
+                "Fire": 7,
+                "Metal": 7,
+                "Ice": 7,
+                "Nature": 7,
+                "Blood": 7,
+                "Meta": 7,
+                "Potion": 7,
+                "Skills": 7
+            },
+            "conditions": {},
+            "complexity_multiplier": 1.0,
+            "complexity_additive": 0.0,
+            "type": ""
         }
     ]
 }
