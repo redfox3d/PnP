@@ -31,10 +31,12 @@ ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Potion", "Skills
 
 class ContentManager:
 
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root):
         self.root = root
-        self.root.title("Card Content Manager")
-        wm.restore(self.root, "main", "1100x650")
+        # root can be a Tk window or an embedded Frame
+        if hasattr(self.root, "title"):
+            self.root.title("Card Content Manager")
+            wm.restore(self.root, "main", "1100x650")
 
         self.data: dict = {}
         self.load_all()
@@ -473,11 +475,21 @@ class ContentManager:
             counter = [0]
             used    = set()
 
-            def _nid():
-                while f"{item_id}_{counter[0]}" in used:
+            # NEU:
+            def _nid_var():
+                while f"{item_id}.v{counter[0]}" in used:
                     counter[0] += 1
-                sid = f"{item_id}_{counter[0]}"
-                used.add(sid); counter[0] += 1
+                sid = f"{item_id}.v{counter[0]}"
+                used.add(sid);
+                counter[0] += 1
+                return sid
+
+            def _nid_opt():
+                while f"{item_id}.o{opt_counter[0]}" in used:
+                    opt_counter[0] += 1
+                sid = f"{item_id}.o{opt_counter[0]}"
+                used.add(sid);
+                opt_counter[0] += 1
                 return sid
 
             new_item = {

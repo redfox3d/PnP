@@ -1,25 +1,36 @@
 """
-constants.py – all static configuration: block types, elements, colours, symbols.
+constants.py – all static configuration.
 """
 
 BLOCK_TYPES = [
-    "Excavate", "Hand", "Play", "Enchantment",
-    "Graveyard", "Exile", "Banished Facedown",
+    "Play", "Excavate", "Hand", "Concentration",
+    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Lost",
 ]
 
 ABILITY_TYPES = ["Trigger", "Play", "Continues", "Activate"]
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Potion", "Skills"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Generic"]
 
-# ── Block colours (hex, used as semi-transparent overlays on the canvas) ──────
+# Generic mana symbol (used when no element is specified)
+GENERIC_MANA_ICON  = "◎"
+GENERIC_MANA_COLOR = "#888888"
+
+# The special Cost ID that renders as mana symbols instead of text
+MANA_COST_ID = "Mana"
+
+NO_ELEMENT_TYPES  = ["Supplies", "Equipment", "Alchemy", "Prowess"]
+BLOCK_CARD_TYPES  = ["Spells", "Prowess"]
+
 BLOCK_COLORS = {
-    "Excavate":         "#8B6914",
-    "Hand":             "#1a6e3c",
-    "Play":             "#1a3e8e",
-    "Enchantment":      "#6a1a8e",
-    "Graveyard":        "#3a3a3a",
-    "Exile":            "#8e1a1a",
-    "Banished Facedown":"#1a6e8e",
+    "Play":          "#1a3e8e",
+    "Excavate":      "#8B6914",
+    "Hand":          "#1a6e3c",
+    "Concentration": "#2a4a6e",
+    "Enchantment":   "#6a1a8e",
+    "Equipped":      "#3a5a3a",
+    "Exhausted":     "#5a3a2a",
+    "Fleeting":      "#1a5a5a",
+    "Lost":          "#3a3a3a",
 }
 
 ELEMENT_COLORS = {
@@ -29,8 +40,6 @@ ELEMENT_COLORS = {
     "Nature": "#27ae60",
     "Blood":  "#8e0000",
     "Meta":   "#8e44ad",
-    "Potion": "#16a085",
-    "Skills": "#d35400",
 }
 
 ELEMENT_ICONS = {
@@ -40,19 +49,18 @@ ELEMENT_ICONS = {
     "Nature": "🌿",
     "Blood":  "🩸",
     "Meta":   "✨",
-    "Potion": "⚗️",
-    "Skills": "⚔️",
 }
 
-# ── Symbols for the artwork strip ─────────────────────────────────────────────
 BLOCK_SYMBOLS = {
-    "Excavate":         "⛏",
-    "Hand":             "✋",
-    "Play":             "▶",
-    "Enchantment":      "✦",
-    "Graveyard":        "☠",
-    "Exile":            "⊗",
-    "Banished Facedown":"◼",
+    "Play":          "▶",
+    "Excavate":      "⛏",
+    "Hand":          "✋",
+    "Concentration": "◉",
+    "Enchantment":   "✦",
+    "Equipped":      "⚔",
+    "Exhausted":     "💤",
+    "Fleeting":      "💨",
+    "Lost":          "☠",
 }
 
 TYPE_SYMBOLS = {
@@ -66,7 +74,6 @@ COND_SYMBOL   = "◈"
 EFFECT_SYMBOL = "◆"
 COST_SYMBOL   = "◉"
 
-# ── Card canvas dimensions ────
-CARD_W    = 476   # war 238
-CARD_H    = 666   # war 333
-ARTWORK_W = 88    # war 44
+CARD_W    = 476
+CARD_H    = 666
+ARTWORK_W = 88

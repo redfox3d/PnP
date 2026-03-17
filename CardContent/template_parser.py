@@ -202,9 +202,13 @@ def make_default_stat(stat_id: str = "") -> dict:
     }
 
 
-def generate_stat_id(effect_id: str, counter: int) -> str:
-    """Auto-generate ID like 'Draw.0'."""
-    return f"{effect_id}.{counter}"
+def generate_stat_id(effect_id: str, counter: int,
+                     kind: str = "v") -> str:
+    """
+    Auto-generate ID like 'Draw.v0' for variables or 'Draw.o0' for options.
+    kind: 'v' = variable, 'o' = option/choice
+    """
+    return f"{effect_id}.{kind}{counter}"
 
 
 # ── ID registry & reference tools ─────────────────────────────────────────────
@@ -319,7 +323,8 @@ def sync_item_template(item: dict) -> None:
     item_id  = item.get("id", "item")
 
     used_ids: set = set()
-    counter = [0]
+    var_counter  = [0]
+    opt_counter  = [0]
 
     def _collect(stat):
         if stat.get("id"):
@@ -329,12 +334,20 @@ def sync_item_template(item: dict) -> None:
     for opt in old_opts.values():
         for stat in opt.get("per_choice", {}).values(): _collect(stat)
 
-    def _next_id() -> str:
-        while generate_stat_id(item_id, counter[0]) in used_ids:
-            counter[0] += 1
-        sid = generate_stat_id(item_id, counter[0])
+    def _next_var_id() -> str:
+        while generate_stat_id(item_id, var_counter[0], "v") in used_ids:
+            var_counter[0] += 1
+        sid = generate_stat_id(item_id, var_counter[0], "v")
         used_ids.add(sid)
-        counter[0] += 1
+        var_counter[0] += 1
+        return sid
+
+    def _next_opt_id() -> str:
+        while generate_stat_id(item_id, opt_counter[0], "o") in used_ids:
+            opt_counter[0] += 1
+        sid = generate_stat_id(item_id, opt_counter[0], "o")
+        used_ids.add(sid)
+        opt_counter[0] += 1
         return sid
 
     new_vars: dict = {}
@@ -342,9 +355,9 @@ def sync_item_template(item: dict) -> None:
         if v in old_vars:
             new_vars[v] = old_vars[v]
             if not new_vars[v].get("id"):
-                new_vars[v]["id"] = _next_id()
+                new_vars[v]["id"] = _next_var_id()
         else:
-            new_vars[v] = make_default_stat(_next_id())
+            new_vars[v] = make_default_stat(_next_var_id())
     item["variables"] = new_vars
 
     new_opts: dict = {}
@@ -356,8 +369,8 @@ def sync_item_template(item: dict) -> None:
             if c in old_pc:
                 pc[c] = old_pc[c]
                 if not pc[c].get("id"):
-                    pc[c]["id"] = _next_id()
+                    pc[c]["id"] = _next_opt_id()
             else:
-                pc[c] = make_default_stat(_next_id())
+                pc[c] = make_default_stat(_next_opt_id())
         new_opts[key] = {"choices": choices, "per_choice": pc}
     item["options"] = new_opts

@@ -1,3 +1,216 @@
 {
-    "Trigger": []
+    "Trigger": [
+        {
+            "id": "Trig_Card_Changes_Position",
+            "content_box": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, Element_List]",
+            "content_text": "You Discards {X} any",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0
+            },
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Trig_Card_Changes_Position_0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
+            },
+            "options": {
+                "0": {
+                    "choices": [
+                        "You",
+                        "Players",
+                        "Anyone"
+                    ],
+                    "per_choice": {
+                        "You": {
+                            "id": "Trig_Card_Changes_Position_1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Players": {
+                            "id": "Trig_Card_Changes_Position_2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Anyone": {
+                            "id": "Trig_Card_Changes_Position_3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "1": {
+                    "choices": [
+                        "Discards",
+                        "Forgets",
+                        "Recycles",
+                        "Looses",
+                        "Plays"
+                    ],
+                    "per_choice": {
+                        "Discards": {
+                            "id": "Trig_Card_Changes_Position_4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Forgets": {
+                            "id": "Trig_Card_Changes_Position_5",
+                            "rarity": 10,
+                            "complexity": 1.5,
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Recycles": {
+                            "id": "Trig_Card_Changes_Position_6",
+                            "rarity": 10,
+                            "complexity": 1.5,
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Looses": {
+                            "id": "Trig_Card_Changes_Position_7",
+                            "rarity": 10,
+                            "complexity": 1.9,
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Plays": {
+                            "id": "Trig_Card_Changes_Position_8",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "2": {
+                    "choices": [
+                        "any",
+                        "Element_List"
+                    ],
+                    "per_choice": {
+                        "any": {
+                            "id": "Trig_Card_Changes_Position_9",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Element_List": {
+                            "id": "Trig_Card_Changes_Position_10",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": "Trig_Movement",
+            "content_box": "[You/Players/Opponents/Anyone] [,{X}]",
+            "content_text": "You/Players/Opponents/Anyone ",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Trig_Movement_0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
+            },
+            "options": {
+                "0": {
+                    "choices": [
+                        "You/Players/Opponents/Anyone"
+                    ],
+                    "per_choice": {
+                        "You/Players/Opponents/Anyone": {
+                            "id": "Trig_Movement_1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "1": {
+                    "choices": [
+                        "{X}"
+                    ],
+                    "per_choice": {
+                        "{X}": {
+                            "id": "Trig_Movement_2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            }
+        }
+    ]
 }

@@ -1,5 +1,5 @@
 """
-data.py – loads the four content JSON files and exposes a singleton ContentData.
+data.py – loads content JSON files and exposes a singleton ContentData.
 """
 
 import json
@@ -15,20 +15,14 @@ def set_data_dir(path: str) -> None:
     print(f"[data] set_data_dir → '{_DATA_DIR}'")
 
 
-def _json_path(filename: str) -> str:
-    full = os.path.join(_DATA_DIR, filename)
-    return full
+def _cc_data_path(filename: str) -> str:
+    return os.path.join(_DATA_DIR, "CardContent", "cc_data", filename)
 
 
 def load_json_list(path: str, key: str) -> list:
-    print(f"[data] load_json_list: path='{path}'  exists={os.path.exists(path)}")
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-            result = data.get(key, [])
-            print(f"[data]   → key='{key}'  found {len(result)} items")
-            return result
-    print(f"[data]   → FILE NOT FOUND!")
+            return json.load(f).get(key, [])
     return []
 
 
@@ -43,18 +37,14 @@ def fill_placeholders(text: str, values: dict) -> str:
 
 
 class ContentData:
-    _instance = None
-
     def __init__(self) -> None:
         self.reload()
 
     def reload(self) -> None:
-        print(f"[ContentData] reload() called, _DATA_DIR='{_DATA_DIR}'")
-        cc_data = os.path.join(_DATA_DIR, "CardContent", "cc_data")
-        self.effects = load_json_list(os.path.join(cc_data, "effects.json"), "Effect")
-        self.triggers = load_json_list(os.path.join(cc_data, "triggers.json"), "Trigger")
-        self.conditions = load_json_list(os.path.join(cc_data, "conditions.json"), "Condition")
-        self.costs = load_json_list(os.path.join(cc_data, "costs.json"), "Cost")
+        self.effects    = load_json_list(_cc_data_path("effects.json"),    "Effect")
+        self.triggers   = load_json_list(_cc_data_path("triggers.json"),   "Trigger")
+        self.conditions = load_json_list(_cc_data_path("conditions.json"), "Condition")
+        self.costs      = load_json_list(_cc_data_path("costs.json"),      "Cost")
 
     def effect_ids(self)    -> list: return [i["id"] for i in self.effects]
     def trigger_ids(self)   -> list: return [i["id"] for i in self.triggers]
@@ -65,6 +55,12 @@ class ContentData:
         lst = getattr(self, kind + "s", [])
         return next((i for i in lst if i.get("id") == id_), None)
 
+    def get_content_text(self, kind: str, id_: str) -> str:
+        item = self.get(kind, id_)
+        if not item:
+            return ""
+        return item.get("content_text") or item.get("effect_text", "")
+
 
 _cd: ContentData | None = None
 
@@ -72,12 +68,7 @@ _cd: ContentData | None = None
 def get_content_data() -> ContentData:
     global _cd
     if _cd is None:
-        print("[data] get_content_data() → creating ContentData for first time")
         _cd = ContentData()
-    return _cd
-
-
-def reload_content_data() -> ContentData:
-    global _cd
-    _cd = ContentData()
+    elif not _cd.effects and _DATA_DIR:
+        _cd.reload()
     return _cd

@@ -14,7 +14,10 @@ from CardContent.template_parser import (
 from CardContent.window_memory import wm
 from CardContent.template_syntax_help import SyntaxHelpWindow
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Potion", "Skills"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta"]
+
+# Card types for the weight section grouping
+CARD_TYPES = ["Spells", "Prowess", "Loot", "Equipment", "Alchemy"]
 
 DEFAULT_ELEMENT_WEIGHT = 10   # used by auto-generator when field is empty
 
@@ -141,12 +144,145 @@ class ContentEditor(tk.Toplevel):
             row=self._row, column=1, sticky="w", padx=8, pady=3)
         self._row += 1
 
+        # cv1 / cv2 / cv3 – content value fields for the whole item
+        lbl("cv1")
+        self._cv1_var = tk.StringVar(value=str(self.item.get("cv1", "")))
+        tk.Entry(self._f, textvariable=self._cv1_var, width=10).grid(
+            row=self._row, column=1, sticky="w", padx=8, pady=3)
+        tk.Label(self._f, text="cv2", font=("Arial", 9, "bold")).grid(
+            row=self._row, column=2, sticky="w", padx=4)
+        self._cv2_var = tk.StringVar(value=str(self.item.get("cv2", "")))
+        tk.Entry(self._f, textvariable=self._cv2_var, width=10).grid(
+            row=self._row, column=3, sticky="w", padx=4, pady=3)
+        tk.Label(self._f, text="cv3", font=("Arial", 9, "bold")).grid(
+            row=self._row, column=4, sticky="w", padx=4)
+        self._cv3_var = tk.StringVar(value=str(self.item.get("cv3", "")))
+        tk.Entry(self._f, textvariable=self._cv3_var, width=10).grid(
+            row=self._row, column=5, sticky="w", padx=4, pady=3)
+        self._row += 1
+
         bf = tk.Frame(self._f)
         bf.grid(row=self._row, column=1, columnspan=5, sticky="w", padx=8, pady=4)
         tk.Button(bf, text="◈ Effect Conditions",
                   command=self._edit_effect_conditions,
                   bg="#553300", fg="white").pack(side="left", padx=4)
         self._row += 1
+
+        # ── Collapsible weights section ────────────────────────────────────────
+        self._build_weights_section()
+
+    def _build_weights_section(self):
+        """Collapsible card-type weights + element weights section."""
+        # Load saved open/closed state
+        _state_key = "weights_open"
+        is_open = self.item.get(_state_key, False)
+
+        container = tk.Frame(self._f, relief="groove", bd=1)
+        container.grid(row=self._row, column=0, columnspan=6,
+                       sticky="ew", padx=8, pady=4)
+        self._row += 1
+
+        # Toggle header
+        header = tk.Frame(container, bg="#1a1a2a")
+        header.pack(fill="x")
+
+        self._weights_open = tk.BooleanVar(value=is_open)
+        self._weights_body  = tk.Frame(container)
+
+        def _toggle():
+            if self._weights_open.get():
+                self._weights_body.pack(fill="x", padx=8, pady=4)
+                toggle_btn.config(text="▼  Kartentyp & Element Gewichtungen")
+            else:
+                self._weights_body.pack_forget()
+                toggle_btn.config(text="▶  Kartentyp & Element Gewichtungen")
+            self.item[_state_key] = self._weights_open.get()
+
+        toggle_btn = tk.Button(
+            header,
+            text=("▼" if is_open else "▶") + "  Kartentyp & Element Gewichtungen",
+            command=lambda: (
+                self._weights_open.set(not self._weights_open.get()),
+                _toggle()
+            ),
+            bg="#1a1a2a", fg="#aaaacc",
+            font=("Arial", 9, "bold"), relief="flat", anchor="w",
+        )
+        toggle_btn.pack(fill="x", padx=4, pady=4)
+
+        # ── Body (card type weights) ───────────────────────────────────────────
+        body = self._weights_body
+
+        tk.Label(body, text="Kartentyp Gewichtungen",
+                 font=("Arial", 9, "bold"), fg="#cc8833").pack(anchor="w", pady=(4,2))
+        tk.Label(body, text="Leer = Standard (10)   0 = nie",
+                 fg="#888", font=("Arial", 8)).pack(anchor="w")
+
+        ct_weights = self.item.setdefault("card_type_weights", {})
+        self._ct_weight_vars = {}
+        ct_grid = tk.Frame(body)
+        ct_grid.pack(fill="x", pady=4)
+
+        for i, ct in enumerate(CARD_TYPES):
+            col = i * 2
+            tk.Label(ct_grid, text=ct, font=("Arial", 8, "bold"),
+                     width=10, anchor="w").grid(row=0, column=col, padx=4)
+            raw = ct_weights.get(ct, "")
+            v   = tk.StringVar(value="" if raw == "" or raw is None else str(raw))
+            self._ct_weight_vars[ct] = v
+            tk.Entry(ct_grid, textvariable=v, width=6).grid(
+                row=0, column=col+1, padx=2)
+
+        ttk.Separator(body, orient="horizontal").pack(fill="x", pady=6)
+
+        # ── Element weights (only for Spells) ──────────────────────────────────
+        tk.Label(body, text="Element Gewichtungen  (nur für Spells)",
+                 font=("Arial", 9, "bold"), fg="#5588cc").pack(anchor="w", pady=(2,2))
+        tk.Label(body, text="☑ = erlaubt   Leer = Standard (10)   0 = nie",
+                 fg="#888", font=("Arial", 8)).pack(anchor="w")
+
+        el_weights  = self.item.setdefault("element_weights", {})
+        allowed_els = self.item.get("allowed_elements", [])
+        self._el_vars    = {}
+        self._el_weights = {}
+
+        hdr = tk.Frame(body)
+        hdr.pack(fill="x", pady=2)
+        for txt, w in [("Element", 10), ("Erlaubt", 7), ("Gewicht", 8), ("", 10)]:
+            tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
+                     width=w, anchor="w").pack(side="left", padx=2)
+
+        for el in ELEMENTS:
+            row_f = tk.Frame(body)
+            row_f.pack(fill="x", pady=1)
+
+            enabled = (el in allowed_els) if allowed_els else True
+            ev = tk.BooleanVar(value=enabled)
+            self._el_vars[el] = ev
+            tk.Checkbutton(row_f, text=el, variable=ev, width=10,
+                           anchor="w").pack(side="left")
+
+            raw_w = el_weights.get(el, "")
+            wv = tk.StringVar(value="" if raw_w == "" or raw_w is None
+                              else str(raw_w))
+            self._el_weights[el] = wv
+            tk.Entry(row_f, textvariable=wv, width=6).pack(side="left", padx=4)
+
+            bar = tk.Label(row_f, text="", bg="#1a6e3c", height=1, width=1)
+            bar.pack(side="left", padx=2)
+
+            def _upd(ev=None, b=bar, wvar=wv):
+                raw = wvar.get().strip()
+                try:    val = max(0, min(20, int(float(raw)))) if raw else DEFAULT_ELEMENT_WEIGHT
+                except: val = 0
+                b.config(width=max(1, val))
+
+            wv.trace_add("write", lambda *_, fn=_upd: fn())
+            _upd()
+
+        # Show/hide body based on initial state
+        if is_open:
+            self._weights_body.pack(fill="x", padx=8, pady=4)
 
     def _sync_preview(self):
         parsed  = parse_template(self._cb_var.get())
@@ -362,6 +498,48 @@ class ContentEditor(tk.Toplevel):
         try:    self.item["complexity_base"] = float(self._cpx_var.get())
         except: pass
 
+        # cv1 / cv2 / cv3 item-level values
+        for key, var in [("cv1", self._cv1_var),
+                         ("cv2", self._cv2_var),
+                         ("cv3", self._cv3_var)]:
+            raw = var.get().strip()
+            if raw:
+                try:    self.item[key] = float(raw)
+                except: pass
+            else:
+                self.item.pop(key, None)
+
+        # Card type weights
+        if hasattr(self, "_ct_weight_vars"):
+            ct_w = {}
+            for ct, v in self._ct_weight_vars.items():
+                raw = v.get().strip()
+                if raw:
+                    try:    ct_w[ct] = float(raw)
+                    except: pass
+            if ct_w:
+                self.item["card_type_weights"] = ct_w
+            else:
+                self.item.pop("card_type_weights", None)
+
+        # Element weights + allowed (from collapsible section)
+        if hasattr(self, "_el_vars"):
+            sel = [el for el, v in self._el_vars.items() if v.get()]
+            if len(sel) < len(ELEMENTS):
+                self.item["allowed_elements"] = sel
+            else:
+                self.item.pop("allowed_elements", None)
+            ew = {}
+            for el in ELEMENTS:
+                raw = self._el_weights[el].get().strip()
+                if raw:
+                    try:    ew[el] = float(raw)
+                    except: pass
+            if ew:
+                self.item["element_weights"] = ew
+            else:
+                self.item.pop("element_weights", None)
+
         if self.on_save:
             self.on_save()
         self.destroy()
@@ -484,7 +662,7 @@ class ConditionsEditor(tk.Toplevel):
         el_f = tk.Frame(f)
         el_f.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
 
-        for el in ELEMENTS:
+        for el in ELEMENTS:  # ELEMENTS now = ["Fire","Metal","Ice","Nature","Blood","Meta"]
             ef = tk.Frame(el_f)
             ef.pack(fill="x", pady=1)
 
