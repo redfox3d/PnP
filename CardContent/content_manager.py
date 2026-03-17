@@ -16,9 +16,8 @@ from CardContent.window_memory  import wm
 from CardContent.content_editor import ContentEditor
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-import os
-
-_HERE = os.path.dirname(os.path.abspath(__file__))
+_HERE        = os.path.dirname(os.path.abspath(__file__))
+COLUMNS_FILE = os.path.join(_HERE, "manager_data", "column_config.json")
 
 FILES = {
     "Effect":    os.path.join(_HERE, "cc_data", "effects.json"),
@@ -26,8 +25,6 @@ FILES = {
     "Condition": os.path.join(_HERE, "cc_data", "conditions.json"),
     "Cost":      os.path.join(_HERE, "cc_data", "costs.json"),
 }
-
-COLUMNS_FILE = os.path.join(_HERE, "manager_data", "column_config.json")
 
 ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Potion", "Skills"]
 
@@ -72,6 +69,7 @@ class ContentManager:
                 item.setdefault("complexity_base", 1.0)
                 item.setdefault("variables",       {})
                 item.setdefault("options",         {})
+                item.setdefault("conditions",      {})
 
     def save_all(self):
         for key, filename in FILES.items():
@@ -103,7 +101,6 @@ class ContentManager:
         self._build_table()
 
     def _build_toolbar(self):
-        # Filter row
         ff = tk.Frame(self.root)
         ff.pack(fill="x", padx=5, pady=4)
 
@@ -124,7 +121,6 @@ class ContentManager:
 
         tk.Button(ff, text="Apply", command=self.apply_filters).pack(side="left", padx=4)
 
-        # Button row
         bf = tk.Frame(self.root)
         bf.pack(fill="x", pady=3)
 
@@ -171,13 +167,13 @@ class ContentManager:
 
         self._apply_col_widths()
 
-        self.tree.bind("<Button-1>",          self._header_click)
-        self.tree.bind("<Button-3>",          self._col_context_menu)
-        self.tree.bind("<Double-1>",          self._open_editor)
-        self.tree.bind("<ButtonPress-1>",     self._drag_start,   add="+")
-        self.tree.bind("<B1-Motion>",         self._drag_motion,  add="+")
-        self.tree.bind("<ButtonRelease-1>",   self._drag_release, add="+")
-        self.tree.bind("<ButtonRelease-1>",   self._save_widths,  add="+")
+        self.tree.bind("<Button-1>",        self._header_click)
+        self.tree.bind("<Button-3>",        self._col_context_menu)
+        self.tree.bind("<Double-1>",        self._open_editor)
+        self.tree.bind("<ButtonPress-1>",   self._drag_start,   add="+")
+        self.tree.bind("<B1-Motion>",       self._drag_motion,  add="+")
+        self.tree.bind("<ButtonRelease-1>", self._drag_release, add="+")
+        self.tree.bind("<ButtonRelease-1>", self._save_widths,  add="+")
 
         self.apply_filters()
         self._update_hidden_dropdown()
@@ -217,8 +213,8 @@ class ContentManager:
     def apply_filters(self, sort_col: str | None = None):
         self.tree.delete(*self.tree.get_children())
 
-        sel_type   = self.type_filter.get()
-        search     = self.search_filter.get().lower()
+        sel_type = self.type_filter.get()
+        search   = self.search_filter.get().lower()
         try:    min_rar = int(self.rarity_filter.get())
         except: min_rar = None
 
@@ -270,6 +266,7 @@ class ContentManager:
                 self.tree.heading(col, text=col + arrow)
             else:
                 self.tree.heading(col, text=col)
+
     # ── Column drag & drop ─────────────────────────────────────────────────────
 
     def _drag_start(self, event):
@@ -430,7 +427,7 @@ class ContentManager:
                         if str(i.get("id", "")) == item_id)
         except StopIteration:
             return
-        ContentEditor(self.root, item,
+        ContentEditor(self.root, item, self.data,
                       on_save=lambda: (self._refresh_table(), self.save_all()))
 
     def _open_create_editor(self):
@@ -473,6 +470,16 @@ class ContentManager:
 
             cb     = entries["content_box"].get()
             parsed = parse_template(cb)
+            counter = [0]
+            used    = set()
+
+            def _nid():
+                while f"{item_id}_{counter[0]}" in used:
+                    counter[0] += 1
+                sid = f"{item_id}_{counter[0]}"
+                used.add(sid); counter[0] += 1
+                return sid
+
             new_item = {
                 "id":              item_id,
                 "content_box":     cb,
@@ -481,13 +488,16 @@ class ContentManager:
                 "rarity":          int(entries["rarity"].get() or 10),
                 "complexity_base": float(entries["complexity_base"].get() or 1.0),
                 "element_weights": {el: 0 for el in ELEMENTS},
+                "conditions":      {},
                 "variables": {
-                    v: make_default_stat() for v in parsed["variables"]
+                    v: make_default_stat(_nid()) for v in parsed["variables"]
                 },
                 "options": {
                     str(i): {
-                        "choices":   choices,
-                        "per_choice": {c: make_default_stat() for c in choices},
+                        "choices": choices,
+                        "per_choice": {
+                            c: make_default_stat(_nid()) for c in choices
+                        },
                     }
                     for i, choices in enumerate(parsed["options"])
                 },

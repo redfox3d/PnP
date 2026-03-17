@@ -20,15 +20,20 @@
             "variables": {
                 "X": {
                     "rarity": 10,
-                    "complexity": 1.0,
-                    "conditions": {}
+                    "complexity": 0.3,
+                    "conditions": {},
+                    "id": "Draw.X",
+                    "cv1": 0.0,
+                    "cv2": 0.0,
+                    "cv3": 0.0
                 }
             },
-            "options": {}
+            "options": {},
+            "conditions": {}
         },
         {
-            "id": "Change_Card_Position",
-            "content_box": "[Add to Hand, Discard, Forget, Lose]",
+            "id": "Change_This_Card_Position",
+            "content_box": "[Add to Hand, Discard, Forget, Lose] ",
             "content_text": "Add to Hand",
             "reminder_text": "",
             "rarity": 10,
@@ -56,21 +61,106 @@
                         "Add to Hand": {
                             "rarity": 10,
                             "complexity": 1.0,
-                            "conditions": {}
+                            "conditions": {},
+                            "id": "Change_Card_Position_0"
                         },
                         "Discard": {
                             "rarity": 10,
                             "complexity": 1.0,
-                            "conditions": {}
+                            "conditions": {},
+                            "id": "Change_Card_Position_1"
                         },
                         "Forget": {
                             "rarity": 10,
                             "complexity": 1.0,
-                            "conditions": {}
+                            "conditions": {},
+                            "id": "Change_Card_Position_2"
                         },
                         "Lose": {
                             "rarity": 10,
+                            "complexity": 1.5,
+                            "conditions": {},
+                            "id": "Change_Card_Position_3",
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0
+                        }
+                    }
+                }
+            },
+            "conditions": {}
+        },
+        {
+            "id": "Change_Any_Cards_Position",
+            "content_box": "{x}{y}[any, news, ezc]",
+            "content_text": "{x}{y}any",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {
+                "x": {
+                    "id": "Change_Any_Cards_Position_0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                },
+                "y": {
+                    "id": "Change_Any_Cards_Position_1",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
+            },
+            "options": {
+                "0": {
+                    "choices": [
+                        "any",
+                        "news",
+                        "ezc"
+                    ],
+                    "per_choice": {
+                        "any": {
+                            "id": "Change_Any_Cards_Position_2",
+                            "rarity": 10,
                             "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "news": {
+                            "id": "Change_Any_Cards_Position_3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "ezc": {
+                            "id": "Change_Any_Cards_Position_4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
                             "conditions": {}
                         }
                     }

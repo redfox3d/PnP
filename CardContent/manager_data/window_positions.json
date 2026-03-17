@@ -1,6 +1,7 @@
 {
-    "main": "1100x650+2492+212",
-    "create_editor": "560x360+2700+266",
-    "content_editor": "700x600+2033+220",
-    "conditions_editor": "400x440+26+26"
+    "main": "1920x1009+1930+-24",
+    "create_editor": "560x360+2988+286",
+    "content_editor": "1920x1009+1852+36",
+    "conditions_editor": "400x440+2716+165",
+    "weights_editor": "320x380+78+78"
 }
