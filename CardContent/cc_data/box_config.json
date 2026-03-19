@@ -1,0 +1,56 @@
+{
+  "Play": {
+    "rarity": 10,
+    "cv_modifier": 1.0,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Excavate": {
+    "rarity": 5,
+    "cv_modifier": 1.0,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Hand": {
+    "rarity": 8,
+    "cv_modifier": 1.0,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Concentration": {
+    "rarity": 4,
+    "cv_modifier": 1.2,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Enchantment": {
+    "rarity": 4,
+    "cv_modifier": 1.2,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Equipped": {
+    "rarity": 3,
+    "cv_modifier": 1.0,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Exhausted": {
+    "rarity": 5,
+    "cv_modifier": 0.8,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Fleeting": {
+    "rarity": 6,
+    "cv_modifier": 0.9,
+    "element_weights": {},
+    "incompatible_with": []
+  },
+  "Lost": {
+    "rarity": 4,
+    "cv_modifier": 0.7,
+    "element_weights": {},
+    "incompatible_with": []
+  }
+}
