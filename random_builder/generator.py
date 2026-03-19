@@ -188,18 +188,43 @@ class CardGenerator:
             prob = float(rule.get("probability", 1.0))
             if random.random() >= prob:
                 continue
-            container_id = rule.get("container", "")
-            if not container_id:
-                continue
-            eff = self._pick_from_container(
-                container_id, element, used_container_effects,
-                cv_budget=effect_budget)
-            if eff:
-                item = self.effects.get(eff["effect_id"])
-                if item:
-                    effect_budget -= cv_content_item(
-                        item, eff.get("vals", {}), eff.get("opt_vals", {}))
-                ability["effects"].append(eff)
+
+            if "container" in rule:
+                # Pick one item from a named container (no_repeat enforced)
+                result = self._pick_from_container(
+                    rule["container"], element, used_container_effects,
+                    cv_budget=effect_budget)
+                if result:
+                    rtype, rdata = result
+                    self._apply_content_item(ability, rtype, rdata, effect_budget)
+                    if rtype == "effect":
+                        item = self.effects.get(rdata["effect_id"])
+                        if item:
+                            effect_budget -= cv_content_item(
+                                item, rdata.get("vals", {}), rdata.get("opt_vals", {}))
+            elif "effect_id" in rule:
+                eid = rule["effect_id"]
+                solo_key = f"__solo__{eid}"
+                if eid in used_container_effects.get(solo_key, set()):
+                    continue
+                used_container_effects.setdefault(solo_key, set()).add(eid)
+                eff = self._build_effect(eid, element, effect_budget)
+                if eff:
+                    item = self.effects.get(eid)
+                    if item:
+                        effect_budget -= cv_content_item(
+                            item, eff.get("vals", {}), eff.get("opt_vals", {}))
+                    ability["effects"].append(eff)
+            elif "cost_id" in rule:
+                cid = rule["cost_id"]
+                solo_key = f"__solo_cost__{cid}"
+                if cid in used_container_effects.get(solo_key, set()):
+                    continue
+                used_container_effects.setdefault(solo_key, set()).add(cid)
+                cost = self._build_cost(cid, element)
+                if cost:
+                    ability["costs"].append(cost)
+            # condition_id / trigger_id rules – reserved for future use
 
         return ability
 
@@ -207,41 +232,63 @@ class CardGenerator:
 
     def _pick_from_container(self, container_id: str, element: str,
                               used: dict, cv_budget: float):
-        container = self.containers.get(container_id, {})
-        effect_ids = container.get("effects", [])
+        """
+        Pick one item from a container.
+        Returns (type_str, data_dict) or None.
+        type_str: "effect" | "cost"
+        """
+        container  = self.containers.get(container_id, {})
         no_repeat  = container.get("no_repeat", True)
-        already_used = used.get(container_id, set())
+        already    = used.get(container_id, set())
 
-        # Filter to available effects
-        available = [eid for eid in effect_ids if eid in self.effects]
-        if no_repeat:
-            available = [eid for eid in available if eid not in already_used]
+        # Gather all available items across types, with their lookup
+        candidates = []  # (type_str, item_id, item_dict)
+        for type_str, lookup, list_key in [
+            ("effect", self.effects, "effects"),
+            ("cost",   self.costs,   "costs"),
+        ]:
+            for iid in container.get(list_key, []):
+                if iid not in lookup:
+                    continue
+                if no_repeat and iid in already:
+                    continue
+                candidates.append((type_str, iid, lookup[iid]))
 
-        if not available:
+        if not candidates:
             return None
 
         # Weight by rarity × element_weight
         weights = []
-        for eid in available:
-            item = self.effects[eid]
+        for _, iid, item in candidates:
             rarity = float(item.get("rarity", 10))
-            el_weights = item.get("element_weights", {})
-            el_w = float(el_weights.get(element, 10)) if el_weights else 10.0
-            if el_w == 0:
-                weights.append(0.0)
-            else:
-                weights.append(math.sqrt(rarity) * (el_w / 10.0))
+            el_w_map = item.get("element_weights", {})
+            el_w = float(el_w_map.get(element, 10)) if el_w_map else 10.0
+            weights.append(math.sqrt(rarity) * (max(el_w, 0) / 10.0))
 
         total_w = sum(weights)
         if total_w <= 0:
-            eff_id = random.choice(available)
+            chosen = random.choice(candidates)
         else:
-            eff_id = random.choices(available, weights=weights)[0]
+            chosen = random.choices(candidates, weights=weights)[0]
 
+        type_str, iid, _ = chosen
         if no_repeat:
-            used.setdefault(container_id, set()).add(eff_id)
+            used.setdefault(container_id, set()).add(iid)
 
-        return self._build_effect(eff_id, element, cv_budget)
+        if type_str == "effect":
+            return ("effect", self._build_effect(iid, element, cv_budget))
+        elif type_str == "cost":
+            return ("cost", self._build_cost(iid, element))
+        return None
+
+    def _apply_content_item(self, ability: dict, type_str: str, data, cv_budget: float):
+        """Add a picked container item to the ability."""
+        if not data:
+            return
+        if type_str == "effect":
+            ability["effects"].append(data)
+        elif type_str == "cost":
+            ability["costs"].append(data)
 
     # ── Effect / cost building ────────────────────────────────────────────────
 

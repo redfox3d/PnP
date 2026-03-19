@@ -4,23 +4,43 @@ container_manager/app.py – Container Manager panel.
 Left:  list of containers (CRUD).
 Right: all available effects as checkboxes to assign to the selected container.
 """
+import json
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 
 from .models import load_containers, save_containers
 
 
-def _load_effect_ids() -> list:
-    """Load all effect IDs from effects.json."""
-    try:
-        import os, json
-        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                         "CardContent", "cc_data", "effects.json")
-        with open(p, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return [item["id"] for item in data.get("Effect", [])]
-    except Exception:
-        return []
+_CC_FILES = {
+    "Effect":    "effects.json",
+    "Cost":      "costs.json",
+    "Condition": "conditions.json",
+    "Trigger":   "triggers.json",
+}
+_TYPE_COLORS = {
+    "Effect":    "#88ff88",
+    "Cost":      "#ffaa44",
+    "Condition": "#88aaff",
+    "Trigger":   "#ff88cc",
+}
+
+
+def _load_all_content() -> dict:
+    """Return {type: [id, ...]} for all content types."""
+    result = {}
+    cc_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "CardContent", "cc_data")
+    for ctype, fname in _CC_FILES.items():
+        path = os.path.join(cc_dir, fname)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            items = raw.get(ctype, raw.get(list(raw.keys())[0], []))
+            result[ctype] = [item["id"] for item in items if "id" in item]
+        except Exception:
+            result[ctype] = []
+    return result
 
 
 class ContainerManager(tk.Frame):
@@ -30,9 +50,9 @@ class ContainerManager(tk.Frame):
         kw.setdefault("bg", "#1a1a1a")
         super().__init__(parent, **kw)
         self._data = load_containers()
-        self._effect_ids = _load_effect_ids()
-        self._selected = None          # currently selected container id
-        self._check_vars: dict = {}    # effect_id → BooleanVar
+        self._all_content = _load_all_content()   # {type: [id, ...]}
+        self._selected = None
+        self._check_vars: dict = {}    # (type, id) → BooleanVar
         self._build()
 
     # ── Layout ────────────────────────────────────────────────────────────────
@@ -121,7 +141,7 @@ class ContainerManager(tk.Frame):
         tk.Label(hdr, text="Effekte im Container:",
                  bg="#1a1a1a", fg="#cc8833",
                  font=("Arial", 10, "bold")).pack(side="left")
-        tk.Button(hdr, text="↺ Effekte neu laden",
+        tk.Button(hdr, text="↺ Neu laden",
                   command=self._reload_effects,
                   bg="#2a2a2a", fg="#aaa",
                   font=("Arial", 8)).pack(side="right")
@@ -227,7 +247,7 @@ class ContainerManager(tk.Frame):
     # ── Effects list ──────────────────────────────────────────────────────────
 
     def _reload_effects(self):
-        self._effect_ids = _load_effect_ids()
+        self._all_content = _load_all_content()
         self._rebuild_effects()
 
     def _rebuild_effects(self):
@@ -242,38 +262,66 @@ class ContainerManager(tk.Frame):
                      font=("Arial", 10, "italic")).pack(padx=12, pady=20)
             return
 
-        if not self._effect_ids:
+        cont = self._data[self._selected]
+        # Container stores items per type: {"effects": [...], "costs": [...], ...}
+        # Legacy: if only "effects" key exists, migrate silently
+        assigned: dict = {}  # (type, id) → True
+        for ctype in _CC_FILES:
+            key = ctype.lower() + "s"  # "effects", "costs", "conditions", "triggers"
+            for iid in cont.get(key, []):
+                assigned[(ctype, iid)] = True
+
+        has_any = any(self._all_content.get(t) for t in _CC_FILES)
+        if not has_any:
             tk.Label(self._effects_inner,
-                     text="Keine Effekte gefunden. Effekte zuerst im Content Editor anlegen.",
+                     text="Kein Content gefunden. Erst im Content Editor anlegen.",
                      bg="#1a1a1a", fg="#888",
                      font=("Arial", 9)).pack(padx=12, pady=12)
             return
 
-        assigned = set(self._data[self._selected].get("effects", []))
+        for ctype, color in _TYPE_COLORS.items():
+            ids = self._all_content.get(ctype, [])
+            if not ids:
+                continue
+            # Section header
+            hdr = tk.Frame(self._effects_inner, bg="#1a1a2a")
+            hdr.pack(fill="x", padx=4, pady=(6, 1))
+            tk.Label(hdr, text=f"  {ctype}s",
+                     bg="#1a1a2a", fg=color,
+                     font=("Arial", 8, "bold")).pack(side="left", padx=4)
 
-        for eff_id in self._effect_ids:
-            row = tk.Frame(self._effects_inner, bg="#1a1a1a")
-            row.pack(fill="x", padx=8, pady=1)
+            for iid in ids:
+                key = (ctype, iid)
+                is_assigned = key in assigned
+                row = tk.Frame(self._effects_inner, bg="#1a1a1a")
+                row.pack(fill="x", padx=12, pady=1)
+                bv = tk.BooleanVar(value=is_assigned)
+                self._check_vars[key] = bv
+                bv.trace_add("write",
+                             lambda *_, k=key, v=bv: self._on_item_toggle(k, v))
+                tk.Checkbutton(
+                    row, text=iid, variable=bv,
+                    bg="#1a1a1a",
+                    fg=color if is_assigned else "#666",
+                    selectcolor="#2a2a3a",
+                    font=("Arial", 9),
+                    activebackground="#1a1a2a").pack(side="left")
 
-            bv = tk.BooleanVar(value=(eff_id in assigned))
-            self._check_vars[eff_id] = bv
-            bv.trace_add("write",
-                         lambda *_, eid=eff_id, v=bv: self._on_effect_toggle(eid, v))
-            tk.Checkbutton(
-                row, text=eff_id, variable=bv,
-                bg="#1a1a1a", fg="#e0e0e0" if eff_id in assigned else "#888",
-                selectcolor="#2a2a3a",
-                font=("Arial", 9),
-                activebackground="#1a1a2a").pack(side="left")
-
-    def _on_effect_toggle(self, eff_id: str, bv: tk.BooleanVar):
+    def _on_item_toggle(self, key: tuple, bv: tk.BooleanVar):
+        """key = (content_type, item_id)"""
         if not self._selected:
             return
-        effects = self._data[self._selected].setdefault("effects", [])
+        ctype, iid = key
+        list_key = ctype.lower() + "s"   # "effects", "costs", etc.
+        items = self._data[self._selected].setdefault(list_key, [])
         if bv.get():
-            if eff_id not in effects:
-                effects.append(eff_id)
+            if iid not in items:
+                items.append(iid)
         else:
-            if eff_id in effects:
-                effects.remove(eff_id)
+            if iid in items:
+                items.remove(iid)
         save_containers(self._data)
+
+    # Keep legacy name for compat
+    def _on_effect_toggle(self, eff_id: str, bv: tk.BooleanVar):
+        self._on_item_toggle(("Effect", eff_id), bv)

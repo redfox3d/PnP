@@ -20,7 +20,8 @@ from .models import (
     load_box_config, save_box_config,
 )
 from .generator import CardGenerator, ELEMENTS
-from .cv_calc import cv_card, complexity_card, _list_to_lookup
+from .cv_calc import cv_card, complexity_card
+from .generator import _list_to_lookup
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -292,28 +293,73 @@ class RandomBuilder(tk.Frame):
     def _rebuild_content_rules(self):
         for w in self._content_rules_frame.winfo_children():
             w.destroy()
-        self._content_rule_vars = {}
+        self._content_rule_vars = {}   # key → StringVar  (key = container_id or effect_id)
+        self._content_rule_types = {}  # key → "container" | "effect"
 
-        rules = {r["container"]: r["probability"]
-                 for r in self._gen_config.get("content_rules", [])}
+        # Build lookup of saved probabilities (supports both container and effect_id rules)
+        saved_probs = {}
+        for r in self._gen_config.get("content_rules", []):
+            if "container" in r:
+                saved_probs[r["container"]] = r["probability"]
+            elif "effect_id" in r:
+                saved_probs[r["effect_id"]] = r["probability"]
 
-        if not self._containers:
+        # ── Containers ────────────────────────────────────────────────────────
+        if self._containers:
+            tk.Label(self._content_rules_frame, text="Container:",
+                     bg="#1a1a1a", fg="#888",
+                     font=("Arial", 7, "bold italic")).pack(anchor="w", padx=2)
+            for cid in sorted(self._containers.keys()):
+                self._add_rule_row(self._content_rules_frame, cid,
+                                   saved_probs.get(cid, 0.0), kind="container",
+                                   fg="#88ccff")
+
+        # ── Ungrouped items (auto-containers) — all content types ─────────────
+        _type_cfg = [
+            ("Effect",    "effects",    "#88ff88", "effect"),
+            ("Cost",      "costs",      "#ffaa44", "cost"),
+            ("Condition", "conditions", "#88aaff", "condition"),
+            ("Trigger",   "triggers",   "#ff88cc", "trigger"),
+        ]
+        any_ungrouped = False
+        for ctype, list_key, color, kind in _type_cfg:
+            in_containers = set()
+            for cont in self._containers.values():
+                in_containers.update(cont.get(list_key, []))
+
+            all_ids = [item["id"] for item in self._content_data.get(ctype, [])]
+            ungrouped = [iid for iid in all_ids if iid not in in_containers]
+            if not ungrouped:
+                continue
+            any_ungrouped = True
             tk.Label(self._content_rules_frame,
-                     text="Keine Container. Erst im Container Manager anlegen.",
+                     text=f"Einzelne {ctype}s (kein Container):",
+                     bg="#1a1a1a", fg=color,
+                     font=("Arial", 7, "bold italic")).pack(
+                anchor="w", padx=2, pady=(4, 0))
+            for iid in ungrouped:
+                self._add_rule_row(self._content_rules_frame, iid,
+                                   saved_probs.get(iid, 0.0), kind=kind,
+                                   fg="#cccccc")
+
+        if not self._containers and not any_ungrouped:
+            tk.Label(self._content_rules_frame,
+                     text="Kein Content gefunden. Erst im Content Editor anlegen.",
                      bg="#1a1a1a", fg="#555", font=("Arial", 8)).pack(
                 anchor="w", padx=4)
-            return
 
-        for cid in sorted(self._containers.keys()):
-            row = tk.Frame(self._content_rules_frame, bg="#1a1a1a")
-            row.pack(fill="x", pady=1)
-            tk.Label(row, text=cid, bg="#1a1a1a", fg="#ccc",
-                     width=16, anchor="w", font=("Arial", 8)).pack(side="left")
-            v = tk.StringVar(value=str(rules.get(cid, 0.0)))
-            self._content_rule_vars[cid] = v
-            tk.Entry(row, textvariable=v, width=6,
-                     bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(
-                side="left", padx=2)
+    def _add_rule_row(self, parent, key: str, prob: float,
+                      kind: str, fg: str):
+        row = tk.Frame(parent, bg="#1a1a1a")
+        row.pack(fill="x", pady=1)
+        tk.Label(row, text=key, bg="#1a1a1a", fg=fg,
+                 width=18, anchor="w", font=("Arial", 8)).pack(side="left")
+        v = tk.StringVar(value=str(prob))
+        self._content_rule_vars[key]  = v
+        self._content_rule_types[key] = kind
+        tk.Entry(row, textvariable=v, width=6,
+                 bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(
+            side="left", padx=2)
 
     def _rebuild_cost_rules(self):
         for w in self._cost_rules_frame.winfo_children():
@@ -617,13 +663,23 @@ class RandomBuilder(tk.Frame):
         cfg["block_rules"] = block_rules
 
         content_rules = []
-        for cid, v in self._content_rule_vars.items():
+        for key, v in self._content_rule_vars.items():
             try:
                 p = float(v.get())
             except Exception:
                 p = 0.0
             if p > 0:
-                content_rules.append({"container": cid, "probability": p})
+                kind = getattr(self, "_content_rule_types", {}).get(key, "container")
+                if kind == "container":
+                    content_rules.append({"container": key, "probability": p})
+                elif kind == "effect":
+                    content_rules.append({"effect_id": key, "probability": p})
+                elif kind == "cost":
+                    content_rules.append({"cost_id": key, "probability": p})
+                elif kind == "condition":
+                    content_rules.append({"condition_id": key, "probability": p})
+                elif kind == "trigger":
+                    content_rules.append({"trigger_id": key, "probability": p})
         cfg["content_rules"] = content_rules
 
         cost_rules = []
