@@ -73,14 +73,14 @@ class App:
     def show_launcher(self):
         self._clear()
         self.root.title("Emma – Game Tools")
-        self.root.geometry("360x280")
+        self.root.geometry("360x330")
         self.root.resizable(False, False)
 
         # Center on screen
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
-        self.root.geometry(f"360x280+{(sw-360)//2}+{(sh-280)//2}")
+        self.root.geometry(f"360x330+{(sw-360)//2}+{(sh-330)//2}")
 
         f = tk.Frame(self.root, bg="#1a1a1a")
         f.pack(fill="both", expand=True)
@@ -90,7 +90,7 @@ class App:
                  font=("Palatino Linotype", 22, "bold")).pack(pady=(32, 4))
         tk.Label(f, text="Game Tools",
                  bg="#1a1a1a", fg="#555",
-                 font=("Arial", 9, "italic")).pack(pady=(0, 28))
+                 font=("Arial", 9, "italic")).pack(pady=(0, 22))
 
         btn_kw = dict(width=22, font=("Arial", 11),
                       relief="flat", cursor="hand2")
@@ -105,6 +105,11 @@ class App:
                   command=self.show_content_manager,
                   **btn_kw).pack(pady=6)
 
+        tk.Button(f, text="🔮  AOE Designer",
+                  bg="#3a1a5e", fg="white",
+                  command=self.show_aoe_designer,
+                  **btn_kw).pack(pady=6)
+
     # ── Card Builder ──────────────────────────────────────────────────────────
 
     def show_card_builder(self):
@@ -113,12 +118,10 @@ class App:
         self.root.geometry("1460x860")
         self.root.resizable(True, True)
 
-        # Switch button in a thin top bar
-        self._add_switch_bar(
-            current="🃏 Card Builder",
-            other_label="📝 Content Editor",
-            other_cmd=self.show_content_manager,
-        )
+        self._add_switch_bar("🃏 Card Builder", [
+            ("📝 Content Editor", self.show_content_manager),
+            ("🔮 AOE Designer",   self.show_aoe_designer),
+        ])
 
         from card_builder.app import CardBuilder
         container = tk.Frame(self.root, bg="#1a1a1a")
@@ -133,11 +136,10 @@ class App:
         self.root.geometry("1100x650")
         self.root.resizable(True, True)
 
-        self._add_switch_bar(
-            current="📝 Content Editor",
-            other_label="🃏 Card Builder",
-            other_cmd=self.show_card_builder,
-        )
+        self._add_switch_bar("📝 Content Editor", [
+            ("🃏 Card Builder",  self.show_card_builder),
+            ("🔮 AOE Designer",  self.show_aoe_designer),
+        ])
 
         # CardContent lives in a separate package next to card_builder
         content_dir = os.path.join(BASE_DIR, "CardContent")
@@ -149,27 +151,47 @@ class App:
         container.pack(fill="both", expand=True)
         self._current_panel = ContentManager(root=container)
 
+    # ── AOE Designer ──────────────────────────────────────────────────────────
+
+    def show_aoe_designer(self):
+        self._clear()
+        self.root.title("AOE Designer")
+        self.root.geometry("980x700")
+        self.root.resizable(True, True)
+
+        self._add_switch_bar("🔮 AOE Designer", [
+            ("🃏 Card Builder",   self.show_card_builder),
+            ("📝 Content Editor", self.show_content_manager),
+        ])
+
+        from aoe_designer.app import AoEDesigner
+        container = tk.Frame(self.root, bg="#1a1a1a")
+        container.pack(fill="both", expand=True)
+        self._current_panel = AoEDesigner(container)
+        self._current_panel.pack(fill="both", expand=True)
+
     # ── Shared switch bar ─────────────────────────────────────────────────────
 
-    def _add_switch_bar(self, current: str, other_label: str, other_cmd):
-        """Thin top bar showing current tool + a button to switch."""
+    def _add_switch_bar(self, current: str, others: list):
+        """Thin top bar: current tool label + buttons for all other tools."""
         bar = tk.Frame(self.root, bg="#0d0d0d", pady=3)
         bar.pack(fill="x", side="top")
 
         tk.Label(bar, text=current, bg="#0d0d0d", fg="#888",
                  font=("Arial", 8, "italic")).pack(side="left", padx=10)
 
-        tk.Button(bar, text=f"⇄  {other_label}",
-                  command=other_cmd,
-                  bg="#2a2a2a", fg="#aaaaaa",
-                  font=("Arial", 8), relief="flat",
-                  cursor="hand2").pack(side="right", padx=8)
-
         tk.Button(bar, text="⌂  Launcher",
                   command=self.show_launcher,
                   bg="#2a2a2a", fg="#aaaaaa",
                   font=("Arial", 8), relief="flat",
                   cursor="hand2").pack(side="right", padx=4)
+
+        for label, cmd in reversed(others):
+            tk.Button(bar, text=f"⇄  {label}",
+                      command=cmd,
+                      bg="#2a2a2a", fg="#aaaaaa",
+                      font=("Arial", 8), relief="flat",
+                      cursor="hand2").pack(side="right", padx=4)
 
 
 # ── Run ───────────────────────────────────────────────────────────────────────

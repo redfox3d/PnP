@@ -4,6 +4,8 @@ template_parser.py – Template parsing, rendering, ID management, reference tra
 Content Box syntax  (for structure):
     {X}          → free variable named X
     [a, b, c]    → dropdown with choices a, b, c
+    [\\Elements] → expands to all game elements as choices
+    [\\AOE]      → expands to all saved AOE pattern IDs as choices
 
 Content Text / Reminder Text syntax  (for conditional rendering):
     {X}                         → insert value of variable X
@@ -20,12 +22,46 @@ Content Text / Reminder Text syntax  (for conditional rendering):
 import re
 from typing import Any
 
+# Game elements – single source of truth for \\Elements expansion
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta"]
+
+
+# ── Special marker expansion ───────────────────────────────────────────────────
+
+def _expand_special_markers(text: str) -> str:
+    """
+    Expand special markers inside bracket groups before parsing/rendering.
+        \\Elements  →  Fire, Metal, Ice, Nature, Blood, Meta
+        \\AOE       →  <comma-separated list of saved AOE pattern IDs>
+    """
+    elements_csv = ", ".join(ELEMENTS)
+    text = re.sub(r"\\Elements", elements_csv, text)
+
+    # \\AOE – load pattern IDs lazily so the import doesn't fail if the
+    # aoe_designer package isn't on the path yet.
+    if r"\AOE" in text:
+        try:
+            import sys, os
+            # aoe_designer lives one level above CardContent
+            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if _root not in sys.path:
+                sys.path.insert(0, _root)
+            from aoe_designer.models import get_pattern_ids
+            ids = get_pattern_ids()
+            replacement = ", ".join(ids) if ids else "no_aoe_pattern"
+            text = re.sub(r"\\AOE", replacement, text)
+        except Exception:
+            pass
+
+    return text
+
 
 # ── Content Box parsing ────────────────────────────────────────────────────────
 
 def parse_template(content_box: str) -> dict:
-    variables = list(dict.fromkeys(re.findall(r"\{([A-Za-z0-9_]+)\}", content_box)))
-    raw_opts  = re.findall(r"\[([^\]]+)\]", content_box)
+    expanded  = _expand_special_markers(content_box)
+    variables = list(dict.fromkeys(re.findall(r"\{([A-Za-z0-9_]+)\}", expanded)))
+    raw_opts  = re.findall(r"\[([^\]]+)\]", expanded)
     options   = [
         [c.strip() for c in raw.split(",") if c.strip()]
         for raw in raw_opts
@@ -158,7 +194,7 @@ def render_content_text(content_box: str,
     Render content_box (structural template) into plain text.
     Supports {X} inside option choices, e.g. [,{X}] or [top,{X}].
     """
-    text = content_box
+    text = _expand_special_markers(content_box)
 
     opt_idx = 0
 
