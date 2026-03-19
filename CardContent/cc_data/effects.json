@@ -166,6 +166,27 @@
                     }
                 }
             }
+        },
+        {
+            "id": "Use_Weapon",
+            "content_box": "",
+            "content_text": "",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {}
         }
     ]
 }

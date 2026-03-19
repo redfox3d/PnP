@@ -1,0 +1,30 @@
+{
+    "cards": [
+        {
+            "name": "New Card",
+            "card_type": "Equipment",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0,
+            "equip_text": ""
+        },
+        {
+            "name": "New Card",
+            "card_type": "Equipment",
+            "artwork": "",
+            "element_sources": [
+                "Metal",
+                "Ice",
+                "Nature"
+            ],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0,
+            "equip_text": ""
+        }
+    ]
+}

@@ -156,22 +156,28 @@ def render_content_text(content_box: str,
                         opt_selections: dict) -> str:
     """
     Render content_box (structural template) into plain text.
-    Used for the Content Box → Content Text preview.
+    Supports {X} inside option choices, e.g. [,{X}] or [top,{X}].
     """
     text = content_box
 
-    for name, val in var_values.items():
-        text = text.replace(f"{{{name}}}", str(val) if val else name)
-
     opt_idx = 0
+
     def _replace(m):
         nonlocal opt_idx
         default = m.group(1).split(",")[0].strip()
         choice  = opt_selections.get(str(opt_idx), default)
         opt_idx += 1
+        # Substitute {X} variables inside the chosen option text
+        for name, val in var_values.items():
+            choice = choice.replace(f"{{{name}}}", str(val) if val else name)
         return choice
 
     text = re.sub(r"\[([^\]]+)\]", _replace, text)
+
+    # Substitute remaining {X} variables outside of options
+    for name, val in var_values.items():
+        text = text.replace(f"{{{name}}}", str(val) if val else name)
+
     return text
 
 
@@ -202,13 +208,9 @@ def make_default_stat(stat_id: str = "") -> dict:
     }
 
 
-def generate_stat_id(effect_id: str, counter: int,
-                     kind: str = "v") -> str:
-    """
-    Auto-generate ID like 'Draw.v0' for variables or 'Draw.o0' for options.
-    kind: 'v' = variable, 'o' = option/choice
-    """
-    return f"{effect_id}.{kind}{counter}"
+def generate_stat_id(effect_id: str, counter: int) -> str:
+    """Auto-generate ID like 'Draw.0'."""
+    return f"{effect_id}.{counter}"
 
 
 # ── ID registry & reference tools ─────────────────────────────────────────────
@@ -323,8 +325,7 @@ def sync_item_template(item: dict) -> None:
     item_id  = item.get("id", "item")
 
     used_ids: set = set()
-    var_counter  = [0]
-    opt_counter  = [0]
+    counter = [0]
 
     def _collect(stat):
         if stat.get("id"):
@@ -334,20 +335,12 @@ def sync_item_template(item: dict) -> None:
     for opt in old_opts.values():
         for stat in opt.get("per_choice", {}).values(): _collect(stat)
 
-    def _next_var_id() -> str:
-        while generate_stat_id(item_id, var_counter[0], "v") in used_ids:
-            var_counter[0] += 1
-        sid = generate_stat_id(item_id, var_counter[0], "v")
+    def _next_id() -> str:
+        while generate_stat_id(item_id, counter[0]) in used_ids:
+            counter[0] += 1
+        sid = generate_stat_id(item_id, counter[0])
         used_ids.add(sid)
-        var_counter[0] += 1
-        return sid
-
-    def _next_opt_id() -> str:
-        while generate_stat_id(item_id, opt_counter[0], "o") in used_ids:
-            opt_counter[0] += 1
-        sid = generate_stat_id(item_id, opt_counter[0], "o")
-        used_ids.add(sid)
-        opt_counter[0] += 1
+        counter[0] += 1
         return sid
 
     new_vars: dict = {}
@@ -355,9 +348,9 @@ def sync_item_template(item: dict) -> None:
         if v in old_vars:
             new_vars[v] = old_vars[v]
             if not new_vars[v].get("id"):
-                new_vars[v]["id"] = _next_var_id()
+                new_vars[v]["id"] = _next_id()
         else:
-            new_vars[v] = make_default_stat(_next_var_id())
+            new_vars[v] = make_default_stat(_next_id())
     item["variables"] = new_vars
 
     new_opts: dict = {}
@@ -369,8 +362,8 @@ def sync_item_template(item: dict) -> None:
             if c in old_pc:
                 pc[c] = old_pc[c]
                 if not pc[c].get("id"):
-                    pc[c]["id"] = _next_opt_id()
+                    pc[c]["id"] = _next_id()
             else:
-                pc[c] = make_default_stat(_next_opt_id())
+                pc[c] = make_default_stat(_next_id())
         new_opts[key] = {"choices": choices, "per_choice": pc}
     item["options"] = new_opts

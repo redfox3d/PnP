@@ -1,0 +1,58 @@
+{
+    "cards": [
+        {
+            "name": "New Card",
+            "card_type": "Loot",
+            "artwork": "",
+            "element_sources": [
+                "Fire",
+                "Metal",
+                "Blood"
+            ],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0
+        },
+        {
+            "name": "New Card",
+            "card_type": "Loot",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0
+        },
+        {
+            "name": "New Card",
+            "card_type": "Loot",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0
+        },
+        {
+            "name": "New Card",
+            "card_type": "Loot",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0
+        },
+        {
+            "name": "New Card",
+            "card_type": "Loot",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0
+        }
+    ]
+}

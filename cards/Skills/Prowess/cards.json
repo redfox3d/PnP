@@ -1,0 +1,33 @@
+{
+    "cards": [
+        {
+            "name": "Use Weapon",
+            "card_type": "Prowess",
+            "artwork": "",
+            "blocks": [
+                {
+                    "type": "Graveyard",
+                    "abilities": []
+                }
+            ]
+        },
+        {
+            "name": "Help up",
+            "card_type": "Prowess",
+            "artwork": "",
+            "blocks": []
+        },
+        {
+            "name": "Shove",
+            "card_type": "Prowess",
+            "artwork": "",
+            "blocks": []
+        },
+        {
+            "name": "New Card",
+            "card_type": "Prowess",
+            "artwork": "",
+            "blocks": []
+        }
+    ]
+}

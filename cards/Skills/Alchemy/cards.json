@@ -1,0 +1,36 @@
+{
+    "cards": [
+        {
+            "name": "Heal Potion",
+            "card_type": "Alchemy",
+            "artwork": "C:/Users/wardr/Documents/colorful-magic-potion-whimsical-candycore-style-rustic-surface_154739-20937.png",
+            "ingredients": [
+                "Bronze",
+                "Erde",
+                "Gold"
+            ],
+            "result_content_id": "Change_Any_Cards_Position",
+            "result_text": "",
+            "on_field_effect": "",
+            "result": {
+                "content_id": "Change_Any_Cards_Position",
+                "var_values": {},
+                "opt_values": {}
+            }
+        },
+        {
+            "name": "New Card",
+            "card_type": "Alchemy",
+            "artwork": "",
+            "ingredients": [],
+            "result_content_id": "",
+            "result_text": "",
+            "on_field_effect": "",
+            "result": {
+                "content_id": "",
+                "var_values": {},
+                "opt_values": {}
+            }
+        }
+    ]
+}

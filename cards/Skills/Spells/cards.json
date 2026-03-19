@@ -1,0 +1,57 @@
+{
+    "cards": [
+        {
+            "name": "New Card",
+            "card_type": "Spells",
+            "artwork": "",
+            "element": "Fire",
+            "blocks": [
+                {
+                    "type": "Play",
+                    "abilities": [
+                        {
+                            "condition_id": null,
+                            "condition_vals": {},
+                            "ability_type": "Play",
+                            "costs": [],
+                            "effects": [
+                                {
+                                    "effect_id": "Draw",
+                                    "vals": {}
+                                }
+                            ],
+                            "choose_n": null,
+                            "choose_repeat": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "New Card",
+            "card_type": "Spells",
+            "artwork": "",
+            "element": "Fire",
+            "blocks": []
+        },
+        {
+            "name": "New Card",
+            "card_type": "Spells",
+            "artwork": "",
+            "element": "Fire",
+            "blocks": [
+                {
+                    "type": "Play",
+                    "abilities": []
+                }
+            ]
+        },
+        {
+            "name": "New Card",
+            "card_type": "Spells",
+            "artwork": "",
+            "element": "Fire",
+            "blocks": []
+        }
+    ]
+}

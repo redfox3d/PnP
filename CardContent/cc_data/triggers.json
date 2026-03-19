@@ -13,7 +13,9 @@
                 "Ice": 0.0,
                 "Nature": 0.0,
                 "Blood": 0.0,
-                "Meta": 0.0
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
             },
             "conditions": {},
             "variables": {
