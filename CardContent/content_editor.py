@@ -328,7 +328,7 @@ class ContentEditor(tk.Toplevel):
         hdr = tk.Frame(parent)
         hdr.pack(fill="x")
         for txt, w in [("Name", 10), ("ID", 16), ("Rarity", 7), ("Cmplx", 7),
-                       ("cv1", 5), ("cv2", 5), ("cv3", 5), ("", 8), ("", 3)]:
+                       ("cv1", 5), ("cv2", 5), ("cv3", 5), ("", 8), ("🎲?", 4), ("🎲!", 4), ("", 3)]:
             tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
                      width=w, anchor="w").pack(side="left", padx=1)
 
@@ -389,6 +389,19 @@ class ContentEditor(tk.Toplevel):
                 self, s, self.data, stat_type=st, choices=ch or []),
             font=("Arial", 8)
         ).pack(side="left", padx=3)
+
+        # Dice checkboxes – only for variable rows
+        if stat_type == "variable":
+            for dk, dl, tt in [
+                ("dice_allowed", "🎲?", "Würfel erlaubt"),
+                ("dice_only",    "🎲!", "Nur Würfel"),
+            ]:
+                bv = tk.BooleanVar(value=bool(stat.get(dk, False)))
+                bv.trace_add("write",
+                             lambda *_, k=dk, v=bv, s=stat: s.__setitem__(k, v.get()))
+                tk.Checkbutton(row, text=dl, variable=bv,
+                               font=("Arial", 7),
+                               activebackground="#2a2a3a").pack(side="left", padx=1)
 
         if can_delete and on_delete:
             tk.Button(row, text="✕", fg="red",

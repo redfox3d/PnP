@@ -23,6 +23,15 @@ HELP_TEXT = """
                  Beispiel:  Draw [, Apfel] Cards.
                  → Option 1: (leer)  Option 2: Apfel
 
+[\Elements]      Alle Elemente als Auswahl (automatisch)
+                 Expandiert zu [Fire, Metal, Ice, Nature, Blood, Meta].
+                 Jedes Element bekommt seine eigene Gewichtung.
+                 Beispiel:  Deal [\Elements] damage.
+
+[\AOE]           Alle gespeicherten AOE-Muster als Auswahl
+                 Expandiert zu den IDs aus dem AOE Designer.
+                 Beispiel:  Cast in pattern [\AOE].
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CONTENT TEXT / REMINDER TEXT  –  Bedingter Text
