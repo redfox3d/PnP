@@ -1,0 +1,1080 @@
+[
+  {
+    "name": "Spell_Fire_Meta_Blood_2476",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "elements": [
+      "Fire",
+      "Meta",
+      "Blood"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 5
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Reveal_Self",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 4,
+                  "y": 4
+                },
+                "opt_vals": {
+                  "0": "ezc"
+                }
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 3
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Fire"
+                },
+                "opt_vals": {
+                  "0": "Blood"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Meta"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.1,
+    "_complexity": 30.472
+  },
+  {
+    "name": "Spell_Metal_1298",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "elements": [
+      "Metal"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Metal"
+                },
+                "opt_vals": {
+                  "0": "Nature"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Meta"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Death",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Metal"
+                },
+                "opt_vals": {
+                  "0": "Ice"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 42.019
+  },
+  {
+    "name": "Spell_Meta_8183",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Meta",
+    "elements": [
+      "Meta"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Fire"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 4,
+                  "y": 4
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Death",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Meta"
+                },
+                "opt_vals": {
+                  "0": "Meta"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 36.642
+  },
+  {
+    "name": "Spell_Nature_8845",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Nature",
+    "elements": [
+      "Nature"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Death",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Nature"
+                },
+                "opt_vals": {
+                  "0": "Blood"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Nature"
+                },
+                "opt_vals": {
+                  "0": "Metal"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Meta"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 35.549
+  },
+  {
+    "name": "Spell_Blood_7310",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Blood",
+    "elements": [
+      "Blood"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 8
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Blood"
+                },
+                "opt_vals": {
+                  "0": "Metal"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Damage",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 13.85
+  },
+  {
+    "name": "Spell_Fire_8488",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "elements": [
+      "Fire"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Death",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Fire"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Fire"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Fire"
+                },
+                "opt_vals": {
+                  "0": "Ice"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 35.749
+  },
+  {
+    "name": "Spell_Blood_1966",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Blood",
+    "elements": [
+      "Blood"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Death",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Blood"
+                },
+                "opt_vals": {
+                  "0": "Fire"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Blood"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Blood"
+                },
+                "opt_vals": {
+                  "0": "Fire"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 4,
+                  "y": 8
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 42.022
+  },
+  {
+    "name": "Spell_Ice_Nature_Metal_4514",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Ice",
+    "elements": [
+      "Ice",
+      "Nature",
+      "Metal"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Ice"
+                },
+                "opt_vals": {
+                  "0": "Ice"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Nature"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Damage",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 2
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Ice"
+                },
+                "opt_vals": {
+                  "0": "Nature"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 37.549
+  },
+  {
+    "name": "Spell_Blood_4463",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Blood",
+    "elements": [
+      "Blood"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Blood"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Fire"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Ranged_Damage",
+                "vals": {
+                  "X": 3,
+                  "Y": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position_Cost",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {
+                  "0": "Recycle"
+                }
+              }
+            ],
+            "choose_n": 1,
+            "choose_repeat": true
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 39.849
+  },
+  {
+    "name": "Spell_Nature_2679",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Nature",
+    "elements": [
+      "Nature"
+    ],
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 5
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Nature"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Reveal_Self",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.1,
+    "_complexity": 13.45
+  },
+  {
+    "name": "Spell_Fire_4897",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Meta_2012",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Meta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Nature_3676",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Nature",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Nature_8463",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Nature",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Nature_2024",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Nature",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Metal_7043",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Meta_2704",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Meta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Metal_7454",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Fire_6356",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  },
+  {
+    "name": "Spell_Fire_8926",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.0,
+    "_complexity": 0.0
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "count": 10,
+  "element_mode": "equal",
+  "custom_element_weights": {
+    "Fire": 10.0,
+    "Metal": 10.0,
+    "Ice": 10.0,
+    "Nature": 10.0,
+    "Blood": 10.0,
+    "Meta": 10.0
+  },
+  "block_rules": [
+    {
+      "block_type": "Play",
+      "probability": 0.95
+    },
+    {
+      "block_type": "Hand",
+      "probability": 0.15
+    },
+    {
+      "block_type": "Fleeting",
+      "probability": 0.1
+    },
+    {
+      "block_type": "Lost",
+      "probability": 0.15
+    }
+  ],
+  "content_rules": [],
+  "cost_rules": [],
+  "cv_target": 3.0,
+  "cv_per_box_max": 3.0
+}

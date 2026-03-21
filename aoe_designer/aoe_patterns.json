@@ -1,0 +1,359 @@
+{
+  "Beam5": {
+    "id": "Beam5",
+    "cells": {
+      "1,-1": "target",
+      "2,-2": "target",
+      "3,-3": "target",
+      "4,-4": "target",
+      "0,0": "target",
+      "-1,1": "player"
+    },
+    "grid_radius": 4
+  },
+  "Beam4": {
+    "id": "Beam4",
+    "cells": {
+      "1,-1": "target",
+      "2,-2": "target",
+      "3,-3": "target",
+      "0,0": "target",
+      "-1,1": "player"
+    },
+    "grid_radius": 4
+  },
+  "Beam3": {
+    "id": "Beam3",
+    "cells": {
+      "1,-1": "target",
+      "2,-2": "target",
+      "0,0": "target",
+      "-1,1": "player"
+    },
+    "grid_radius": 4
+  },
+  "Star2": {
+    "id": "Star2",
+    "cells": {
+      "0,0": "player",
+      "0,-1": "target",
+      "0,-2": "target",
+      "-1,0": "target",
+      "-2,0": "target",
+      "-1,1": "target",
+      "-2,2": "target",
+      "0,1": "target",
+      "0,2": "target",
+      "1,0": "target",
+      "2,0": "target",
+      "1,-1": "target",
+      "2,-2": "target"
+    },
+    "grid_radius": 4
+  },
+  "Star3": {
+    "id": "Star3",
+    "cells": {
+      "0,0": "player",
+      "0,-1": "target",
+      "0,-2": "target",
+      "-1,0": "target",
+      "-2,0": "target",
+      "-1,1": "target",
+      "-2,2": "target",
+      "0,1": "target",
+      "0,2": "target",
+      "1,0": "target",
+      "2,0": "target",
+      "1,-1": "target",
+      "2,-2": "target",
+      "0,-3": "target",
+      "-3,0": "target",
+      "-3,3": "target",
+      "0,3": "target",
+      "3,0": "target",
+      "3,-3": "target"
+    },
+    "grid_radius": 4
+  },
+  "Ring": {
+    "id": "Ring",
+    "cells": {
+      "0,0": "player",
+      "0,-2": "target",
+      "-2,2": "target",
+      "0,2": "target",
+      "2,0": "target",
+      "2,-2": "target",
+      "-2,1": "target",
+      "-2,0": "target",
+      "-1,-1": "target",
+      "2,-1": "target",
+      "-1,2": "target",
+      "1,1": "target",
+      "1,-2": "target"
+    },
+    "grid_radius": 4
+  },
+  "Explosion1": {
+    "id": "Explosion1",
+    "cells": {
+      "0,0": "player",
+      "-1,1": "target",
+      "-1,0": "target",
+      "0,-1": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,1": "target"
+    },
+    "grid_radius": 4
+  },
+  "Explosion2": {
+    "id": "Explosion2",
+    "cells": {
+      "0,0": "player",
+      "-1,1": "target",
+      "-1,0": "target",
+      "0,-1": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,1": "target",
+      "-2,2": "target",
+      "-2,1": "target",
+      "-2,0": "target",
+      "-1,-1": "target",
+      "0,-2": "target",
+      "1,-2": "target",
+      "2,-2": "target",
+      "2,-1": "target",
+      "2,0": "target",
+      "1,1": "target",
+      "0,2": "target",
+      "-1,2": "target"
+    },
+    "grid_radius": 4
+  },
+  "Explosion3": {
+    "id": "Explosion3",
+    "cells": {
+      "0,0": "player",
+      "-1,1": "target",
+      "-1,0": "target",
+      "0,-1": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,1": "target",
+      "-2,2": "target",
+      "-2,1": "target",
+      "-2,0": "target",
+      "-1,-1": "target",
+      "0,-2": "target",
+      "1,-2": "target",
+      "2,-2": "target",
+      "2,-1": "target",
+      "2,0": "target",
+      "1,1": "target",
+      "0,2": "target",
+      "-1,2": "target",
+      "-3,3": "target",
+      "-3,2": "target",
+      "-3,1": "target",
+      "-3,0": "target",
+      "-2,-1": "target",
+      "-1,-2": "target",
+      "0,-3": "target",
+      "1,-3": "target",
+      "2,-3": "target",
+      "3,-3": "target",
+      "3,-2": "target",
+      "3,-1": "target",
+      "3,0": "target",
+      "2,1": "target",
+      "1,2": "target",
+      "0,3": "target",
+      "-1,3": "target",
+      "-2,3": "target"
+    },
+    "grid_radius": 4
+  },
+  "Explosion4": {
+    "id": "Explosion4",
+    "cells": {
+      "0,0": "player",
+      "-1,1": "target",
+      "-1,0": "target",
+      "0,-1": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,1": "target",
+      "-2,2": "target",
+      "-2,1": "target",
+      "-2,0": "target",
+      "-1,-1": "target",
+      "0,-2": "target",
+      "1,-2": "target",
+      "2,-2": "target",
+      "2,-1": "target",
+      "2,0": "target",
+      "1,1": "target",
+      "0,2": "target",
+      "-1,2": "target",
+      "-3,3": "target",
+      "-3,2": "target",
+      "-3,1": "target",
+      "-3,0": "target",
+      "-2,-1": "target",
+      "-1,-2": "target",
+      "0,-3": "target",
+      "1,-3": "target",
+      "2,-3": "target",
+      "3,-3": "target",
+      "3,-2": "target",
+      "3,-1": "target",
+      "3,0": "target",
+      "2,1": "target",
+      "1,2": "target",
+      "0,3": "target",
+      "-1,3": "target",
+      "-2,3": "target",
+      "-4,4": "target",
+      "-4,3": "target",
+      "-4,2": "target",
+      "-4,1": "target",
+      "-4,0": "target",
+      "-3,-1": "target",
+      "-2,-2": "target",
+      "0,-4": "target",
+      "-1,-3": "target",
+      "1,-4": "target",
+      "2,-4": "target",
+      "3,-4": "target",
+      "4,-4": "target",
+      "4,-3": "target",
+      "4,-2": "target",
+      "4,-1": "target",
+      "4,0": "target",
+      "3,1": "target",
+      "2,2": "target",
+      "1,3": "target",
+      "0,4": "target",
+      "-1,4": "target",
+      "-2,4": "target",
+      "-3,4": "target"
+    },
+    "grid_radius": 4
+  },
+  "aoe3": {
+    "id": "aoe3",
+    "cells": {
+      "0,0": "target",
+      "0,-1": "target",
+      "1,-1": "target"
+    },
+    "grid_radius": 4
+  },
+  "aoe2": {
+    "id": "aoe2",
+    "cells": {
+      "0,0": "target",
+      "1,-1": "target"
+    },
+    "grid_radius": 4
+  },
+  "aoe4": {
+    "id": "aoe4",
+    "cells": {
+      "0,0": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,-1": "target"
+    },
+    "grid_radius": 4
+  },
+  "aoe6": {
+    "id": "aoe6",
+    "cells": {
+      "0,0": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,-1": "target",
+      "2,-1": "target",
+      "-1,0": "target"
+    },
+    "grid_radius": 4
+  },
+  "aoe7": {
+    "id": "aoe7",
+    "cells": {
+      "0,0": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,-1": "target",
+      "2,-1": "target",
+      "1,-2": "target",
+      "2,-2": "target"
+    },
+    "grid_radius": 4
+  },
+  "aoe_explosion": {
+    "id": "aoe_explosion",
+    "cells": {
+      "0,0": "target",
+      "1,-1": "target",
+      "1,0": "target",
+      "0,-1": "target",
+      "2,-1": "target",
+      "1,-2": "target",
+      "2,-2": "target",
+      "-1,1": "target",
+      "-1,-1": "target",
+      "1,1": "target",
+      "3,-1": "target",
+      "3,-3": "target",
+      "1,-3": "target"
+    },
+    "grid_radius": 4
+  },
+  "Front2": {
+    "id": "Front2",
+    "cells": {
+      "0,0": "player",
+      "0,-1": "target",
+      "1,-1": "target"
+    },
+    "grid_radius": 4
+  },
+  "Front3": {
+    "id": "Front3",
+    "cells": {
+      "0,0": "player",
+      "0,-1": "target",
+      "1,-1": "target",
+      "-1,0": "target"
+    },
+    "grid_radius": 4
+  },
+  "Front4": {
+    "id": "Front4",
+    "cells": {
+      "0,0": "player",
+      "0,-1": "target",
+      "1,-1": "target",
+      "-1,0": "target",
+      "-1,1": "target"
+    },
+    "grid_radius": 4
+  },
+  "Front5": {
+    "id": "Front5",
+    "cells": {
+      "0,0": "player",
+      "0,-1": "target",
+      "1,-1": "target",
+      "-1,0": "target",
+      "-1,1": "target",
+      "0,1": "target"
+    },
+    "grid_radius": 4
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "Damage": {
+    "id": "Damage",
+    "description": "",
+    "effects": [
+      "Damage",
+      "Ranged_Damage",
+      "Use_Weapon"
+    ],
+    "no_repeat": true
+  },
+  "Change_Card_Position": {
+    "id": "Change_Card_Position",
+    "description": "",
+    "no_repeat": true,
+    "element_filter": false,
+    "element_weights": {},
+    "sub_containers": [],
+    "effects": [
+      "Change_This_Card_Position"
+    ],
+    "costs": [
+      "Reveal_Self"
+    ],
+    "conditions": [],
+    "triggers": [],
+    "weights": {}
+  }
+}

@@ -187,7 +187,7 @@ class RandomBuilder(tk.Frame):
         self._block_rule_vars = {}
         block_rules = {r["block_type"]: r["probability"]
                        for r in self._gen_config.get("block_rules", [])}
-        from card_builder.constants import BLOCK_TYPES
+        from card_builder.constants import BOX_TYPES as BLOCK_TYPES
         for bt in BLOCK_TYPES:
             row = tk.Frame(f, bg="#1a1a1a")
             row.pack(fill="x", padx=12, pady=1)
