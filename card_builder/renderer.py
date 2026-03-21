@@ -21,7 +21,7 @@ except ImportError:
 
 from .constants import (
     CARD_W, CARD_H, ARTWORK_W,
-    BLOCK_COLORS, BLOCK_SYMBOLS,
+    BOX_COLORS, BOX_SYMBOLS,
     ELEMENT_COLORS, ELEMENT_ICONS,
     TYPE_SYMBOLS, COND_SYMBOL, EFFECT_SYMBOL, COST_SYMBOL,
 )
@@ -149,7 +149,7 @@ class CardRenderer:
         c.create_rectangle(x0, y0, self.W-6, y1, fill="#111", outline="#444")
         symbols = []
         for blk in card.get("blocks", []):
-            symbols.append(BLOCK_SYMBOLS.get(blk["type"], "?"))
+            symbols.append(BOX_SYMBOLS.get(blk["type"], "?"))
             for ab in blk.get("abilities", []):
                 if ab.get("condition_id"):
                     symbols.append(COND_SYMBOL)
@@ -184,7 +184,7 @@ class CardRenderer:
             y0    = TOP + i * block_h
             y1    = y0 + block_h
             btype = blk["type"]
-            col   = BLOCK_COLORS.get(btype, "#333")
+            col   = BOX_COLORS.get(btype, "#333")
             c.create_rectangle(6, y0, self.W-self.AW-10, y1,
                                fill=col, outline="#888", width=1, stipple="gray50")
             c.create_text(10, y0+4, text=f"[{btype}]", anchor="nw",
@@ -201,35 +201,103 @@ class CardRenderer:
         max_w = self.W - self.AW - 28
         lh    = self.FS + 6
 
+        # ── Build header ──────────────────────────────────────────────────────
+        trigger_text = ""
+        if ab.get("trigger_id"):
+            trig = CD.get("trigger", ab["trigger_id"])
+            if trig:
+                t = trig.get("content_text") or trig.get("effect_text", "")
+                for k, v in ab.get("trigger_vals", {}).items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                trigger_text = t
+
+        cond_text = ""
         if ab.get("condition_id"):
             cond = CD.get("condition", ab["condition_id"])
             if cond:
-                txt = fill_placeholders(
-                    cond.get("content_text") or cond.get("effect_text", ""),
-                    ab.get("condition_vals", {}))
-                y = self._wrap(txt, x, y, max_w, FN, "#ffdd88", y_max)
+                t = cond.get("content_text") or cond.get("effect_text", "")
+                for k, v in ab.get("condition_vals", {}).items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                cond_text = t
 
-        atype = ab.get("ability_type", "Play")
-        costs = []
+        if trigger_text and cond_text:
+            prefix = f"If {trigger_text} and you have {cond_text}"
+        elif trigger_text:
+            prefix = f"If {trigger_text}"
+        elif cond_text:
+            prefix = f"If you have {cond_text}"
+        else:
+            prefix = ""
+
+        costs_text = []
         for ci in ab.get("costs", []):
             co = CD.get("cost", ci["cost_id"])
             if co:
-                costs.append(fill_placeholders(
-                    co.get("content_text") or co.get("effect_text", ""),
-                    ci.get("vals", {})))
-        tline = f"{atype}: {', '.join(costs)}" if costs else atype
-        if y + lh <= y_max:
-            c.create_text(x, y, text=tline, anchor="nw",
-                          font=FB, fill="#aaddff")
-            y += lh
+                t = co.get("content_text") or co.get("effect_text", "")
+                for k, v in ci.get("vals", {}).items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                costs_text.append(t)
+        cost_str = ", ".join(costs_text)
 
-        for ei in ab.get("effects", []):
-            eff = CD.get("effect", ei["effect_id"])
-            if eff:
-                etxt = fill_placeholders(
-                    eff.get("content_text") or eff.get("effect_text", ""),
-                    ei.get("vals", {}))
-                y = self._wrap(f"• {etxt}", x+6, y, max_w-6, FN, "white", y_max)
+        effects    = ab.get("effects", [])
+        choose_n   = ab.get("choose_n")
+        choose_rep = ab.get("choose_repeat", False)
+        n_eff      = len(effects) + len(ab.get("continuouses", []))
+        choose_part = ""
+        if choose_n and choose_n < n_eff:
+            choose_part = f" - Choose {choose_n}"
+            if choose_rep:
+                choose_part += ", same multiple times"
+
+        if prefix:
+            header = f"{prefix}; {cost_str}{choose_part}:" if cost_str else f"{prefix}{choose_part}:"
+        else:
+            header = f"{cost_str}{choose_part}:" if cost_str else ""
+
+        if header and y + lh <= y_max:
+            y = self._wrap(header, x, y, max_w, FB, "#aaddff", y_max)
+
+        # ── Effects as bullets ────────────────────────────────────────────────
+        eff_data = []
+        for ei in effects:
+            eff = CD.get("effect", ei.get("effect_id", ""))
+            if not eff:
+                continue
+            ct = eff.get("content_text") or eff.get("effect_text", "")
+            for k, v in ei.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
+            eff_data.append([eff, ei, ct])
+
+        chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))
+
+        def _est_lines(text: str) -> int:
+            if not text:
+                return 1
+            import math
+            return max(1, math.ceil(sum(len(w)+1 for w in text.split()) / chars_per_line))
+
+        avail_lines = max(1, (y_max - 4 - y) // lh)
+        total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+
+        if total_lines > avail_lines:
+            sortable = sorted(range(len(eff_data)),
+                              key=lambda i: float(eff_data[i][0].get("complexity_base", 1.0)),
+                              reverse=True)
+            for i in sortable:
+                eff, ei, _ = eff_data[i]
+                rt = eff.get("reminder_text", "")
+                if rt:
+                    for k, v in ei.get("vals", {}).items():
+                        rt = rt.replace(f"{{{k}}}", str(v))
+                    eff_data[i][2] = rt
+                total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+                if total_lines <= avail_lines:
+                    break
+
+        for _, _, etxt in eff_data:
+            if etxt and y + lh <= y_max:
+                y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
+
         return y + 4
 
     # ── Prowess renderer ──────────────────────────────────────────────────────
@@ -258,7 +326,7 @@ class CardRenderer:
             y0    = TOP + i * block_h
             y1    = y0 + block_h
             btype = blk["type"]
-            col   = BLOCK_COLORS.get(btype, "#333")
+            col   = BOX_COLORS.get(btype, "#333")
             c.create_rectangle(6, y0, self.W-8, y1,
                                fill=col, outline="#888", width=1, stipple="gray50")
             c.create_text(10, y0+4, text=f"[{btype}]", anchor="nw",

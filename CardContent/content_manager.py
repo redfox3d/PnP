@@ -11,6 +11,7 @@ from tkinter import ttk, messagebox, simpledialog
 from CardContent.template_parser import (
     parse_template, render_content_text,
     make_default_stat, sync_item_template,
+    collect_all_ids, has_broken_refs,
 )
 from CardContent.window_memory  import wm
 from CardContent.content_editor import ContentEditor
@@ -166,6 +167,7 @@ class ContentManager:
         vsb.pack(side="right",  fill="y")
         hsb.pack(side="bottom", fill="x")
         self.tree.pack(fill="both", expand=True)
+        self.tree.tag_configure("broken", background="#4a1a1a", foreground="#ff8888")
 
         self._apply_col_widths()
 
@@ -220,6 +222,8 @@ class ContentManager:
         try:    min_rar = int(self.rarity_filter.get())
         except: min_rar = None
 
+        all_ids = collect_all_ids(self.data)
+
         rows = []
         for type_name, items in self.data.items():
             if sel_type != "All" and type_name != sel_type:
@@ -234,18 +238,20 @@ class ContentManager:
                     continue
                 row = [type_name if c == "type" else item.get(c, "")
                        for c in self.columns]
-                rows.append(row)
+                rows.append((row, item))
 
         if sort_col and sort_col in self.columns:
             rev = not self.sort_directions.get(sort_col, True)
             ci  = self.columns.index(sort_col)
-            def _key(r):
-                try:    return (0, float(r[ci]))
-                except: return (1, str(r[ci]).lower())
+            def _key(entry):
+                try:    return (0, float(entry[0][ci]))
+                except: return (1, str(entry[0][ci]).lower())
             rows.sort(key=_key, reverse=rev)
 
-        for row in rows:
-            self.tree.insert("", "end", values=row)
+        for row, item in rows:
+            iid = self.tree.insert("", "end", values=row)
+            if has_broken_refs(item, all_ids):
+                self.tree.item(iid, tags=("broken",))
 
     # ── Sorting ────────────────────────────────────────────────────────────────
 

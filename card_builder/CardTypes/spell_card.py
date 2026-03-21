@@ -1,8 +1,8 @@
 """
 spell_card.py – Editor and renderer for Spells and Prowess cards.
 
-Spells:  element, artwork, mana cost symbols left of content, blocks
-Prowess: no element, no artwork, blocks full width
+Spells:  element, artwork, mana cost symbols left of content, boxes
+Prowess: no element, no artwork, boxes full width
 """
 
 import tkinter as tk
@@ -11,13 +11,13 @@ from tkinter import ttk
 from card_builder.CardTypes.base_card import BaseCardEditor, _render_content
 from card_builder.constants import (
     CARD_W, CARD_H, ARTWORK_W,
-    BLOCK_TYPES, BLOCK_COLORS, BLOCK_SYMBOLS,
+    BOX_TYPES, BOX_COLORS, BOX_SYMBOLS,
     ELEMENT_COLORS, ELEMENT_ICONS,
     TYPE_SYMBOLS, COND_SYMBOL, EFFECT_SYMBOL, COST_SYMBOL,
     MANA_COST_ID, GENERIC_MANA_ICON, GENERIC_MANA_COLOR,
 )
-from card_builder.models import empty_block, empty_ability
-from card_builder.widgets import BlockEditor
+from card_builder.models import empty_box, empty_ability
+from card_builder.widgets import BoxEditor
 
 try:
     from PIL import Image, ImageTk
@@ -45,7 +45,7 @@ class SpellCardEditor(BaseCardEditor):
                  font=("Arial", 9, "bold")).pack(side="left")
         self._new_block_var = tk.StringVar(value="Play")
         ttk.Combobox(ctrl, textvariable=self._new_block_var,
-                     values=BLOCK_TYPES, width=16, state="readonly").pack(
+                     values=BOX_TYPES, width=16, state="readonly").pack(
             side="left", padx=4)
         tk.Button(ctrl, text="+ Add Block", command=self._add_block,
                   bg="#1a6e3c", fg="white", font=("Arial", 8)).pack(
@@ -72,7 +72,7 @@ class SpellCardEditor(BaseCardEditor):
                      font=("Arial", 8)).pack(side="left", padx=4)
             tv = tk.StringVar(value=blk.get("type", "Play"))
             tc = ttk.Combobox(type_row, textvariable=tv,
-                              values=BLOCK_TYPES, state="readonly",
+                              values=BOX_TYPES, state="readonly",
                               width=16, font=("Arial", 8))
             tc.pack(side="left", padx=4)
 
@@ -83,7 +83,7 @@ class SpellCardEditor(BaseCardEditor):
 
             tc.bind("<<ComboboxSelected>>", _change_type)
 
-            BlockEditor(wrapper, blk,
+            BoxEditor(wrapper, blk,
                         on_change=self.on_change,
                         on_delete=lambda i=idx: self._del_block(i),
                         bg="#212121").pack(fill="x")
@@ -94,7 +94,7 @@ class SpellCardEditor(BaseCardEditor):
             from tkinter import messagebox
             messagebox.showwarning("Limit", "Max 4 blocks.")
             return
-        blocks.append(empty_block(self._new_block_var.get()))
+        blocks.append(empty_box(self._new_block_var.get()))
         self._rebuild_blocks()
         if self.on_change: self.on_change()
 
@@ -190,7 +190,7 @@ class SpellCardRenderer:
         c.create_rectangle(x0, y0, self.W-6, y1, fill="#111", outline="#444")
         symbols = []
         for blk in card.get("blocks", []):
-            symbols.append(BLOCK_SYMBOLS.get(blk["type"], "?"))
+            symbols.append(BOX_SYMBOLS.get(blk["type"], "?"))
             for ab in blk.get("abilities", []):
                 if ab.get("condition_id"):
                     symbols.append(COND_SYMBOL)
@@ -223,7 +223,7 @@ class SpellCardRenderer:
             y0    = top + i * block_h
             y1    = y0 + block_h
             btype = blk["type"]
-            col   = BLOCK_COLORS.get(btype, "#333")
+            col   = BOX_COLORS.get(btype, "#333")
 
             c.create_rectangle(left-MANA_STRIP_W, y0, right, y1,
                                fill=col, outline="#888", width=1, stipple="gray50")
@@ -292,16 +292,30 @@ class SpellCardRenderer:
         max_w = right - left - 8
         lh    = self.FS + 6
 
+        # ── Build header: "If [trigger] and you have [cond]; cost - Choose Y:" ─
+        trigger_text = ""
+        if ab.get("trigger_id"):
+            trig = CD.get("trigger", ab["trigger_id"])
+            if trig:
+                trigger_text = _render_content(trig, {
+                    "var_values": ab.get("trigger_vals", {}), "opt_values": {}})
+
+        cond_text = ""
         if ab.get("condition_id"):
             cond = CD.get("condition", ab["condition_id"])
             if cond:
-                txt = _render_content(cond, {
-                    "var_values": ab.get("condition_vals", {}),
-                    "opt_values": {}})
-                y = self._wrap(txt, x, y, max_w, FN, "#ffdd88", y_max)
+                cond_text = _render_content(cond, {
+                    "var_values": ab.get("condition_vals", {}), "opt_values": {}})
 
-        atype = ab.get("ability_type", "Play")
-        # Only show non-mana costs as text
+        if trigger_text and cond_text:
+            prefix = f"If {trigger_text} and you have {cond_text}"
+        elif trigger_text:
+            prefix = f"If {trigger_text}"
+        elif cond_text:
+            prefix = f"If you have {cond_text}"
+        else:
+            prefix = ""
+
         non_mana_costs = []
         for ci in ab.get("costs", []):
             if ci.get("cost_id") == MANA_COST_ID:
@@ -309,20 +323,81 @@ class SpellCardRenderer:
             co = CD.get("cost", ci["cost_id"])
             if co:
                 non_mana_costs.append(_render_content(co, {
-                    "var_values": ci.get("vals", {}),
-                    "opt_values": {}}))
-        tline = f"{atype}: {', '.join(non_mana_costs)}" if non_mana_costs else atype
-        if y + lh <= y_max:
-            c.create_text(x, y, text=tline, anchor="nw", font=FB, fill="#aaddff")
-            y += lh
+                    "var_values": ci.get("vals", {}), "opt_values": {}}))
+        cost_str = ", ".join(non_mana_costs)
 
-        for ei in ab.get("effects", []):
-            eff = CD.get("effect", ei["effect_id"])
-            if eff:
-                etxt = _render_content(eff, {
-                    "var_values": ei.get("vals", {}),
-                    "opt_values": ei.get("opt_vals", {})})
-                y = self._wrap(f"• {etxt}", x+6, y, max_w-6, FN, "white", y_max)
+        effects    = ab.get("effects", [])
+        choose_n   = ab.get("choose_n")
+        choose_rep = ab.get("choose_repeat", False)
+        n_eff      = len(effects) + len(ab.get("continuouses", []))
+        choose_part = ""
+        if choose_n and choose_n < n_eff:
+            choose_part = f" - Choose {choose_n}"
+            if choose_rep:
+                choose_part += ", same multiple times"
+
+        if prefix:
+            header = f"{prefix}; {cost_str}{choose_part}:" if cost_str else f"{prefix}{choose_part}:"
+        else:
+            header = f"{cost_str}{choose_part}:" if cost_str else ""
+
+        if header and y + lh <= y_max:
+            y = self._wrap(header, x, y, max_w, FB, "#aaddff", y_max)
+
+        # ── Draw effects as bullets, prefer content_text; swap complex → reminder ─
+        eff_data = []
+        for ei in effects:
+            eff = CD.get("effect", ei.get("effect_id", ""))
+            if not eff:
+                continue
+            ct = eff.get("content_text") or eff.get("content_box", "")
+            for k, v in ei.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
+            eff_data.append([eff, ei, ct])
+
+        for cont in ab.get("continuouses", []):
+            itm = CD.get("continuous", cont.get("effect_id", "")) if hasattr(CD, 'get') else None
+            if not itm:
+                continue
+            ct = itm.get("content_text") or itm.get("content_box", "")
+            for k, v in cont.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
+            eff_data.append([itm, cont, ct])
+
+        # Estimate fit; if tight, swap most complex items to reminder_text
+        chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))
+
+        def _est_lines(text: str) -> int:
+            if not text:
+                return 1
+            words = text.split()
+            total_chars = sum(len(w) + 1 for w in words)
+            import math
+            return max(1, math.ceil(total_chars / chars_per_line))
+
+        avail_lines = max(1, (y_max - 4 - y) // lh)
+        total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+
+        if total_lines > avail_lines:
+            # Sort by complexity descending (use complexity_base as proxy)
+            sortable = sorted(range(len(eff_data)),
+                              key=lambda i: float(eff_data[i][0].get("complexity_base", 1.0)),
+                              reverse=True)
+            for i in sortable:
+                eff, ei, _ = eff_data[i]
+                rt = eff.get("reminder_text", "")
+                if rt:
+                    for k, v in ei.get("vals", {}).items():
+                        rt = rt.replace(f"{{{k}}}", str(v))
+                    eff_data[i][2] = rt
+                total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+                if total_lines <= avail_lines:
+                    break
+
+        for _, _, etxt in eff_data:
+            if etxt and y + lh <= y_max:
+                y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
+
         return y + 4
 
     def _wrap(self, text, x, y, max_w, font, color, y_max):

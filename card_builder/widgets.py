@@ -2,14 +2,14 @@
 widgets.py – reusable editor widgets:
     PlaceholderFrame  – inline {X}/{Y} variable entry fields
     AbilityEditor     – one ability row (condition + type + costs + effects + choose)
-    BlockEditor       – one labelled block frame containing multiple AbilityEditors
+    BoxEditor         – one labelled box frame containing multiple AbilityEditors
 """
 
 import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
-from .constants import ABILITY_TYPES, BLOCK_COLORS, BLOCK_SYMBOLS
+from .constants import ABILITY_TYPES, BOX_COLORS, BOX_SYMBOLS
 from .data import get_content_data, parse_placeholders, fill_placeholders
 from .models import empty_ability
 
@@ -275,22 +275,22 @@ class AbilityEditor(tk.Frame):
         self.on_change()
 
 
-# ── BlockEditor ───────────────────────────────────────────────────────────────
+# ── BoxEditor ─────────────────────────────────────────────────────────────────
 
-class BlockEditor(tk.LabelFrame):
+class BoxEditor(tk.LabelFrame):
     """
-    Labelled frame for one card block.
-    Contains a header (Add Ability / Remove Block) and
+    Labelled frame for one card box.
+    Contains a header (Add Ability / Remove Box) and
     one AbilityEditor per ability.
     """
 
     def __init__(self, parent: tk.Widget, block: dict,
                  on_change: Callable, on_delete: Callable, **kw) -> None:
         btype = block.get("type", "?")
-        color = BLOCK_COLORS.get(btype, "#333")
+        color = BOX_COLORS.get(btype, "#333")
         super().__init__(
             parent,
-            text=f" {BLOCK_SYMBOLS.get(btype, '?')} {btype} ",
+            text=f" {BOX_SYMBOLS.get(btype, '?')} {btype} ",
             fg=color, font=("Arial", 9, "bold"),
             relief="groove", bd=2, **kw,
         )

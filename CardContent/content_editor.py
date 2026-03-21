@@ -337,7 +337,8 @@ class ContentEditor(tk.Toplevel):
                   stat_type: str = "variable",
                   choices: list  = None,
                   can_delete: bool = False,
-                  on_delete = None):
+                  on_delete = None,
+                  id_prefix: str = ""):
 
         row = tk.Frame(parent, relief="groove", bd=1)
         row.pack(fill="x", pady=1)
@@ -345,16 +346,24 @@ class ContentEditor(tk.Toplevel):
         tk.Label(row, text=label, width=10,
                  fg=label_color, font=("Arial", 9, "bold")).pack(side="left", padx=4)
 
-        id_var   = tk.StringVar(value=stat.get("id", ""))
-        id_entry = tk.Entry(row, textvariable=id_var, width=16,
+        full_id = stat.get("id", "")
+        ext_val = full_id[len(id_prefix):] if (id_prefix and full_id.startswith(id_prefix)) else full_id
+
+        if id_prefix:
+            tk.Label(row, text=id_prefix, fg="#666688",
+                     font=("Arial", 7)).pack(side="left", padx=0)
+
+        id_var   = tk.StringVar(value=ext_val)
+        id_entry = tk.Entry(row, textvariable=id_var, width=10,
                             font=("Arial", 8), fg="#aaaaff", bg="#1a1a2e")
         id_entry.pack(side="left", padx=2)
-        old_ref = [stat.get("id", "")]
+        old_ref = [full_id]
 
-        def _on_id(_e, s=stat, iv=id_var, ref=old_ref):
-            new = iv.get().strip()
+        def _on_id(_e, s=stat, iv=id_var, ref=old_ref, pfx=id_prefix):
+            ext = iv.get().strip()
+            new = pfx + ext if pfx else ext
             old = ref[0]
-            if new and new != old:
+            if ext and new != old:
                 n = rename_id_everywhere(old, new, self.data)
                 s["id"] = new
                 ref[0]  = new
@@ -437,7 +446,8 @@ class ContentEditor(tk.Toplevel):
 
             self._stat_row(self._var_frame, label=f"{{{vname}}}",
                            label_color="#5588cc", stat=stat,
-                           stat_type="variable", can_delete=True, on_delete=_del)
+                           stat_type="variable", can_delete=True, on_delete=_del,
+                           id_prefix=f"{self.item.get('id', 'item')}.")
 
     # ── Rebuild opts ───────────────────────────────────────────────────────────
 
@@ -480,6 +490,7 @@ class ContentEditor(tk.Toplevel):
 
                 self._stat_row(grp, label=choice, label_color="#cc8833",
                                stat=stat, stat_type="choice", choices=choices,
+                               id_prefix=f"{self.item.get('id', 'item')}.{opt_key}.",
                                can_delete=True, on_delete=_del)
 
     # ── Sub-editors ────────────────────────────────────────────────────────────
@@ -582,6 +593,7 @@ class ConditionsEditor(tk.Toplevel):
         wm.restore(self, "conditions_editor", "540x660")
         self.cond = stat_or_item.setdefault("conditions", {})
         self._build()
+        self.protocol("WM_DELETE_WINDOW", self._save_and_close)
 
     def _build(self):
         outer = tk.Frame(self)
@@ -756,7 +768,7 @@ class ConditionsEditor(tk.Toplevel):
         tk.Entry(f, textvariable=self._notes_var, width=46).grid(
             row=row, column=0, columnspan=3, sticky="we", padx=8); row += 1
 
-        tk.Button(self, text="Save", command=self._save,
+        tk.Button(self, text="Save", command=self._save_and_close,
                   bg="#1a6e3c", fg="white", width=14).pack(pady=10)
 
     # ── ID condition UI ────────────────────────────────────────────────────────
@@ -808,6 +820,25 @@ class ConditionsEditor(tk.Toplevel):
                 tk.Label(rf, text=f"({info['type']}  {info['item_id']})",
                          fg="#888", font=("Arial", 8)).pack(side="left", padx=4)
 
+            # val_min / val_max for this id_condition
+            for lbl, fkey in [("Min", "val_min"), ("Max", "val_max")]:
+                tk.Label(rf, text=lbl, font=("Arial", 7), fg="#aaaaaa").pack(
+                    side="left", padx=(4, 0))
+                vv = tk.StringVar(value=str(entry.get(fkey, "")))
+                ev = tk.Entry(rf, textvariable=vv, width=5, font=("Arial", 8))
+                ev.pack(side="left", padx=1)
+
+                def _on_val(_, e=entry, k=fkey, v=vv):
+                    raw = v.get().strip()
+                    if raw:
+                        try:    e[k] = float(raw)
+                        except: pass
+                    else:
+                        e.pop(k, None)
+
+                ev.bind("<FocusOut>", _on_val)
+                ev.bind("<Return>",   _on_val)
+
             tk.Button(rf, text="✕", fg="red",
                       command=lambda e=entry: self._remove_id(e),
                       font=("Arial", 8, "bold"), width=2).pack(side="left", padx=2)
@@ -826,7 +857,8 @@ class ConditionsEditor(tk.Toplevel):
 
     # ── Save ───────────────────────────────────────────────────────────────────
 
-    def _save(self):
+    def _commit(self):
+        """Persist all fields into self.cond without closing the window."""
         # Mana
         for key in ("min_mana", "max_mana"):
             var = getattr(self, f"_{key}_var")
@@ -877,4 +909,6 @@ class ConditionsEditor(tk.Toplevel):
         if notes: self.cond["notes"] = notes
         else:     self.cond.pop("notes", None)
 
+    def _save_and_close(self):
+        self._commit()
         self.destroy()

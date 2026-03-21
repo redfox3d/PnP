@@ -2,7 +2,7 @@
 constants.py – all static configuration.
 """
 
-BLOCK_TYPES = [
+BOX_TYPES = [
     "Play", "Excavate", "Hand", "Concentration",
     "Enchantment", "Equipped", "Exhausted", "Fleeting", "Lost",
 ]
@@ -19,9 +19,9 @@ GENERIC_MANA_COLOR = "#888888"
 MANA_COST_ID = "Mana"
 
 NO_ELEMENT_TYPES  = ["Supplies", "Equipment", "Alchemy", "Prowess"]
-BLOCK_CARD_TYPES  = ["Spells", "Prowess"]
+BOX_CARD_TYPES    = ["Spells", "Prowess"]
 
-BLOCK_COLORS = {
+BOX_COLORS = {
     "Play":          "#1a3e8e",
     "Excavate":      "#8B6914",
     "Hand":          "#1a6e3c",
@@ -51,7 +51,7 @@ ELEMENT_ICONS = {
     "Meta":   "✨",
 }
 
-BLOCK_SYMBOLS = {
+BOX_SYMBOLS = {
     "Play":          "▶",
     "Excavate":      "⛏",
     "Hand":          "✋",

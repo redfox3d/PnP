@@ -72,7 +72,7 @@ def empty_card(card_type: str = "Spells") -> dict:
     return base
 
 
-def empty_block(btype: str = "Play") -> dict:
+def empty_box(btype: str = "Play") -> dict:
     return {"type": btype, "abilities": []}
 
 

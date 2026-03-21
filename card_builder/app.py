@@ -6,9 +6,9 @@ import copy
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from .constants import CARD_W, CARD_H, BLOCK_TYPES
+from .constants import CARD_W, CARD_H, BOX_TYPES
 from .models import (
-    empty_card, empty_block, load_cards, save_cards,
+    empty_card, empty_box, load_cards, save_cards,
     ALL_CARD_TYPES, CARD_TYPE_PARENT,
 )
 from .CardTypes import get_editor, get_renderer

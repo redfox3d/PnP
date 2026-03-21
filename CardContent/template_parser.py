@@ -192,28 +192,22 @@ def render_content_text(content_box: str,
                         opt_selections: dict) -> str:
     """
     Render content_box (structural template) into plain text.
-    Supports {X} inside option choices, e.g. [,{X}] or [top,{X}].
+    Used for the Content Box → Content Text preview.
     """
     text = _expand_special_markers(content_box)
 
-    opt_idx = 0
+    for name, val in var_values.items():
+        text = text.replace(f"{{{name}}}", str(val) if val else name)
 
+    opt_idx = 0
     def _replace(m):
         nonlocal opt_idx
         default = m.group(1).split(",")[0].strip()
         choice  = opt_selections.get(str(opt_idx), default)
         opt_idx += 1
-        # Substitute {X} variables inside the chosen option text
-        for name, val in var_values.items():
-            choice = choice.replace(f"{{{name}}}", str(val) if val else name)
         return choice
 
     text = re.sub(r"\[([^\]]+)\]", _replace, text)
-
-    # Substitute remaining {X} variables outside of options
-    for name, val in var_values.items():
-        text = text.replace(f"{{{name}}}", str(val) if val else name)
-
     return text
 
 
@@ -244,9 +238,13 @@ def make_default_stat(stat_id: str = "") -> dict:
     }
 
 
-def generate_stat_id(effect_id: str, counter: int) -> str:
-    """Auto-generate ID like 'Draw.0'."""
-    return f"{effect_id}.{counter}"
+def generate_stat_id(effect_id: str, counter: int,
+                     kind: str = "v") -> str:
+    """
+    Auto-generate ID like 'Draw.v0' for variables or 'Draw.o0' for options.
+    kind: 'v' = variable, 'o' = option/choice
+    """
+    return f"{effect_id}.{kind}{counter}"
 
 
 # ── ID registry & reference tools ─────────────────────────────────────────────
@@ -320,6 +318,29 @@ def rename_id_everywhere(old_id: str, new_id: str, data: dict) -> int:
     return count
 
 
+def has_broken_refs(item: dict, all_ids: dict) -> bool:
+    """
+    Returns True if any id_condition entry in this item references a stat ID
+    that does not exist in all_ids (as returned by collect_all_ids).
+    """
+    def _check_cond(cond: dict) -> bool:
+        for entry in cond.get("id_conditions", []):
+            if isinstance(entry, dict) and entry.get("id") and entry["id"] not in all_ids:
+                return True
+        return False
+
+    if _check_cond(item.get("conditions", {})):
+        return True
+    for stat in item.get("variables", {}).values():
+        if _check_cond(stat.get("conditions", {})):
+            return True
+    for opt in item.get("options", {}).values():
+        for stat in opt.get("per_choice", {}).values():
+            if _check_cond(stat.get("conditions", {})):
+                return True
+    return False
+
+
 def rename_content_id(old_id: str, new_id: str, data: dict) -> int:
     """
     Rename a content item's ID and update all child stat IDs that start
@@ -361,7 +382,8 @@ def sync_item_template(item: dict) -> None:
     item_id  = item.get("id", "item")
 
     used_ids: set = set()
-    counter = [0]
+    var_counter  = [0]
+    opt_counter  = [0]
 
     def _collect(stat):
         if stat.get("id"):
@@ -371,12 +393,20 @@ def sync_item_template(item: dict) -> None:
     for opt in old_opts.values():
         for stat in opt.get("per_choice", {}).values(): _collect(stat)
 
-    def _next_id() -> str:
-        while generate_stat_id(item_id, counter[0]) in used_ids:
-            counter[0] += 1
-        sid = generate_stat_id(item_id, counter[0])
+    def _next_var_id() -> str:
+        while generate_stat_id(item_id, var_counter[0], "v") in used_ids:
+            var_counter[0] += 1
+        sid = generate_stat_id(item_id, var_counter[0], "v")
         used_ids.add(sid)
-        counter[0] += 1
+        var_counter[0] += 1
+        return sid
+
+    def _next_opt_id() -> str:
+        while generate_stat_id(item_id, opt_counter[0], "o") in used_ids:
+            opt_counter[0] += 1
+        sid = generate_stat_id(item_id, opt_counter[0], "o")
+        used_ids.add(sid)
+        opt_counter[0] += 1
         return sid
 
     new_vars: dict = {}
@@ -384,9 +414,9 @@ def sync_item_template(item: dict) -> None:
         if v in old_vars:
             new_vars[v] = old_vars[v]
             if not new_vars[v].get("id"):
-                new_vars[v]["id"] = _next_id()
+                new_vars[v]["id"] = _next_var_id()
         else:
-            new_vars[v] = make_default_stat(_next_id())
+            new_vars[v] = make_default_stat(_next_var_id())
     item["variables"] = new_vars
 
     new_opts: dict = {}
@@ -398,8 +428,8 @@ def sync_item_template(item: dict) -> None:
             if c in old_pc:
                 pc[c] = old_pc[c]
                 if not pc[c].get("id"):
-                    pc[c]["id"] = _next_id()
+                    pc[c]["id"] = _next_opt_id()
             else:
-                pc[c] = make_default_stat(_next_id())
+                pc[c] = make_default_stat(_next_opt_id())
         new_opts[key] = {"choices": choices, "per_choice": pc}
     item["options"] = new_opts
