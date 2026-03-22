@@ -14,6 +14,8 @@ from CardContent.template_parser import (
 from CardContent.window_memory import wm
 from CardContent.template_syntax_help import SyntaxHelpWindow
 
+from card_builder.constants import BOX_TYPES
+
 ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta"]
 
 # Card types for the weight section grouping
@@ -724,6 +726,28 @@ class ConditionsEditor(tk.Toplevel):
         ttk.Separator(f, orient="horizontal").grid(
             row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
 
+        # ── Allowed box types ─────────────────────────────────────────────────
+        tk.Label(f, text="Erlaubte Box-Typen",
+                 font=("Arial", 9, "bold")).grid(
+            row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+        tk.Label(f, text="☑ = erlaubt   (leer = alle erlaubt)",
+                 fg="#888", font=("Arial", 8)).grid(
+            row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+
+        allowed_bt = self.cond.get("allowed_box_types", [])
+        self._bt_vars = {}
+        bt_f = tk.Frame(f)
+        bt_f.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
+        for i, bt in enumerate(BOX_TYPES):
+            enabled = (bt in allowed_bt) if allowed_bt else True
+            v = tk.BooleanVar(value=enabled)
+            self._bt_vars[bt] = v
+            tk.Checkbutton(bt_f, text=bt, variable=v, anchor="w",
+                           width=14).grid(row=i // 3, column=i % 3, sticky="w")
+
+        ttk.Separator(f, orient="horizontal").grid(
+            row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
+
         # ── ID Conditions ─────────────────────────────────────────────────────
         tk.Label(f, text="ID Bedingungen", font=("Arial", 9, "bold")).grid(
             row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
@@ -885,6 +909,13 @@ class ConditionsEditor(tk.Toplevel):
             self.cond["allowed_elements"] = sel
         else:
             self.cond.pop("allowed_elements", None)
+
+        # Allowed box types – only save if not all checked
+        sel_bt = [bt for bt, v in self._bt_vars.items() if v.get()]
+        if len(sel_bt) < len(BOX_TYPES):
+            self.cond["allowed_box_types"] = sel_bt
+        else:
+            self.cond.pop("allowed_box_types", None)
 
         # Element weights – only save non-empty entries
         weights = {}

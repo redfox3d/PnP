@@ -508,13 +508,13 @@ class ContentManager:
                 "element_weights": {el: 0 for el in ELEMENTS},
                 "conditions":      {},
                 "variables": {
-                    v: make_default_stat(_nid()) for v in parsed["variables"]
+                    v: make_default_stat(_nid_var()) for v in parsed["variables"]
                 },
                 "options": {
                     str(i): {
                         "choices": choices,
                         "per_choice": {
-                            c: make_default_stat(_nid()) for c in choices
+                            c: make_default_stat(_nid_opt()) for c in choices
                         },
                     }
                     for i, choices in enumerate(parsed["options"])
@@ -524,6 +524,9 @@ class ContentManager:
             self._refresh_table()
             self.save_all()
             win.destroy()
+            # Direkt den vollen Editor öffnen
+            ContentEditor(self.root, new_item, self.data,
+                          on_save=lambda: (self._refresh_table(), self.save_all()))
 
         tk.Button(win, text="Create", command=_create,
                   bg="#1a6e3c", fg="white", width=16).grid(

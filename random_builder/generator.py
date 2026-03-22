@@ -193,7 +193,7 @@ class CardGenerator:
                 # Pick one item from a named container (no_repeat enforced)
                 result = self._pick_from_container(
                     rule["container"], element, used_container_effects,
-                    cv_budget=effect_budget)
+                    cv_budget=effect_budget, block_type=block_type)
                 if result:
                     rtype, rdata = result
                     self._apply_content_item(ability, rtype, rdata, effect_budget)
@@ -204,19 +204,28 @@ class CardGenerator:
                                 item, rdata.get("vals", {}), rdata.get("opt_vals", {}))
             elif "effect_id" in rule:
                 eid = rule["effect_id"]
+                item = self.effects.get(eid)
+                if item:
+                    allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
+                    if allowed_bt and block_type and block_type not in allowed_bt:
+                        continue
                 solo_key = f"__solo__{eid}"
                 if eid in used_container_effects.get(solo_key, set()):
                     continue
                 used_container_effects.setdefault(solo_key, set()).add(eid)
                 eff = self._build_effect(eid, element, effect_budget)
                 if eff:
-                    item = self.effects.get(eid)
                     if item:
                         effect_budget -= cv_content_item(
                             item, eff.get("vals", {}), eff.get("opt_vals", {}))
                     ability["effects"].append(eff)
             elif "cost_id" in rule:
                 cid = rule["cost_id"]
+                cost_item = self.costs.get(cid)
+                if cost_item:
+                    allowed_bt = cost_item.get("conditions", {}).get("allowed_box_types", [])
+                    if allowed_bt and block_type and block_type not in allowed_bt:
+                        continue
                 solo_key = f"__solo_cost__{cid}"
                 if cid in used_container_effects.get(solo_key, set()):
                     continue
@@ -231,7 +240,7 @@ class CardGenerator:
     # ── Effect picking ────────────────────────────────────────────────────────
 
     def _pick_from_container(self, container_id: str, element: str,
-                              used: dict, cv_budget: float):
+                              used: dict, cv_budget: float, block_type: str = ""):
         """
         Pick one item from a container.
         Returns (type_str, data_dict) or None.
@@ -252,7 +261,12 @@ class CardGenerator:
                     continue
                 if no_repeat and iid in already:
                     continue
-                candidates.append((type_str, iid, lookup[iid]))
+                item = lookup[iid]
+                # Filter by allowed_box_types (empty list = all allowed)
+                allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
+                if allowed_bt and block_type and block_type not in allowed_bt:
+                    continue
+                candidates.append((type_str, iid, item))
 
         if not candidates:
             return None

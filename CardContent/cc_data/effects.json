@@ -187,6 +187,68 @@
             "conditions": {},
             "variables": {},
             "options": {}
+        },
+        {
+            "id": "Pulverize",
+            "content_box": "{X}",
+            "content_text": "{X}",
+            "reminder_text": "Create {X} Powder Tokens based on the Metal Sources you sacrificed for this Card.",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Pulverize.v0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
+            },
+            "options": {}
+        },
+        {
+            "id": "Grow",
+            "content_box": "{X}",
+            "content_text": "{X}",
+            "reminder_text": "Create {X} Herb Tokens of your Choice",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0,
+                "Metal": 0,
+                "Ice": 0,
+                "Nature": 0,
+                "Blood": 0,
+                "Meta": 0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Grow.v0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
+            },
+            "options": {}
         }
     ]
 }
