@@ -4,7 +4,7 @@ constants.py – all static configuration.
 
 BOX_TYPES = [
     "Play", "Excavate", "Hand", "Concentration",
-    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Lost",
+    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Forgotten", "Lost",
 ]
 
 ABILITY_TYPES = ["Trigger", "Play", "Continues", "Activate"]

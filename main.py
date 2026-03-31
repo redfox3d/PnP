@@ -43,6 +43,8 @@ class App:
         self.root.configure(bg="#1a1a1a")
         self._apply_style()
         self._current_panel = None
+        from utils import enable_mousewheel_scroll
+        enable_mousewheel_scroll(self.root)
         self.show_launcher()
         self.root.mainloop()
 

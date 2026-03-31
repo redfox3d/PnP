@@ -15,11 +15,31 @@
       "probability": 0.95
     },
     {
+      "block_type": "Excavate",
+      "probability": 0.05
+    },
+    {
       "block_type": "Hand",
       "probability": 0.15
     },
     {
+      "block_type": "Concentration",
+      "probability": 0.03
+    },
+    {
+      "block_type": "Enchantment",
+      "probability": 0.03
+    },
+    {
+      "block_type": "Equipped",
+      "probability": 0.01
+    },
+    {
       "block_type": "Fleeting",
+      "probability": 0.1
+    },
+    {
+      "block_type": "Forgotten",
       "probability": 0.1
     },
     {
@@ -27,8 +47,91 @@
       "probability": 0.15
     }
   ],
-  "content_rules": [],
-  "cost_rules": [],
+  "content_rules": [
+    {
+      "container": "Change_Card_Position",
+      "probability": 1.0
+    },
+    {
+      "container": "Damage",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Draw",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Pulverize",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Grow",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Multicast",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Precise",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Forget_This_Card",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Loose_This_Card",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Discard_This_Card",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Recycle_This_Card",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Drain",
+      "probability": 1.0
+    },
+    {
+      "cost_id": "Mana",
+      "probability": 1.0
+    },
+    {
+      "cost_id": "Change_This_Card_Position_Play",
+      "probability": 1.0
+    },
+    {
+      "cost_id": "Recycle_Cards",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Trig_Card_Changes_Position",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Trig_Movement",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Play_Skill",
+      "probability": 1.0
+    }
+  ],
+  "cost_rules": [
+    {
+      "cost_id": "Mana",
+      "probability": 0.95
+    },
+    {
+      "cost_id": "Change_This_Card_Position_Play",
+      "probability": 0.1
+    }
+  ],
   "cv_target": 3.0,
-  "cv_per_box_max": 3.0
+  "cv_per_box_max": 3.0,
+  "cv_card_min": -999.0
 }

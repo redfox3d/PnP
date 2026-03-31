@@ -1,7 +1,7 @@
 """
 template_parser.py – Template parsing, rendering, ID management, reference tracking.
 
-Content Box syntax  (for structure):
+Sigil syntax  (for structure):
     {X}          → free variable named X
     [a, b, c]    → dropdown with choices a, b, c
     [\\Elements] → expands to all game elements as choices
@@ -56,10 +56,10 @@ def _expand_special_markers(text: str) -> str:
     return text
 
 
-# ── Content Box parsing ────────────────────────────────────────────────────────
+# ── Sigil parsing ────────────────────────────────────────────────────────
 
-def parse_template(content_box: str) -> dict:
-    expanded  = _expand_special_markers(content_box)
+def parse_template(sigil: str) -> dict:
+    expanded  = _expand_special_markers(sigil)
     variables = list(dict.fromkeys(re.findall(r"\{([A-Za-z0-9_]+)\}", expanded)))
     raw_opts  = re.findall(r"\[([^\]]+)\]", expanded)
     options   = [
@@ -129,14 +129,14 @@ def _render_block(text: str, var_values: dict, opt_selections: dict) -> str:
     """
     Process a single level of [if/elif/else/endif] tags and substitute {X}.
     Recursively handles nested blocks.
+    Unclosed [if ...] blocks (missing [/if]) are auto-closed at end of string.
     """
-    # Pattern: [if COND]...[elif COND]...[else]...[/if]
-    IF_PAT = re.compile(
-        r"\[if ([^\]]+)\](.*?)(?=\[elif |\[else\]|\[/if\])",
-        re.DOTALL
-    )
-
     result = text
+
+    # Auto-close any unclosed [if ...] blocks so the regex always matches
+    open_count  = len(re.findall(r"\[if [^\]]+\]", result))
+    close_count = len(re.findall(r"\[/if\]", result))
+    result += "[/if]" * max(0, open_count - close_count)
 
     # Process if-blocks iteratively (outermost first)
     while True:
@@ -187,14 +187,14 @@ def _render_block(text: str, var_values: dict, opt_selections: dict) -> str:
     return result
 
 
-def render_content_text(content_box: str,
+def render_content_text(sigil: str,
                         var_values: dict,
                         opt_selections: dict) -> str:
     """
-    Render content_box (structural template) into plain text.
-    Used for the Content Box → Content Text preview.
+    Render sigil (structural template) into plain text.
+    Used for the Sigil → Content Text preview.
     """
-    text = _expand_special_markers(content_box)
+    text = _expand_special_markers(sigil)
 
     for name, val in var_values.items():
         text = text.replace(f"{{{name}}}", str(val) if val else name)
@@ -231,7 +231,7 @@ def make_default_stat(stat_id: str = "") -> dict:
         "id":         stat_id,
         "rarity":     10,
         "complexity": 1.0,
-        "cv1":        0,
+        "cv1":        1,
         "cv2":        0,
         "cv3":        0,
         "conditions": {},
@@ -376,7 +376,7 @@ def rename_content_id(old_id: str, new_id: str, data: dict) -> int:
 # ── Template sync ──────────────────────────────────────────────────────────────
 
 def sync_item_template(item: dict) -> None:
-    parsed   = parse_template(item.get("content_box", ""))
+    parsed   = parse_template(item.get("sigil", ""))
     old_vars = item.get("variables", {})
     old_opts = item.get("options",   {})
     item_id  = item.get("id", "item")

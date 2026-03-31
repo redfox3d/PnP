@@ -39,6 +39,11 @@ class ContentEditor(tk.Toplevel):
 
     def __init__(self, parent, item: dict, data: dict, on_save=None):
         super().__init__(parent)
+        # Migrate legacy key on the fly
+        if "content_box" in item and "sigil" not in item:
+            item["sigil"] = item.pop("content_box")
+        elif "content_box" in item:
+            item.pop("content_box")
         self.item         = item
         self.data         = data
         self.on_save      = on_save
@@ -95,13 +100,19 @@ class ContentEditor(tk.Toplevel):
         self._id_var = tk.StringVar(value=self.item.get("id", ""))
         tk.Entry(self._f, textvariable=self._id_var, width=36).grid(
             row=self._row, column=1, columnspan=3, sticky="we", padx=8, pady=3)
+        tk.Button(self._f, text="⧉",
+                  command=lambda: (self.clipboard_clear(),
+                                   self.clipboard_append(self._id_var.get()),
+                                   self._flash(f"Kopiert: {self._id_var.get()}")),
+                  font=("Arial", 8), padx=2, pady=0).grid(
+            row=self._row, column=4, sticky="w", padx=2)
         tk.Label(self._f, text="(Umbenennen propagiert alle Child-IDs)",
                  fg="#888", font=("Arial", 8)).grid(
-            row=self._row, column=4, sticky="w", padx=4)
+            row=self._row, column=5, sticky="w", padx=4)
         self._row += 1
 
         lbl("Content Box")
-        self._cb_var = tk.StringVar(value=self.item.get("content_box", ""))
+        self._cb_var = tk.StringVar(value=self.item.get("sigil", ""))  # stored as "sigil"
         tk.Entry(self._f, textvariable=self._cb_var, width=52).grid(
             row=self._row, column=1, columnspan=4, sticky="we", padx=8, pady=3)
         tk.Button(self._f, text="?", command=lambda: SyntaxHelpWindow(self),
@@ -148,19 +159,16 @@ class ContentEditor(tk.Toplevel):
 
         # cv1 / cv2 / cv3 – content value fields for the whole item
         lbl("cv1")
+        cv_f = tk.Frame(self._f)
+        cv_f.grid(row=self._row, column=1, columnspan=5, sticky="w", padx=8, pady=3)
         self._cv1_var = tk.StringVar(value=str(self.item.get("cv1", "")))
-        tk.Entry(self._f, textvariable=self._cv1_var, width=10).grid(
-            row=self._row, column=1, sticky="w", padx=8, pady=3)
-        tk.Label(self._f, text="cv2", font=("Arial", 9, "bold")).grid(
-            row=self._row, column=2, sticky="w", padx=4)
+        tk.Entry(cv_f, textvariable=self._cv1_var, width=10).pack(side="left", padx=2)
+        tk.Label(cv_f, text="cv2", font=("Arial", 9, "bold")).pack(side="left", padx=(8, 2))
         self._cv2_var = tk.StringVar(value=str(self.item.get("cv2", "")))
-        tk.Entry(self._f, textvariable=self._cv2_var, width=10).grid(
-            row=self._row, column=3, sticky="w", padx=4, pady=3)
-        tk.Label(self._f, text="cv3", font=("Arial", 9, "bold")).grid(
-            row=self._row, column=4, sticky="w", padx=4)
+        tk.Entry(cv_f, textvariable=self._cv2_var, width=10).pack(side="left", padx=2)
+        tk.Label(cv_f, text="cv3", font=("Arial", 9, "bold")).pack(side="left", padx=(8, 2))
         self._cv3_var = tk.StringVar(value=str(self.item.get("cv3", "")))
-        tk.Entry(self._f, textvariable=self._cv3_var, width=10).grid(
-            row=self._row, column=5, sticky="w", padx=4, pady=3)
+        tk.Entry(cv_f, textvariable=self._cv3_var, width=10).pack(side="left", padx=2)
         self._row += 1
 
         bf = tk.Frame(self._f)
@@ -319,7 +327,7 @@ class ContentEditor(tk.Toplevel):
         self._rebuild_opts()
 
     def _on_cb_change(self, *_):
-        self.item["content_box"] = self._cb_var.get()
+        self.item["sigil"] = self._cb_var.get()
         sync_item_template(self.item)
         self._rebuild_vars()
         self._rebuild_opts()
@@ -352,13 +360,35 @@ class ContentEditor(tk.Toplevel):
         ext_val = full_id[len(id_prefix):] if (id_prefix and full_id.startswith(id_prefix)) else full_id
 
         if id_prefix:
-            tk.Label(row, text=id_prefix, fg="#666688",
-                     font=("Arial", 7)).pack(side="left", padx=0)
+            # Truncate display to max 14 chars, show full prefix as tooltip
+            display_pfx = id_prefix if len(id_prefix) <= 14 else "…" + id_prefix[-12:]
+            pfx_lbl = tk.Label(row, text=display_pfx, fg="#666688",
+                               font=("Arial", 7), width=14, anchor="e")
+            pfx_lbl.pack(side="left", padx=0)
+            # Tooltip: show full prefix on hover
+            def _enter(e, w=pfx_lbl, full=id_prefix):
+                w._tip = tk.Toplevel(w); w._tip.wm_overrideredirect(True)
+                x, y = w.winfo_rootx(), w.winfo_rooty() + 18
+                w._tip.geometry(f"+{x}+{y}")
+                tk.Label(w._tip, text=full, bg="#333355", fg="white",
+                         font=("Arial", 8), relief="solid", bd=1).pack()
+            def _leave(e, w=pfx_lbl):
+                if hasattr(w, "_tip"): w._tip.destroy(); del w._tip
+            pfx_lbl.bind("<Enter>", _enter)
+            pfx_lbl.bind("<Leave>", _leave)
 
         id_var   = tk.StringVar(value=ext_val)
         id_entry = tk.Entry(row, textvariable=id_var, width=10,
                             font=("Arial", 8), fg="#aaaaff", bg="#1a1a2e")
         id_entry.pack(side="left", padx=2)
+
+        def _copy_id(fid=full_id):
+            self.clipboard_clear()
+            self.clipboard_append(fid)
+            self._flash(f"Kopiert: {fid}")
+        tk.Button(row, text="⧉", command=_copy_id,
+                  font=("Arial", 7), padx=2, pady=0).pack(side="left", padx=1)
+
         old_ref = [full_id]
 
         def _on_id(_e, s=stat, iv=id_var, ref=old_ref, pfx=id_prefix):
@@ -378,7 +408,7 @@ class ContentEditor(tk.Toplevel):
         fields = [
             ("rarity",     tk.StringVar(value=str(stat.get("rarity",     10))),  7),
             ("complexity", tk.StringVar(value=str(stat.get("complexity", 1.0))), 7),
-            ("cv1",        tk.StringVar(value=str(stat.get("cv1", 0))),           5),
+            ("cv1",        tk.StringVar(value=str(stat.get("cv1", 1))),           5),
             ("cv2",        tk.StringVar(value=str(stat.get("cv2", 0))),           5),
             ("cv3",        tk.StringVar(value=str(stat.get("cv3", 0))),           5),
         ]
@@ -516,7 +546,7 @@ class ContentEditor(tk.Toplevel):
                 self._flash(f"Content ID '{old_id}' → '{new_id}'  ({n} Änderungen)")
 
         self.item["id"]              = new_id
-        self.item["content_box"]     = self._cb_var.get()
+        self.item["sigil"]            = self._cb_var.get()
         self.item["content_text"]    = self._ct_var.get()
         self.item["reminder_text"]   = self._rt_var.get()
         try:    self.item["rarity"]          = int(self._rar_var.get())
@@ -566,9 +596,9 @@ class ContentEditor(tk.Toplevel):
             else:
                 self.item.pop("element_weights", None)
 
+        self.destroy()
         if self.on_save:
             self.on_save()
-        self.destroy()
 
 
 # ── Conditions Editor ──────────────────────────────────────────────────────────

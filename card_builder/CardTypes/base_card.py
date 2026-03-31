@@ -318,21 +318,29 @@ class ContentSelector(tk.Frame):
 
 def _render_content(item: dict, val: dict) -> str:
     """
-    Render a content item's content_text by substituting var_values and opt_values.
-    Falls back to effect_text for old-format items.
-    Supports [if X=1]...[else]...[/if] syntax via template_parser if available.
+    Render a content item using the template_parser:
+      - content_text with [if OPT0=…] conditionals  → render_display_text
+      - sigil (Content Box) with [a,b,c] dropdowns   → render_content_text
+    Falls back to effect_text/sigil for legacy items.
     """
-    template = item.get("content_text") or item.get("effect_text", "")
-    var_vals = val.get("var_values", {})
-    opt_vals = val.get("opt_values", {})
+    ct        = item.get("content_text") or item.get("effect_text", "")
+    sigil     = item.get("sigil", "")
+    var_vals  = val.get("var_values", {})
+    opt_vals  = val.get("opt_values", {})
 
     try:
-        from CardContent.template_parser import render_display_text
-        return render_display_text(template, var_vals, opt_vals)
+        from CardContent.template_parser import render_display_text, render_content_text
+        if ct:
+            return render_display_text(ct, var_vals, opt_vals)
+        elif sigil:
+            return render_content_text(sigil, var_vals, opt_vals)
+        return ""
     except ImportError:
         pass
 
-    # Fallback: simple substitution
+    template = ct or sigil
+
+    # Fallback: simple substitution (no template_parser available)
     import re
     text = template
     for name, v in var_vals.items():
@@ -424,12 +432,14 @@ class BaseCardEditor(tk.Frame):
         tk.Label(row, text=f"[{cat} › {ct}]", bg=self.BG, fg="#555",
                  font=("Arial", 8, "italic")).pack(side="left", padx=8)
 
-        # Artwork
-        art_row = tk.Frame(self._f, bg=self.BG)
-        art_row.pack(fill="x", padx=8, pady=4)
-        self._art = ArtworkPicker(art_row, self.card.get("artwork", ""),
-                                  on_change=self._art_changed)
-        self._art.pack(side="left")
+        # Artwork – nur bei Karten die kein Spell/Prowess sind
+        self._art = None
+        if ct not in ("Spells", "Prowess"):
+            art_row = tk.Frame(self._f, bg=self.BG)
+            art_row.pack(fill="x", padx=8, pady=4)
+            self._art = ArtworkPicker(art_row, self.card.get("artwork", ""),
+                                      on_change=self._art_changed)
+            self._art.pack(side="left")
 
         self._sep()
 
@@ -442,7 +452,8 @@ class BaseCardEditor(tk.Frame):
         if self.on_change: self.on_change()
 
     def _art_changed(self):
-        self.card["artwork"] = self._art.get()
+        if self._art:
+            self.card["artwork"] = self._art.get()
         if self.on_change: self.on_change()
 
     # ── Helpers ───────────────────────────────────────────────────────────────

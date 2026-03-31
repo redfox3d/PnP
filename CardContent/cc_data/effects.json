@@ -2,26 +2,26 @@
     "Effect": [
         {
             "id": "Draw",
-            "content_box": "{X}",
-            "content_text": "{X}",
+            "content_text": "Draw {X} Cards",
             "reminder_text": "",
             "rarity": 10,
             "complexity_base": 1.0,
             "element_weights": {
-                "Fire": 0,
-                "Metal": 0,
-                "Ice": 0,
-                "Nature": 0,
-                "Blood": 0,
-                "Meta": 0,
-                "Potion": 0,
-                "Skills": 0
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0
             },
             "variables": {
                 "X": {
                     "rarity": 10,
                     "complexity": 0.3,
-                    "conditions": {},
+                    "conditions": {
+                        "var_min": 1.0,
+                        "var_max": 20.0
+                    },
                     "id": "Draw.X",
                     "cv1": 0.0,
                     "cv2": 0.0,
@@ -29,181 +29,41 @@
                 }
             },
             "options": {},
-            "conditions": {}
-        },
-        {
-            "id": "Change_This_Card_Position",
-            "content_box": "[Add to Hand, Discard, Forget, Lose] ",
-            "content_text": "Add to Hand",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0,
-                "Metal": 0,
-                "Ice": 0,
-                "Nature": 0,
-                "Blood": 0,
-                "Meta": 0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "variables": {},
-            "options": {
-                "0": {
-                    "choices": [
-                        "Add to Hand",
-                        "Discard",
-                        "Forget",
-                        "Lose"
-                    ],
-                    "per_choice": {
-                        "Add to Hand": {
-                            "rarity": 10,
-                            "complexity": 1.0,
-                            "conditions": {},
-                            "id": "Change_Card_Position_0"
-                        },
-                        "Discard": {
-                            "rarity": 10,
-                            "complexity": 1.0,
-                            "conditions": {},
-                            "id": "Change_Card_Position_1"
-                        },
-                        "Forget": {
-                            "rarity": 10,
-                            "complexity": 1.0,
-                            "conditions": {},
-                            "id": "Change_Card_Position_2"
-                        },
-                        "Lose": {
-                            "rarity": 10,
-                            "complexity": 1.5,
-                            "conditions": {},
-                            "id": "Change_Card_Position_3",
-                            "cv1": 0.0,
-                            "cv2": 0.0,
-                            "cv3": 0.0
-                        }
-                    }
-                }
-            },
-            "conditions": {}
-        },
-        {
-            "id": "Change_Any_Cards_Position",
-            "content_box": "{x}{y}[any, news, ezc]",
-            "content_text": "{x}{y}any",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0,
-                "Metal": 0,
-                "Ice": 0,
-                "Nature": 0,
-                "Blood": 0,
-                "Meta": 0,
-                "Potion": 0,
-                "Skills": 0
-            },
             "conditions": {},
-            "variables": {
-                "x": {
-                    "id": "Change_Any_Cards_Position_0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 0,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {}
-                },
-                "y": {
-                    "id": "Change_Any_Cards_Position_1",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 0,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {}
-                }
-            },
-            "options": {
-                "0": {
-                    "choices": [
-                        "any",
-                        "news",
-                        "ezc"
-                    ],
-                    "per_choice": {
-                        "any": {
-                            "id": "Change_Any_Cards_Position_2",
-                            "rarity": 10,
-                            "complexity": 1.0,
-                            "cv1": 0,
-                            "cv2": 0,
-                            "cv3": 0,
-                            "conditions": {}
-                        },
-                        "news": {
-                            "id": "Change_Any_Cards_Position_3",
-                            "rarity": 10,
-                            "complexity": 1.0,
-                            "cv1": 0,
-                            "cv2": 0,
-                            "cv3": 0,
-                            "conditions": {}
-                        },
-                        "ezc": {
-                            "id": "Change_Any_Cards_Position_4",
-                            "rarity": 10,
-                            "complexity": 1.0,
-                            "cv1": 0,
-                            "cv2": 0,
-                            "cv3": 0,
-                            "conditions": {}
-                        }
-                    }
-                }
-            }
+            "sigil": "{X}"
         },
         {
             "id": "Use_Weapon",
-            "content_box": "",
-            "content_text": "",
+            "content_text": "Use your Weapon",
             "reminder_text": "",
             "rarity": 10,
             "complexity_base": 1.0,
             "element_weights": {
-                "Fire": 0,
-                "Metal": 0,
-                "Ice": 0,
-                "Nature": 0,
-                "Blood": 0,
-                "Meta": 0,
-                "Potion": 0,
-                "Skills": 0
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0
             },
             "conditions": {},
             "variables": {},
-            "options": {}
+            "options": {},
+            "sigil": ""
         },
         {
             "id": "Pulverize",
-            "content_box": "{X}",
-            "content_text": "{X}",
+            "content_text": "Pulverize {X}",
             "reminder_text": "Create {X} Powder Tokens based on the Metal Sources you sacrificed for this Card.",
             "rarity": 10,
             "complexity_base": 1.0,
             "element_weights": {
-                "Fire": 0,
-                "Metal": 0,
-                "Ice": 0,
-                "Nature": 0,
-                "Blood": 0,
-                "Meta": 0,
-                "Potion": 0,
-                "Skills": 0
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0
             },
             "conditions": {},
             "variables": {
@@ -217,24 +77,22 @@
                     "conditions": {}
                 }
             },
-            "options": {}
+            "options": {},
+            "sigil": "{X}"
         },
         {
             "id": "Grow",
-            "content_box": "{X}",
-            "content_text": "{X}",
+            "content_text": "Grow {X}",
             "reminder_text": "Create {X} Herb Tokens of your Choice",
             "rarity": 10,
             "complexity_base": 1.0,
             "element_weights": {
-                "Fire": 0,
-                "Metal": 0,
-                "Ice": 0,
-                "Nature": 0,
-                "Blood": 0,
-                "Meta": 0,
-                "Potion": 0,
-                "Skills": 0
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0
             },
             "conditions": {},
             "variables": {
@@ -248,7 +106,172 @@
                     "conditions": {}
                 }
             },
-            "options": {}
+            "options": {},
+            "sigil": "{X}"
+        },
+        {
+            "id": "Multicast",
+            "content_text": "Copy this cards play effect X Times",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 3.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {
+                "allowed_box_types": [
+                    "Play"
+                ]
+            },
+            "variables": {},
+            "options": {},
+            "weights_open": true,
+            "card_type_weights": {},
+            "sigil": ""
+        },
+        {
+            "id": "Precise",
+            "content_text": "Precise",
+            "reminder_text": "this Sigils damage can't miss",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {},
+            "sigil": ""
+        },
+        {
+            "id": "Forget_This_Card",
+            "content_text": "Forget this Card",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {},
+            "sigil": ""
+        },
+        {
+            "id": "Loose_This_Card",
+            "content_text": "Loose this Carrd",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {},
+            "sigil": ""
+        },
+        {
+            "id": "Discard_This_Card",
+            "content_text": "Discard this Card",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {},
+            "sigil": ""
+        },
+        {
+            "id": "Recycle_This_Card",
+            "content_text": "Recycle this Card",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {},
+            "sigil": ""
+        },
+        {
+            "id": "Drain",
+            "content_text": "Drain {X}",
+            "reminder_text": "Deal {X} Damage, Heal {X}",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Drain.v0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 1,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {},
+                    "dice_only": true
+                }
+            },
+            "options": {},
+            "sigil": "{X}"
         }
     ]
 }

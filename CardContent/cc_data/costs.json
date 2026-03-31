@@ -2,7 +2,6 @@
     "Cost": [
         {
             "id": "Mana",
-            "content_box": "",
             "content_text": "",
             "reminder_text": "",
             "rarity": 10,
@@ -19,7 +18,157 @@
             },
             "conditions": {},
             "variables": {},
-            "options": {}
+            "options": {},
+            "sigil": ""
+        },
+        {
+            "id": "Change_This_Card_Position_Play",
+            "content_text": "Reveal",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {
+                "0": {
+                    "choices": [
+                        "Reveal",
+                        "Forget",
+                        "Loose",
+                        "Recycle"
+                    ],
+                    "per_choice": {
+                        "Reveal": {
+                            "id": "Change_This_Card_Position_Play.o0",
+                            "rarity": 7,
+                            "complexity": 1.0,
+                            "cv1": 0.1,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Forget": {
+                            "id": "Change_This_Card_Position_Play.o2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0.7,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Loose": {
+                            "id": "Change_This_Card_Position_Play.o3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1.2,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Recycle": {
+                            "id": "Change_This_Card_Position_Play.o4",
+                            "rarity": 3,
+                            "complexity": 1.0,
+                            "cv1": -0.5,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            },
+            "sigil": "[Reveal, Forget, Loose, Recycle]"
+        },
+        {
+            "id": "Recycle_Cards",
+            "content_text": "Recyle {X} [if OPT0=Hand] Skills, from your Hand [elif OPT0=Discard] Skills, from your Discard Pile [elif OPT0=Forget] Forgotten Skills [elif OPT0=Loose] Lost Skills",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "cv1": 1.0,
+            "cv2": 0.0,
+            "cv3": 0.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Recycle_Cards.v0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 1,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
+            },
+            "options": {
+                "0": {
+                    "choices": [
+                        "Hand",
+                        "Discard",
+                        "Forget",
+                        "Loose"
+                    ],
+                    "per_choice": {
+                        "Hand": {
+                            "id": "Recycle_Cards.o0",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Discard": {
+                            "id": "Recycle_Cards.o1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Forget": {
+                            "id": "Recycle_Cards.o3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Loose": {
+                            "id": "Recycle_Cards.o2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            },
+            "sigil": "{X} [Hand, Discard, Forget, Loose]"
         }
     ]
 }

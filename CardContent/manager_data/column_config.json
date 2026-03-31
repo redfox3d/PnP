@@ -3,17 +3,17 @@
         "type",
         "id",
         "rarity",
-        "content_box",
+        "sigil",
         "content_text",
         "reminder_text"
     ],
     "column_order": [],
     "column_widths": {
-        "type": 296,
-        "id": 295,
-        "rarity": 64,
-        "content_box": 563,
+        "type": 297,
+        "id": 296,
+        "rarity": 176,
+        "sigil": 562,
         "content_text": 338,
-        "reminder_text": 345
+        "reminder_text": 232
     }
 }

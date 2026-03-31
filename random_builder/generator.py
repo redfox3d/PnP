@@ -53,9 +53,10 @@ class CardGenerator:
 
     def __init__(self, content_data: dict, containers: dict,
                  box_config: dict, gen_config: dict):
-        self.effects   = _list_to_lookup(content_data.get("Effect",    []))
-        self.costs     = _list_to_lookup(content_data.get("Cost",      []))
-        self.conditions= _list_to_lookup(content_data.get("Condition", []))
+        self.effects    = _list_to_lookup(content_data.get("Effect",    []))
+        self.costs      = _list_to_lookup(content_data.get("Cost",      []))
+        self.conditions = _list_to_lookup(content_data.get("Condition", []))
+        self.triggers   = _list_to_lookup(content_data.get("Trigger",   []))
         self.containers = containers
         self.box_config = box_config
         self.cfg        = gen_config
@@ -63,11 +64,21 @@ class CardGenerator:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def generate(self, count: int) -> list:
+        cv_min = float(self.cfg.get("cv_card_min", -999.0))
         cards = []
-        for _ in range(count):
+        attempts = 0
+        max_attempts = count * 10  # avoid infinite loop
+        while len(cards) < count and attempts < max_attempts:
+            attempts += 1
             card = self._generate_one()
-            if card is not None:
-                cards.append(card)
+            if card is None:
+                continue
+            if card.get("_cv", 0) < cv_min:
+                print(f"  [gen] Karte verworfen: CV={card['_cv']:.2f} < min={cv_min:.2f}")
+                continue
+            cards.append(card)
+        if len(cards) < count:
+            print(f"  [gen] Warnung: nur {len(cards)}/{count} Karten erfüllen CV-Min={cv_min}")
         return cards
 
     # ── Card generation ───────────────────────────────────────────────────────
@@ -75,13 +86,21 @@ class CardGenerator:
     def _generate_one(self) -> dict:
         element = self._pick_element()
         block_types = self._pick_blocks(element)
+        print(f"  [gen_one] Element={element}, Boxen={block_types}")
 
-        # Track which containers have been used (for no_repeat)
-        used_container_effects: dict = {}  # container_id → set of used effect_ids
+        # Container no_repeat dedup is shared across all boxes on a card.
+        # Solo-item dedup is per-box (same effect can appear in different boxes).
+        used_containers: dict = {}  # container_id → set of used effect_ids (card-wide)
 
         blocks = []
         for btype in block_types:
-            ability = self._build_ability(btype, element, used_container_effects)
+            # Fresh solo-dedup dict for each box
+            used_solo: dict = {}
+            ability = self._build_ability(btype, element, used_containers, used_solo)
+            n_eff = len(ability.get("effects", []))
+            n_cost = len(ability.get("costs", []))
+            print(f"    [gen_one] Box={btype}: {n_eff} Effekte, {n_cost} Kosten, "
+                  f"trigger={ability.get('trigger_id')}")
             block = {"type": btype, "abilities": [ability]}
             blocks.append(block)
 
@@ -150,38 +169,54 @@ class CardGenerator:
     # ── Ability ───────────────────────────────────────────────────────────────
 
     def _build_ability(self, block_type: str, element: str,
-                       used_container_effects: dict) -> dict:
+                       used_containers: dict,
+                       used_solo: dict) -> dict:
+        """
+        used_containers : shared across all boxes on this card (container no_repeat)
+        used_solo       : fresh per box (solo-item within-box dedup only)
+        """
+        is_play = (block_type == "Play")
+
+        # Non-Play boxes get a random trigger
+        trigger_id, trigger_vals = None, {}
+        if not is_play and self.triggers:
+            tid = random.choice(list(self.triggers.keys()))
+            trigger_id   = tid
+            trigger_vals = {}   # TODO: pick variable values when trigger vars exist
+
         ability = {
             "condition_id":   None,
             "condition_vals": {},
-            "ability_type":   "Play",
+            "trigger_id":     trigger_id,
+            "trigger_vals":   trigger_vals,
+            "ability_type":   "Play" if is_play else "Trigger",
             "costs":          [],
             "effects":        [],
             "choose_n":       None,
             "choose_repeat":  False,
         }
 
-        # ── Costs ─────────────────────────────────────────────────────────────
-        for rule in self.cfg.get("cost_rules", []):
-            prob = float(rule.get("probability", 1.0))
-            if random.random() >= prob:
-                continue
-            cost_id = rule.get("cost_id", "")
-            if cost_id:
-                cost = self._build_cost(cost_id, element)
-                if cost:
-                    ability["costs"].append(cost)
+        # ── Costs (only on Play boxes) ─────────────────────────────────────────
+        if is_play:
+            for rule in self.cfg.get("cost_rules", []):
+                prob = float(rule.get("probability", 1.0))
+                if random.random() >= prob:
+                    continue
+                cost_id = rule.get("cost_id", "")
+                if cost_id:
+                    cost = self._build_cost(cost_id, element)
+                    if cost:
+                        ability["costs"].append(cost)
 
         # ── CV budget for this box ─────────────────────────────────────────────
         cv_per_box = float(self.cfg.get("cv_per_box_max", 3.0))
-        # Base cost CV (costs reduce the budget available for effects)
         cost_cv = sum(
             cv_content_item(self.costs[c["cost_id"]],
                             c.get("vals", {}), c.get("opt_vals", {}))
             for c in ability["costs"]
             if c["cost_id"] in self.costs
         )
-        effect_budget = cv_per_box + cost_cv  # effects can eat this much
+        effect_budget = cv_per_box + cost_cv
 
         # ── Effects ───────────────────────────────────────────────────────────
         for rule in self.cfg.get("content_rules", []):
@@ -190,9 +225,8 @@ class CardGenerator:
                 continue
 
             if "container" in rule:
-                # Pick one item from a named container (no_repeat enforced)
                 result = self._pick_from_container(
-                    rule["container"], element, used_container_effects,
+                    rule["container"], element, used_containers,
                     cv_budget=effect_budget, block_type=block_type)
                 if result:
                     rtype, rdata = result
@@ -209,10 +243,11 @@ class CardGenerator:
                     allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
                     if allowed_bt and block_type and block_type not in allowed_bt:
                         continue
+                # Solo dedup is per-box only
                 solo_key = f"__solo__{eid}"
-                if eid in used_container_effects.get(solo_key, set()):
+                if eid in used_solo.get(solo_key, set()):
                     continue
-                used_container_effects.setdefault(solo_key, set()).add(eid)
+                used_solo.setdefault(solo_key, set()).add(eid)
                 eff = self._build_effect(eid, element, effect_budget)
                 if eff:
                     if item:
@@ -227,13 +262,12 @@ class CardGenerator:
                     if allowed_bt and block_type and block_type not in allowed_bt:
                         continue
                 solo_key = f"__solo_cost__{cid}"
-                if cid in used_container_effects.get(solo_key, set()):
+                if cid in used_solo.get(solo_key, set()):
                     continue
-                used_container_effects.setdefault(solo_key, set()).add(cid)
+                used_solo.setdefault(solo_key, set()).add(cid)
                 cost = self._build_cost(cid, element)
                 if cost:
                     ability["costs"].append(cost)
-            # condition_id / trigger_id rules – reserved for future use
 
         return ability
 
@@ -387,24 +421,19 @@ class CardGenerator:
 
         for var_name, stat in variables.items():
             cond = stat.get("conditions", {})
-            vmin = float(cond.get("var_min", 1))
-            vmax = float(cond.get("var_max", 10))
+            # Default range 0–10 if not specified
+            vmin = int(float(cond.get("var_min", 0)))
+            vmax = int(float(cond.get("var_max", 10)))
 
             x_max = max_x_for_budget(stat, share)
             x_max = min(x_max, vmax)
-            x_min = max(vmin, 1)
+            x_min = max(vmin, 0)
 
             if x_min > x_max:
                 x = x_min
             else:
-                x = random.uniform(x_min, x_max)
+                x = random.randint(int(x_min), int(x_max))
 
-            # Round to int if no decimal variance
-            if abs(x - round(x)) < 0.05:
-                x = int(round(x))
-            else:
-                x = round(x, 1)
-
-            vals[var_name] = x
+            vals[var_name] = int(x)
 
         return vals

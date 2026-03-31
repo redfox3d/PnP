@@ -15,8 +15,9 @@ import os
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _RANDOM_CARDS_FILE = os.path.join(_ROOT, "cards", "Random", "Spells", "cards.json")
-_GEN_CONFIG_FILE   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gen_config.json")
-_BOX_CONFIG_FILE   = os.path.join(_ROOT, "CardContent", "cc_data", "box_config.json")
+_GEN_CONFIG_FILE      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gen_config.json")
+_BOX_CONFIG_FILE      = os.path.join(_ROOT, "CardContent", "cc_data", "box_config.json")
+_CONTENT_PROBS_FILE   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "content_probs.json")
 
 _DEFAULT_GEN_CONFIG = {
     "count": 10,
@@ -93,3 +94,21 @@ def load_box_config() -> dict:
 def save_box_config(cfg: dict):
     with open(_BOX_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
+
+
+# ── Content rule probabilities (separate from gen_config) ─────────────────────
+
+def load_content_probs() -> dict:
+    """Returns {key: float} of saved probability overrides. Default = 1.0 for all."""
+    if not os.path.exists(_CONTENT_PROBS_FILE):
+        return {}
+    try:
+        with open(_CONTENT_PROBS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_content_probs(probs: dict):
+    with open(_CONTENT_PROBS_FILE, "w", encoding="utf-8") as f:
+        json.dump(probs, f, indent=2, ensure_ascii=False)

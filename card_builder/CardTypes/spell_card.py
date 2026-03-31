@@ -119,6 +119,8 @@ class SpellCardRenderer:
         self._img = None
 
     def render(self, card: dict):
+        print(f"[renderer] render() card={card.get('name')} "
+              f"blocks={[b.get('type') for b in card.get('blocks',[])]} ...")
         c  = self.canvas
         c.delete("all")
         ct = card.get("card_type", "Spells")
@@ -143,12 +145,10 @@ class SpellCardRenderer:
                           fill=color, outline="gold", width=2)
             c.create_text(cx, cy, text=ELEMENT_ICONS.get(elem, "?"),
                           font=("Arial", 16))
-            # Artwork strip right side
+            # Element strip on the right — no artwork box for Spells
             self._draw_artwork_strip(card)
-            # Artwork box
-            self._draw_artwork_box(card, 6, 40, self.W-self.AW-8, 200)
             content_left = 6 + MANA_STRIP_W
-            content_top  = 206
+            content_top  = 40
         else:
             # Prowess: no artwork, no strip
             content_left = 6
@@ -215,7 +215,9 @@ class SpellCardRenderer:
         BOTTOM  = self.H - 6
         block_h = (BOTTOM - top) // len(blocks)
         from card_builder.data import get_content_data
+        print(f"[renderer] _draw_blocks: {len(blocks)} Blöcke, lade CD ...")
         CD = get_content_data()
+        print(f"[renderer] CD geladen")
         FN = (self.FF, self.FS)
         FB = (self.FF, self.FS, "bold")
 
@@ -298,14 +300,16 @@ class SpellCardRenderer:
             trig = CD.get("trigger", ab["trigger_id"])
             if trig:
                 trigger_text = _render_content(trig, {
-                    "var_values": ab.get("trigger_vals", {}), "opt_values": {}})
+                    "var_values": ab.get("trigger_vals", {}),
+                    "opt_values": ab.get("trigger_opt_vals", {})})
 
         cond_text = ""
         if ab.get("condition_id"):
             cond = CD.get("condition", ab["condition_id"])
             if cond:
                 cond_text = _render_content(cond, {
-                    "var_values": ab.get("condition_vals", {}), "opt_values": {}})
+                    "var_values": ab.get("condition_vals", {}),
+                    "opt_values": ab.get("condition_opt_vals", {})})
 
         if trigger_text and cond_text:
             prefix = f"If {trigger_text} and you have {cond_text}"
@@ -323,7 +327,8 @@ class SpellCardRenderer:
             co = CD.get("cost", ci["cost_id"])
             if co:
                 non_mana_costs.append(_render_content(co, {
-                    "var_values": ci.get("vals", {}), "opt_values": {}}))
+                    "var_values": ci.get("vals", {}),
+                    "opt_values": ci.get("opt_vals", {})}))
         cost_str = ", ".join(non_mana_costs)
 
         effects    = ab.get("effects", [])
@@ -350,18 +355,39 @@ class SpellCardRenderer:
             eff = CD.get("effect", ei.get("effect_id", ""))
             if not eff:
                 continue
-            ct = eff.get("content_text") or eff.get("content_box", "")
-            for k, v in ei.get("vals", {}).items():
-                ct = ct.replace(f"{{{k}}}", str(v))
+            # ei["content_text"] is pre-rendered by _to_render_card → use directly
+            # Otherwise render on the fly with proper template functions
+            if ei.get("content_text"):
+                ct = ei["content_text"]
+            else:
+                from CardContent.template_parser import render_content_text, render_display_text
+                raw_ct    = eff.get("content_text", "")
+                raw_sigil = eff.get("sigil", "")
+                vals_ei   = ei.get("vals", {})
+                opts_ei   = ei.get("opt_vals", {})
+                if raw_ct:
+                    ct = render_display_text(raw_ct, vals_ei, opts_ei)
+                elif raw_sigil:
+                    ct = render_content_text(raw_sigil, vals_ei, opts_ei)
+                else:
+                    ct = eff.get("id", "")
             eff_data.append([eff, ei, ct])
 
         for cont in ab.get("continuouses", []):
             itm = CD.get("continuous", cont.get("effect_id", "")) if hasattr(CD, 'get') else None
             if not itm:
                 continue
-            ct = itm.get("content_text") or itm.get("content_box", "")
-            for k, v in cont.get("vals", {}).items():
-                ct = ct.replace(f"{{{k}}}", str(v))
+            from CardContent.template_parser import render_content_text, render_display_text
+            raw_ct    = itm.get("content_text", "")
+            raw_sigil = itm.get("sigil", "")
+            vals_c    = cont.get("vals", {})
+            opts_c    = cont.get("opt_vals", {})
+            if raw_ct:
+                ct = render_display_text(raw_ct, vals_c, opts_c)
+            elif raw_sigil:
+                ct = render_content_text(raw_sigil, vals_c, opts_c)
+            else:
+                ct = itm.get("id", "")
             eff_data.append([itm, cont, ct])
 
         # Estimate fit; if tight, swap most complex items to reminder_text

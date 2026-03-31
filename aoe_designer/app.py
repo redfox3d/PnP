@@ -6,7 +6,7 @@ Cell states (click to cycle):
     Right-click always resets to empty.
 
 Patterns are saved under IDs to aoe_patterns.json next to this module.
-Use \\AOE in a Content Box [\\AOE] to auto-import all saved pattern IDs as options.
+Use \\AOE in a Sigil [\\AOE] to auto-import all saved pattern IDs as options.
 """
 
 import math
@@ -343,7 +343,7 @@ class AoEDesigner(tk.Frame):
             tk.Label(leg, text=label, bg="#1a1a1a", fg="#888",
                      font=("Arial", 8)).pack(side="left")
 
-        tk.Label(parent, text="Syntax:  [\\AOE]  in Content Box",
+        tk.Label(parent, text="Syntax:  [\\AOE]  in Sigil",
                  bg="#1a1a1a", fg="#555",
                  font=("Arial", 7, "italic")).pack(pady=(6, 2), padx=6)
 

@@ -2,7 +2,6 @@
     "Trigger": [
         {
             "id": "Trig_Card_Changes_Position",
-            "content_box": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, Element_List]",
             "content_text": "You Discards {X} any",
             "reminder_text": "",
             "rarity": 10,
@@ -148,11 +147,11 @@
                         }
                     }
                 }
-            }
+            },
+            "sigil": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, Element_List]"
         },
         {
             "id": "Trig_Movement",
-            "content_box": "[You/Players/Opponents/Anyone] [,{X}]",
             "content_text": "You/Players/Opponents/Anyone ",
             "reminder_text": "",
             "rarity": 10,
@@ -212,7 +211,99 @@
                         }
                     }
                 }
-            }
+            },
+            "sigil": "[You/Players/Opponents/Anyone] [,{X}]"
+        },
+        {
+            "id": "Play_Skill",
+            "content_text": "If you plays a \\Elements Skill",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "cv1": 1.0,
+            "cv2": 0.0,
+            "cv3": 0.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Meta": 0.0,
+                "Potion": 0,
+                "Skills": 0
+            },
+            "conditions": {},
+            "variables": {},
+            "options": {
+                "0": {
+                    "choices": [
+                        "Fire",
+                        "Metal",
+                        "Ice",
+                        "Nature",
+                        "Blood",
+                        "Meta"
+                    ],
+                    "per_choice": {
+                        "Fire": {
+                            "id": "Play_Skill.o0",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Metal": {
+                            "id": "Play_Skill.o1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Ice": {
+                            "id": "Play_Skill.o2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Nature": {
+                            "id": "Play_Skill.o3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Blood": {
+                            "id": "Play_Skill.o4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Meta": {
+                            "id": "Play_Skill.o5",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            },
+            "sigil": "[\\Elements]"
         }
     ]
 }

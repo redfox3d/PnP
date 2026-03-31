@@ -62,10 +62,16 @@ class ContentManager:
 
         for items in self.data.values():
             for item in items:
+                # Migrate legacy key content_box → sigil
+                if "content_box" in item and "sigil" not in item:
+                    item["sigil"] = item.pop("content_box")
+                elif "content_box" in item:
+                    item.pop("content_box")
+
                 w = item.setdefault("element_weights", {})
                 for el in ELEMENTS:
                     w.setdefault(el, 0)
-                item.setdefault("content_box",     item.get("effect_text", ""))
+                item.setdefault("sigil",           item.get("effect_text", ""))
                 item.setdefault("content_text",    item.get("effect_text", ""))
                 item.setdefault("reminder_text",   "")
                 item.setdefault("rarity",          10)
@@ -129,6 +135,8 @@ class ContentManager:
 
         tk.Button(bf, text="＋ New Content", command=self._open_create_editor,
                   bg="#1a6e3c", fg="white").pack(side="left", padx=6)
+        tk.Button(bf, text="🗑 Delete", command=self._delete_selected,
+                  bg="#6e1a1a", fg="white").pack(side="left", padx=6)
         tk.Button(bf, text="Add Column", command=self._add_column).pack(side="left", padx=6)
         tk.Button(bf, text="💾 Save All", command=self.save_all,
                   bg="#1a3e8e", fg="white").pack(side="right", padx=6)
@@ -185,7 +193,7 @@ class ContentManager:
     # ── Column helpers ─────────────────────────────────────────────────────────
 
     def _all_columns(self) -> list:
-        cols = ["type", "id", "rarity", "content_box", "content_text", "reminder_text"]
+        cols = ["type", "id", "rarity", "sigil", "content_text", "reminder_text"]
         for items in self.data.values():
             for item in items:
                 for k in item:
@@ -438,99 +446,110 @@ class ContentManager:
         ContentEditor(self.root, item, self.data,
                       on_save=lambda: (self._refresh_table(), self.save_all()))
 
+    def _delete_selected(self):
+        sel = self.tree.focus()
+        if not sel:
+            return
+        vals = self.tree.item(sel)["values"]
+        if not vals or len(vals) < 2:
+            return
+        try:
+            type_idx = self.columns.index("type")
+            id_idx   = self.columns.index("id")
+        except ValueError:
+            return
+        type_name = vals[type_idx]
+        item_id   = str(vals[id_idx])
+        if not messagebox.askyesno("Löschen?",
+                                   f"'{item_id}' ({type_name}) wirklich löschen?"):
+            return
+        self.data[type_name] = [
+            i for i in self.data.get(type_name, [])
+            if str(i.get("id", "")) != item_id
+        ]
+        self._refresh_table()
+        self.save_all()
+
     def _open_create_editor(self):
+        """Show a minimal dialog (Type + ID only), then open ContentEditor directly."""
         win = tk.Toplevel(self.root)
         win.title("New Content")
-        wm.restore(win, "create_editor", "560x360")
+        win.resizable(False, False)
         win.columnconfigure(1, weight=1)
 
-        fields = [
-            ("ID",              "id",              ""),
-            ("Content Box",     "content_box",     ""),
-            ("Reminder Text",   "reminder_text",   ""),
-            ("Rarity",          "rarity",          "10"),
-            ("Complexity Base", "complexity_base", "1.0"),
-        ]
-        entries = {}
-        for row, (label, key, default) in enumerate(fields):
-            tk.Label(win, text=label).grid(
-                row=row, column=0, sticky="w", padx=8, pady=4)
-            e = tk.Entry(win, width=48)
-            e.insert(0, default)
-            e.grid(row=row, column=1, sticky="we", padx=8, pady=4)
-            entries[key] = e
-
-        r = len(fields)
-        tk.Label(win, text="Type").grid(row=r, column=0, sticky="w", padx=8, pady=4)
+        tk.Label(win, text="Type").grid(row=0, column=0, sticky="w", padx=8, pady=8)
         type_box = ttk.Combobox(win, values=list(FILES.keys()),
-                                state="readonly", width=16)
+                                state="readonly", width=20)
         type_box.current(0)
-        type_box.grid(row=r, column=1, sticky="w", padx=8, pady=4)
+        type_box.grid(row=0, column=1, sticky="w", padx=8, pady=8)
 
-        def _create():
+        tk.Label(win, text="ID").grid(row=1, column=0, sticky="w", padx=8, pady=8)
+        id_entry = tk.Entry(win, width=36)
+        id_entry.grid(row=1, column=1, sticky="we", padx=8, pady=8)
+
+        tk.Label(win, text="Content Box").grid(row=2, column=0, sticky="w", padx=8, pady=8)
+        sigil_entry = tk.Entry(win, width=36)
+        sigil_entry.grid(row=2, column=1, sticky="we", padx=8, pady=8)
+
+        tk.Label(win, text="Content Text").grid(row=3, column=0, sticky="w", padx=8, pady=8)
+        ct_entry = tk.Entry(win, width=36)
+        ct_entry.grid(row=3, column=1, sticky="we", padx=8, pady=8)
+
+        # Auto-fill Content Text from Sigil when Sigil loses focus
+        def _auto_ct(*_):
+            if not ct_entry.get():
+                ct_entry.delete(0, "end")
+                ct_entry.insert(0, sigil_entry.get())
+        sigil_entry.bind("<FocusOut>", _auto_ct)
+        sigil_entry.bind("<Tab>",      _auto_ct)
+
+        err_lbl = tk.Label(win, text="", fg="red")
+        err_lbl.grid(row=4, column=0, columnspan=2)
+
+        def _open():
             type_name = type_box.get()
-            item_id   = entries["id"].get().strip()
+            item_id   = id_entry.get().strip()
             if not item_id:
-                messagebox.showerror("Error", "ID is required."); return
+                err_lbl.config(text="ID is required."); return
             for existing in self.data.get(type_name, []):
                 if existing.get("id") == item_id:
-                    messagebox.showerror("Error", "ID already exists."); return
+                    err_lbl.config(text="ID already exists."); return
 
-            cb     = entries["content_box"].get()
-            parsed = parse_template(cb)
-            counter = [0]
-            used    = set()
-
-            # NEU:
-            def _nid_var():
-                while f"{item_id}.v{counter[0]}" in used:
-                    counter[0] += 1
-                sid = f"{item_id}.v{counter[0]}"
-                used.add(sid);
-                counter[0] += 1
-                return sid
-
-            def _nid_opt():
-                while f"{item_id}.o{opt_counter[0]}" in used:
-                    opt_counter[0] += 1
-                sid = f"{item_id}.o{opt_counter[0]}"
-                used.add(sid);
-                opt_counter[0] += 1
-                return sid
-
+            sigil_val = sigil_entry.get()
             new_item = {
                 "id":              item_id,
-                "content_box":     cb,
-                "content_text":    render_content_text(cb, {}, {}),
-                "reminder_text":   entries["reminder_text"].get(),
-                "rarity":          int(entries["rarity"].get() or 10),
-                "complexity_base": float(entries["complexity_base"].get() or 1.0),
+                "sigil":           sigil_val,
+                "content_text":    ct_entry.get() or sigil_val,
+                "reminder_text":   "",
+                "rarity":          10,
+                "complexity_base": 1.0,
+                "cv1":             1.0,
+                "cv2":             0.0,
+                "cv3":             0.0,
                 "element_weights": {el: 0 for el in ELEMENTS},
                 "conditions":      {},
-                "variables": {
-                    v: make_default_stat(_nid_var()) for v in parsed["variables"]
-                },
-                "options": {
-                    str(i): {
-                        "choices": choices,
-                        "per_choice": {
-                            c: make_default_stat(_nid_opt()) for c in choices
-                        },
-                    }
-                    for i, choices in enumerate(parsed["options"])
-                },
+                "variables":       {},
+                "options":         {},
             }
-            self.data[type_name].append(new_item)
-            self._refresh_table()
-            self.save_all()
-            win.destroy()
-            # Direkt den vollen Editor öffnen
-            ContentEditor(self.root, new_item, self.data,
-                          on_save=lambda: (self._refresh_table(), self.save_all()))
 
-        tk.Button(win, text="Create", command=_create,
+            _added = [False]
+
+            def _on_save():
+                if not _added[0]:
+                    self.data[type_name].append(new_item)
+                    _added[0] = True
+                self._refresh_table()
+                self.save_all()
+
+            win.destroy()
+            ContentEditor(self.root, new_item, self.data, on_save=_on_save)
+
+        tk.Button(win, text="Open Editor", command=_open,
                   bg="#1a6e3c", fg="white", width=16).grid(
-            row=r + 1, column=0, columnspan=2, pady=14)
+            row=5, column=0, columnspan=2, pady=12)
+
+        id_entry.bind("<Return>", lambda _: _open())
+        id_entry.focus_set()
 
     # ── Status bar ─────────────────────────────────────────────────────────────
 

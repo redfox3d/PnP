@@ -67,7 +67,7 @@ X=1-5            Range (inkl. 1 und 5)
   OPTIONEN  (OPT0, OPT1, ...)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-OPT0             erste [a,b,c]-Auswahl in der Content Box
+OPT0             erste [a,b,c]-Auswahl in der Sigil
 OPT1             zweite Auswahl, usw.
 
 [if OPT0=top]from the top[/if]
@@ -81,7 +81,7 @@ OPT1             zweite Auswahl, usw.
   VOLLSTÄNDIGES BEISPIEL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Content Box:
+Sigil:
     Draw {X} cards from the [top, random, bottom].
 
 Content Text:

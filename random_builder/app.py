@@ -18,6 +18,7 @@ from .models import (
     load_random_cards, save_random_cards, clear_random_cards,
     load_gen_config, save_gen_config,
     load_box_config, save_box_config,
+    load_content_probs, save_content_probs,
 )
 from .generator import CardGenerator, ELEMENTS
 from .cv_calc import cv_card, complexity_card
@@ -38,7 +39,14 @@ def _load_content_data() -> dict:
         try:
             with open(path, "r", encoding="utf-8") as f:
                 raw = json.load(f)
-            data[key] = raw.get(key, raw.get(list(raw.keys())[0], []))
+            items = raw.get(key, raw.get(list(raw.keys())[0], []))
+            # Migrate legacy key content_box → sigil
+            for item in items:
+                if "content_box" in item and "sigil" not in item:
+                    item["sigil"] = item.pop("content_box")
+                elif "content_box" in item:
+                    item.pop("content_box")
+            data[key] = items
         except Exception:
             data[key] = []
     return data
@@ -72,6 +80,7 @@ class RandomBuilder(tk.Frame):
         self._effects_lu    = _list_to_lookup(self._content_data.get("Effect", []))
         self._costs_lu      = _list_to_lookup(self._content_data.get("Cost",   []))
         self._containers    = _load_containers()
+        self._content_probs = load_content_probs()
         self._box_config    = load_box_config()
         self._gen_config    = load_gen_config()
         self._cards: list   = load_random_cards()
@@ -141,6 +150,7 @@ class RandomBuilder(tk.Frame):
         tk.Label(f, text="Anzahl Karten:", bg="#1a1a1a", fg="#aaa",
                  font=("Arial", 9, "bold")).pack(anchor="w", **pad)
         self._count_var = tk.IntVar(value=self._gen_config.get("count", 10))
+        self._count_var.trace_add("write", self._schedule_autosave)
         tk.Spinbox(f, from_=1, to=500, textvariable=self._count_var,
                    width=8, bg="#2a2a2a", fg="white",
                    buttonbackground="#333").pack(anchor="w", **pad)
@@ -152,6 +162,7 @@ class RandomBuilder(tk.Frame):
                  font=("Arial", 9, "bold")).pack(anchor="w", **pad)
         self._el_mode_var = tk.StringVar(
             value=self._gen_config.get("element_mode", "equal"))
+        self._el_mode_var.trace_add("write", self._schedule_autosave)
         for val, lbl in [("equal", "Alle gleich"), ("custom", "Eigene Gewichte")]:
             tk.Radiobutton(f, text=lbl, variable=self._el_mode_var, value=val,
                            bg="#1a1a1a", fg="#ccc", selectcolor="#2a2a3a",
@@ -169,6 +180,7 @@ class RandomBuilder(tk.Frame):
                      width=8, anchor="w", font=("Arial", 8)).pack(side="left")
             v = tk.StringVar(value=str(
                 self._gen_config.get("custom_element_weights", {}).get(el, 10)))
+            v.trace_add("write", self._schedule_autosave)
             self._el_weight_vars[el] = v
             tk.Entry(row, textvariable=v, width=6,
                      bg="#2a2a2a", fg="white").pack(side="left", padx=2)
@@ -194,6 +206,7 @@ class RandomBuilder(tk.Frame):
             tk.Label(row, text=bt, bg="#1a1a1a", fg="#ccc",
                      width=13, anchor="w", font=("Arial", 8)).pack(side="left")
             v = tk.StringVar(value=str(block_rules.get(bt, 0.0)))
+            v.trace_add("write", self._schedule_autosave)
             self._block_rule_vars[bt] = v
             tk.Entry(row, textvariable=v, width=6,
                      bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(
@@ -241,16 +254,25 @@ class RandomBuilder(tk.Frame):
                  font=("Arial", 9, "bold")).pack(anchor="w", **pad)
         cv_row = tk.Frame(f, bg="#1a1a1a")
         cv_row.pack(fill="x", padx=12, pady=2)
-        tk.Label(cv_row, text="Karte ≤", bg="#1a1a1a", fg="#888",
+        tk.Label(cv_row, text="Karte ≥", bg="#1a1a1a", fg="#888",
+                 font=("Arial", 8)).pack(side="left")
+        self._cv_min_var = tk.StringVar(
+            value=str(self._gen_config.get("cv_card_min", -999.0)))
+        self._cv_min_var.trace_add("write", self._schedule_autosave)
+        tk.Entry(cv_row, textvariable=self._cv_min_var, width=5,
+                 bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+        tk.Label(cv_row, text="≤", bg="#1a1a1a", fg="#888",
                  font=("Arial", 8)).pack(side="left")
         self._cv_target_var = tk.StringVar(
             value=str(self._gen_config.get("cv_target", 3.0)))
+        self._cv_target_var.trace_add("write", self._schedule_autosave)
         tk.Entry(cv_row, textvariable=self._cv_target_var, width=5,
                  bg="#2a2a2a", fg="white").pack(side="left", padx=4)
-        tk.Label(cv_row, text="Box ≤", bg="#1a1a1a", fg="#888",
-                 font=("Arial", 8)).pack(side="left", padx=(8, 0))
+        tk.Label(cv_row, text="  Box ≤", bg="#1a1a1a", fg="#888",
+                 font=("Arial", 8)).pack(side="left", padx=(4, 0))
         self._cv_box_var = tk.StringVar(
             value=str(self._gen_config.get("cv_per_box_max", 3.0)))
+        self._cv_box_var.trace_add("write", self._schedule_autosave)
         tk.Entry(cv_row, textvariable=self._cv_box_var, width=5,
                  bg="#2a2a2a", fg="white").pack(side="left", padx=4)
 
@@ -262,12 +284,6 @@ class RandomBuilder(tk.Frame):
                   bg="#1a6e3c", fg="white",
                   font=("Arial", 11, "bold"),
                   cursor="hand2").pack(fill="x", padx=8, pady=4)
-
-        tk.Button(f, text="🗑  Alle zufälligen Karten löschen",
-                  command=self._delete_all,
-                  bg="#8e1a1a", fg="white",
-                  font=("Arial", 9),
-                  cursor="hand2").pack(fill="x", padx=8, pady=2)
 
         tk.Button(f, text="💾  Einstellungen speichern",
                   command=self._save_config,
@@ -293,16 +309,17 @@ class RandomBuilder(tk.Frame):
     def _rebuild_content_rules(self):
         for w in self._content_rules_frame.winfo_children():
             w.destroy()
-        self._content_rule_vars = {}   # key → StringVar  (key = container_id or effect_id)
-        self._content_rule_types = {}  # key → "container" | "effect"
+        self._content_rule_vars = {}   # key → StringVar
+        self._content_rule_types = {}  # key → "container" | "effect" | ...
 
-        # Build lookup of saved probabilities (supports both container and effect_id rules)
+        # Saved probs: first from content_probs.json, then fall back to gen_config
         saved_probs = {}
         for r in self._gen_config.get("content_rules", []):
             if "container" in r:
                 saved_probs[r["container"]] = r["probability"]
             elif "effect_id" in r:
                 saved_probs[r["effect_id"]] = r["probability"]
+        saved_probs.update(self._content_probs)  # content_probs.json overrides
 
         # ── Containers ────────────────────────────────────────────────────────
         if self._containers:
@@ -310,8 +327,9 @@ class RandomBuilder(tk.Frame):
                      bg="#1a1a1a", fg="#888",
                      font=("Arial", 7, "bold italic")).pack(anchor="w", padx=2)
             for cid in sorted(self._containers.keys()):
+                # Default = 1.0 (equal) if not customised
                 self._add_rule_row(self._content_rules_frame, cid,
-                                   saved_probs.get(cid, 0.0), kind="container",
+                                   saved_probs.get(cid, 1.0), kind="container",
                                    fg="#88ccff")
 
         # ── Ungrouped items (auto-containers) — all content types ─────────────
@@ -339,7 +357,7 @@ class RandomBuilder(tk.Frame):
                 anchor="w", padx=2, pady=(4, 0))
             for iid in ungrouped:
                 self._add_rule_row(self._content_rules_frame, iid,
-                                   saved_probs.get(iid, 0.0), kind=kind,
+                                   saved_probs.get(iid, 1.0), kind=kind,
                                    fg="#cccccc")
 
         if not self._containers and not any_ungrouped:
@@ -357,6 +375,16 @@ class RandomBuilder(tk.Frame):
         v = tk.StringVar(value=str(prob))
         self._content_rule_vars[key]  = v
         self._content_rule_types[key] = kind
+
+        def _on_prob_change(*_, k=key, var=v):
+            try:
+                self._content_probs[k] = float(var.get())
+                save_content_probs(self._content_probs)
+            except ValueError:
+                pass
+
+        v.trace_add("write", _on_prob_change)
+        v.trace_add("write", self._schedule_autosave)
         tk.Entry(row, textvariable=v, width=6,
                  bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(
             side="left", padx=2)
@@ -383,13 +411,15 @@ class RandomBuilder(tk.Frame):
             tk.Label(row, text=cid, bg="#1a1a1a", fg="#ccc",
                      width=16, anchor="w", font=("Arial", 8)).pack(side="left")
             v = tk.StringVar(value=str(rules.get(cid, 0.0)))
+            v.trace_add("write", self._schedule_autosave)
             self._cost_rule_vars[cid] = v
             tk.Entry(row, textvariable=v, width=6,
                      bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(
                 side="left", padx=2)
 
     def _reload_containers(self):
-        self._containers = _load_containers()
+        self._containers    = _load_containers()
+        self._content_probs = load_content_probs()
         self._rebuild_content_rules()
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -397,9 +427,17 @@ class RandomBuilder(tk.Frame):
     # ══════════════════════════════════════════════════════════════════════════
 
     def _build_card_list(self, parent):
-        tk.Label(parent, text="Generierte Karten",
+        # Header row with title + delete-all button
+        hdr = tk.Frame(parent, bg="#1a1a1a")
+        hdr.pack(fill="x", padx=8, pady=(6, 2))
+        tk.Label(hdr, text="Generierte Karten",
                  bg="#1a1a1a", fg="#88ccff",
-                 font=("Arial", 10, "bold")).pack(anchor="w", padx=8, pady=(6, 2))
+                 font=("Arial", 10, "bold")).pack(side="left")
+        tk.Button(hdr, text="🗑 Alle löschen",
+                  command=self._delete_all,
+                  bg="#5a1a1a", fg="#ff8888",
+                  font=("Arial", 8), cursor="hand2",
+                  relief="flat").pack(side="right")
 
         # Filter bar
         filter_f = tk.Frame(parent, bg="#1a1a1a")
@@ -512,9 +550,18 @@ class RandomBuilder(tk.Frame):
 
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=6)
 
-        # Scrollable block detail
-        outer = tk.Frame(parent, bg="#1a1a1a")
-        outer.pack(fill="both", expand=True)
+        # ── Card preview (rendered card image) + scrollable block detail ──────
+        content_row = tk.Frame(parent, bg="#1a1a1a")
+        content_row.pack(fill="both", expand=True)
+
+        # Left: card preview
+        from card_builder.card_preview import CardPreviewWidget
+        self._card_preview = CardPreviewWidget(content_row, label="Vorschau", bg="#1a1a1a")
+        self._card_preview.pack(side="left", anchor="n", padx=(8, 4), pady=4)
+
+        # Right: scrollable block detail
+        outer = tk.Frame(content_row, bg="#1a1a1a")
+        outer.pack(side="left", fill="both", expand=True)
         vsb = tk.Scrollbar(outer, orient="vertical")
         vsb.pack(side="right", fill="y")
         self._detail_canvas = tk.Canvas(outer, yscrollcommand=vsb.set,
@@ -538,8 +585,49 @@ class RandomBuilder(tk.Frame):
             lambda e: self._detail_canvas.itemconfig(
                 self._detail_win, width=e.width))
 
+    def _open_content_editor(self, item_id: str, type_name: str):
+        """Open ContentEditor for an effect or cost by ID."""
+        lookup = {"Effect": self._effects_lu, "Cost": self._costs_lu}
+        item = lookup.get(type_name, {}).get(item_id)
+        if not item:
+            return
+        from CardContent.content_editor import ContentEditor
+
+        def _on_save():
+            # Reload lookup tables so rendered text updates on next card select
+            self._content_data = _load_content_data()
+            self._effects_lu   = _list_to_lookup(self._content_data.get("Effect", []))
+            self._costs_lu     = _list_to_lookup(self._content_data.get("Cost",   []))
+
+        ContentEditor(self.winfo_toplevel(), item, self._content_data,
+                      on_save=_on_save)
+
+    def _to_render_card(self, card: dict) -> dict:
+        """Convert random card format → card_builder renderer format."""
+        import copy, re
+        rc = copy.deepcopy(card)
+        rc.setdefault("name",      card.get("name", "?"))
+        rc.setdefault("artwork",   "")
+        rc.setdefault("card_type", "Spells")
+        for blk in rc.get("blocks", []):
+            for ab in blk.get("abilities", []):
+                for eff in ab.get("effects", []):
+                    eid   = eff.get("effect_id", "")
+                    item  = self._effects_lu.get(eid, {})
+                    evals = eff.get("vals", {})
+                    eopt  = eff.get("opt_vals", {})
+                    eff["content_text"] = _render_effect(item, evals, eopt, fallback_id=eid)
+                for cost in ab.get("costs", []):
+                    cid   = cost.get("cost_id", "")
+                    item  = self._costs_lu.get(cid, {})
+                    cvals = cost.get("vals", {})
+                    copt  = cost.get("opt_vals", {})
+                    cost["content_text"] = _render_effect(item, cvals, copt, fallback_id=cid)
+        return rc
+
     def _clear_detail(self):
         self._detail_header.config(text="← Karte auswählen")
+        self._card_preview.clear()
         self._metrics_label.config(text="")
         for w in self._detail_inner.winfo_children():
             w.destroy()
@@ -552,66 +640,159 @@ class RandomBuilder(tk.Frame):
             text=f"CV: {card.get('_cv', '?')}   Complexity: {card.get('_complexity', '?')}"
                  f"   Boxen: {len(card.get('blocks', []))}")
 
+        # Render visual card preview
+        try:
+            print(f"[detail] Rendere Vorschau für {card.get('name')} ...")
+            rc = self._to_render_card(card)
+            self._card_preview.show(rc)
+            print(f"[detail] Vorschau OK")
+        except Exception as e:
+            print(f"[detail] Vorschau FEHLER: {e}")
+            import traceback; traceback.print_exc()
+            self._card_preview.clear()
+
         for w in self._detail_inner.winfo_children():
             w.destroy()
 
-        from card_builder.constants import BLOCK_COLORS, BLOCK_SYMBOLS
+        from card_builder.constants import BOX_COLORS as BLOCK_COLORS, BOX_SYMBOLS as BLOCK_SYMBOLS
+        from .cv_calc import cv_content_item, cv_ability, complexity_content_item
+
+        BG   = "#1e1e2e"
+        BG2  = "#161622"
 
         for block in card.get("blocks", []):
             btype = block.get("type", "?")
             color = BLOCK_COLORS.get(btype, "#333")
             sym   = BLOCK_SYMBOLS.get(btype, "■")
 
-            # Block header
+            # ── Block header ──────────────────────────────────────────────────
             bh = tk.Frame(self._detail_inner, bg=color)
-            bh.pack(fill="x", padx=8, pady=(6, 0))
+            bh.pack(fill="x", padx=8, pady=(8, 0))
             tk.Label(bh, text=f" {sym}  {btype}",
                      bg=color, fg="white",
-                     font=("Arial", 10, "bold")).pack(
-                side="left", padx=6, pady=3)
+                     font=("Arial", 10, "bold")).pack(side="left", padx=6, pady=3)
 
-            # Abilities
+            # ── Abilities ─────────────────────────────────────────────────────
             for ab in block.get("abilities", []):
-                ab_frame = tk.Frame(self._detail_inner, bg="#1e1e2e",
-                                    relief="groove", bd=1)
+                ab_frame = tk.Frame(self._detail_inner, bg=BG, relief="groove", bd=1)
                 ab_frame.pack(fill="x", padx=12, pady=2)
 
+                # Compute ability-level stats
+                ab_cv = cv_ability(ab, self._effects_lu, self._costs_lu)
+                ab_cmplx = (
+                    sum(complexity_content_item(self._effects_lu[e["effect_id"]])
+                        for e in ab.get("effects", [])
+                        if e.get("effect_id") in self._effects_lu)
+                    + sum(complexity_content_item(self._costs_lu[c["cost_id"]])
+                          for c in ab.get("costs", [])
+                          if c.get("cost_id") in self._costs_lu)
+                )
+
+                # Ability type header row
                 ab_type = ab.get("ability_type", "Play")
-                tk.Label(ab_frame, text=f"  {ab_type}",
-                         bg="#1e1e2e", fg="#88aaff",
-                         font=("Arial", 9, "bold")).pack(
-                    anchor="w", padx=4, pady=(4, 0))
+                hrow = tk.Frame(ab_frame, bg=BG)
+                hrow.pack(fill="x", padx=4, pady=(4, 2))
+                tk.Label(hrow, text=f"  {ab_type}",
+                         bg=BG, fg="#88aaff",
+                         font=("Arial", 9, "bold")).pack(side="left")
+                tk.Label(hrow,
+                         text=f"CV={ab_cv:+.2f}   Cmplx={ab_cmplx:.1f}",
+                         bg=BG, fg="#aaaaaa",
+                         font=("Consolas", 8)).pack(side="right", padx=6)
 
-                # Costs
+                # ── Costs ─────────────────────────────────────────────────────
                 for cost in ab.get("costs", []):
-                    cid  = cost.get("cost_id", "?")
-                    vals = cost.get("vals", {})
-                    vals_str = "  ".join(f"{k}={v}" for k, v in vals.items())
-                    tk.Label(ab_frame,
-                             text=f"    Cost: {cid}  {vals_str}",
-                             bg="#1e1e2e", fg="#ffaa44",
-                             font=("Consolas", 8)).pack(anchor="w", padx=4)
+                    cid    = cost.get("cost_id", "?")
+                    cvals  = cost.get("vals", {})
+                    citem  = self._costs_lu.get(cid, {})
+                    copt   = cost.get("opt_vals", {})
+                    ctext  = _render_effect(citem, cvals, copt, fallback_id=cid)
+                    c_cv   = cv_content_item(citem, cvals, copt) if citem else 0.0
+                    c_cmplx = complexity_content_item(citem) if citem else 0.0
+                    crow   = tk.Frame(ab_frame, bg=BG2)
+                    crow.pack(fill="x", padx=8, pady=1)
+                    # Clickable cost ID
+                    tk.Button(crow, text=f"  Cost: {cid}",
+                              bg=BG2, fg="#ffaa44", relief="flat", cursor="hand2",
+                              font=("Consolas", 8), anchor="w",
+                              command=lambda i=cid: self._open_content_editor(i, "Cost")
+                              ).pack(side="left")
+                    tk.Label(crow, text=f"→  {ctext}",
+                             bg=BG2, fg="#ffcc77",
+                             font=("Consolas", 8)).pack(side="left", padx=4)
+                    tk.Label(crow, text=f"CV={c_cv:+.2f}  Cmplx={c_cmplx:.1f}",
+                             bg=BG2, fg="#aaaaaa",
+                             font=("Consolas", 8)).pack(side="right", padx=4)
+                    for vk, vv in cvals.items():
+                        vrow = tk.Frame(ab_frame, bg=BG2)
+                        vrow.pack(fill="x", padx=24, pady=0)
+                        tk.Button(vrow, text=f"  {{{vk}}} = {vv}",
+                                  bg=BG2, fg="#886644", relief="flat", cursor="hand2",
+                                  font=("Consolas", 7),
+                                  command=lambda i=cid: self._open_content_editor(i, "Cost")
+                                  ).pack(side="left")
+                    for oi, ch in sorted(copt.items()):
+                        orow = tk.Frame(ab_frame, bg=BG2)
+                        orow.pack(fill="x", padx=24, pady=0)
+                        tk.Button(orow, text=f"  [opt{oi}] = {ch}",
+                                  bg=BG2, fg="#886688", relief="flat", cursor="hand2",
+                                  font=("Consolas", 7),
+                                  command=lambda i=cid: self._open_content_editor(i, "Cost")
+                                  ).pack(side="left")
 
-                # Effects
+                # ── Effects ───────────────────────────────────────────────────
                 for eff in ab.get("effects", []):
-                    eid     = eff.get("effect_id", "?")
-                    vals    = eff.get("vals", {})
-                    opt_vals= eff.get("opt_vals", {})
-                    item    = self._effects_lu.get(eid, {})
-                    # Render content text
-                    text = _render_effect(item, vals, opt_vals)
-                    item_cv = 0
-                    from .cv_calc import cv_content_item
-                    if item:
-                        item_cv = cv_content_item(item, vals, opt_vals)
-                    tk.Label(ab_frame,
-                             text=f"    Eff: {eid}  →  {text}  (CV={item_cv:.2f})",
-                             bg="#1e1e2e", fg="#88ff88",
-                             font=("Consolas", 8),
-                             wraplength=500, justify="left").pack(
-                        anchor="w", padx=4, pady=1)
+                    eid      = eff.get("effect_id", "?")
+                    evals    = eff.get("vals", {})
+                    eopt     = eff.get("opt_vals", {})
+                    eitem    = self._effects_lu.get(eid, {})
+                    etext    = _render_effect(eitem, evals, eopt, fallback_id=eid)
+                    e_cv     = cv_content_item(eitem, evals, eopt) if eitem else 0.0
+                    e_cmplx  = complexity_content_item(eitem) if eitem else 0.0
 
-                tk.Frame(ab_frame, bg="#1e1e2e", height=4).pack()
+                    erow = tk.Frame(ab_frame, bg=BG)
+                    erow.pack(fill="x", padx=8, pady=1)
+                    # Clickable effect ID
+                    tk.Button(erow, text=f"  Eff: {eid}",
+                              bg=BG, fg="#88ff88", relief="flat", cursor="hand2",
+                              font=("Consolas", 8), anchor="w",
+                              command=lambda i=eid: self._open_content_editor(i, "Effect")
+                              ).pack(side="left")
+                    tk.Label(erow, text=f"→  {etext}",
+                             bg=BG, fg="#ccffcc",
+                             font=("Consolas", 8)).pack(side="left", padx=4)
+                    tk.Label(erow,
+                             text=f"CV={e_cv:+.2f}  Cmplx={e_cmplx:.1f}",
+                             bg=BG, fg="#aaaaaa",
+                             font=("Consolas", 8)).pack(side="right", padx=4)
+
+                    # Variable values indented – inline edit on click
+                    for vk, vv in evals.items():
+                        vrow = tk.Frame(ab_frame, bg=BG)
+                        vrow.pack(fill="x", padx=24, pady=0)
+                        tk.Label(vrow, text=f"  {{{vk}}} =",
+                                 bg=BG, fg="#558855",
+                                 font=("Consolas", 7)).pack(side="left")
+                        btn_v = tk.Button(vrow, text=str(vv),
+                                  bg=BG, fg="#88ff88", relief="flat", cursor="hand2",
+                                  font=("Consolas", 7, "underline"))
+                        btn_v.config(command=lambda b=btn_v, d=eff, k=vk:
+                                     self._inline_edit_var(b, card, d, k, eid, "Effect"))
+                        btn_v.pack(side="left", padx=2)
+                    # Option values indented – inline combobox on click
+                    for oi, choice in sorted(eopt.items()):
+                        orow = tk.Frame(ab_frame, bg=BG)
+                        orow.pack(fill="x", padx=24, pady=0)
+                        tk.Label(orow, text=f"  [opt{oi}] =",
+                                 bg=BG, fg="#558888",
+                                 font=("Consolas", 7)).pack(side="left")
+                        btn_o = tk.Button(orow, text=str(choice),
+                                  bg=BG, fg="#88cccc", relief="flat", cursor="hand2",
+                                  font=("Consolas", 7, "underline"))
+                        btn_o.config(command=lambda b=btn_o, d=eff, k=oi:
+                                     self._inline_edit_opt(b, card, d, k, eid, "Effect"))
+                        btn_o.pack(side="left", padx=2)
+                tk.Frame(ab_frame, bg=BG, height=3).pack()
 
         # Raw JSON toggle
         def _toggle_json(f=self._detail_inner, c=card):
@@ -629,6 +810,99 @@ class RandomBuilder(tk.Frame):
     # ══════════════════════════════════════════════════════════════════════════
     # Actions
     # ══════════════════════════════════════════════════════════════════════════
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Inline editing of variable values and option choices
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def _recompute_card(self, card: dict):
+        """Recompute _cv and _complexity for a card after manual edits."""
+        card["_cv"]         = round(cv_card(card, self._box_config,
+                                            self._effects_lu, self._costs_lu), 3)
+        card["_complexity"] = round(complexity_card(card, self._effects_lu,
+                                                    self._costs_lu), 3)
+
+    def _inline_edit_var(self, btn, card, data_dict, key, item_id, type_name):
+        """Replace a variable-value button with an inline Entry."""
+        import re
+        btn.pack_forget()
+        parent = btn.master
+        var = tk.StringVar(value=str(data_dict.get("vals", {}).get(key, 0)))
+        ent = tk.Entry(parent, textvariable=var, width=8,
+                       bg="#2a3a2a", fg="white", font=("Consolas", 7),
+                       insertbackground="white")
+        ent.pack(side="left", padx=2)
+        ent.focus_set()
+        ent.select_range(0, "end")
+
+        def _commit(_=None):
+            try:
+                new_val = int(var.get())
+            except ValueError:
+                try:
+                    new_val = int(float(var.get()))
+                except ValueError:
+                    return
+            data_dict.setdefault("vals", {})[key] = new_val
+            self._recompute_card(card)
+            save_random_cards(self._cards)
+            self._refresh_list()
+            self._show_detail(card)
+
+        ent.bind("<Return>",    _commit)
+        ent.bind("<FocusOut>",  _commit)
+        ent.bind("<Escape>",    lambda _: self._show_detail(card))
+
+    def _inline_edit_opt(self, btn, card, data_dict, opt_key, item_id, type_name):
+        """Replace an option button with an inline Combobox."""
+        import re
+        btn.pack_forget()
+        parent = btn.master
+        lu = self._effects_lu if type_name == "Effect" else self._costs_lu
+        item = lu.get(item_id, {})
+        cb_text = item.get("sigil", "")
+        # Extract all option lists from sigil
+        opt_lists = [
+            [c.strip() for c in m.split(",")]
+            for m in re.findall(r'\[([^\]]+)\]', cb_text)
+        ]
+        try:
+            idx = int(opt_key)
+            choices = opt_lists[idx] if idx < len(opt_lists) else []
+        except (ValueError, IndexError):
+            choices = []
+
+        current = data_dict.get("opt_vals", {}).get(str(opt_key),
+                  choices[0] if choices else "")
+        var = tk.StringVar(value=current)
+        cb = ttk.Combobox(parent, textvariable=var,
+                          values=choices, width=12,
+                          font=("Consolas", 7), state="readonly")
+        cb.pack(side="left", padx=2)
+        cb.focus_set()
+
+        def _commit(_=None):
+            data_dict.setdefault("opt_vals", {})[str(opt_key)] = var.get()
+            self._recompute_card(card)
+            save_random_cards(self._cards)
+            self._refresh_list()
+            self._show_detail(card)
+
+        cb.bind("<<ComboboxSelected>>", _commit)
+        cb.bind("<FocusOut>",           _commit)
+        cb.bind("<Escape>",             lambda _: self._show_detail(card))
+
+    def _schedule_autosave(self, *_):
+        """Debounced auto-save: saves 800 ms after last change."""
+        if hasattr(self, "_autosave_job") and self._autosave_job:
+            self.after_cancel(self._autosave_job)
+        self._autosave_job = self.after(800, self._do_autosave)
+
+    def _do_autosave(self):
+        self._autosave_job = None
+        cfg = self._collect_config()
+        save_gen_config(cfg)
+        self._gen_config = cfg
 
     def _save_config(self):
         cfg = self._collect_config()
@@ -700,25 +974,36 @@ class RandomBuilder(tk.Frame):
             cfg["cv_per_box_max"] = float(self._cv_box_var.get())
         except Exception:
             pass
+        try:
+            cfg["cv_card_min"] = float(self._cv_min_var.get())
+        except Exception:
+            pass
 
         return cfg
 
     def _generate(self):
         cfg = self._collect_config()
         count = cfg.get("count", 10)
+        print(f"[generate] Starte Generierung: {count} Karten, cfg={cfg}")
         self._set_status(f"Generiere {count} Karten ...", "#1a3e8e")
         self.update_idletasks()
 
         # Reload live data
+        print("[generate] Lade Content-Daten ...")
         self._content_data = _load_content_data()
         self._effects_lu   = _list_to_lookup(self._content_data.get("Effect", []))
         self._costs_lu     = _list_to_lookup(self._content_data.get("Cost",   []))
         self._containers   = _load_containers()
         self._box_config   = load_box_config()
+        print(f"[generate] Effekte: {len(self._effects_lu)}, Kosten: {len(self._costs_lu)}, "
+              f"Container: {len(self._containers)}, BoxConfig: {len(self._box_config)}")
+        print(f"[generate] Triggers: {len(self._content_data.get('Trigger', []))}")
 
         gen = CardGenerator(self._content_data, self._containers,
                             self._box_config, cfg)
+        print("[generate] Generator erstellt, starte generate() ...")
         new_cards = gen.generate(count)
+        print(f"[generate] {len(new_cards)} Karten generiert")
         self._cards.extend(new_cards)
         save_random_cards(self._cards)
 
@@ -750,20 +1035,39 @@ class RandomBuilder(tk.Frame):
 
 # ── Rendering helper ──────────────────────────────────────────────────────────
 
-def _render_effect(item: dict, vals: dict, opt_vals: dict) -> str:
-    """Simple substitution for display in detail view."""
-    if not item:
-        return "?"
-    text = item.get("content_text") or item.get("content_box", "?")
-    for k, v in vals.items():
-        text = text.replace(f"{{{k}}}", str(v))
+def _render_effect(item: dict, vals: dict, opt_vals: dict,
+                   fallback_id: str = "") -> str:
+    """
+    Render a content item's display text using the template_parser functions:
+      - content_text  → render_display_text  (handles [if OPT0=…] conditionals)
+      - sigil         → render_content_text  (handles [a,b,c] dropdown choices)
+    Falls back to 'ID var=val [opt]' when no content is defined.
+    """
+    from CardContent.template_parser import render_content_text, render_display_text
     import re
-    opt_idx = 0
-    def _repl(m):
-        nonlocal opt_idx
-        choices = [c.strip() for c in m.group(1).split(",")]
-        sel = opt_vals.get(str(opt_idx), choices[0] if choices else "")
-        opt_idx += 1
-        return sel
-    text = re.sub(r"\[([^\]]+)\]", _repl, text)
-    return text
+
+    if not item and not fallback_id:
+        return ""
+
+    sigil = item.get("sigil", "") if item else ""
+    ct    = item.get("content_text", "") if item else ""
+
+    if ct:
+        # content_text uses [if OPT0=…] conditional syntax
+        text = render_display_text(ct, vals, opt_vals)
+    elif sigil:
+        # sigil uses [a,b,c] dropdown syntax
+        text = render_content_text(sigil, vals, opt_vals)
+    else:
+        text = ""
+
+    if not text:
+        # No content defined — build a readable fallback from ID + vals + opts
+        parts = [fallback_id or (item.get("id", "?") if item else "?")]
+        for k, v in vals.items():
+            parts.append(f"{k}={v}")
+        for oi in sorted(opt_vals.keys()):
+            parts.append(f"[{opt_vals[oi]}]")
+        return " ".join(parts)
+
+    return text.strip()

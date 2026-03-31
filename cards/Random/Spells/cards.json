@@ -1,14 +1,9 @@
 [
   {
-    "name": "Spell_Fire_Meta_Blood_2476",
+    "name": "Spell_Metal_9674",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Fire",
-    "elements": [
-      "Fire",
-      "Meta",
-      "Blood"
-    ],
+    "element": "Metal",
     "blocks": [
       {
         "type": "Play",
@@ -16,28 +11,267 @@
           {
             "condition_id": null,
             "condition_vals": {},
-            "trigger_id": "Trig_Movement",
-            "trigger_vals": {
-              "X": 5
-            },
-            "ability_type": "Trigger",
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
             "costs": [
               {
-                "cost_id": "Reveal_Self",
+                "cost_id": "Mana",
                 "vals": {},
                 "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Recycle"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Recycle"
+                }
               }
             ],
             "effects": [
               {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Lose"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
                 "effect_id": "Change_Any_Cards_Position",
                 "vals": {
-                  "x": 4,
-                  "y": 4
+                  "x": 8,
+                  "y": 3
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Excavate",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 1,
+                  "y": 7
                 },
                 "opt_vals": {
                   "0": "ezc"
                 }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.2,
+    "_complexity": 58.602
+  },
+  {
+    "name": "Spell_Metal_1461",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Reveal"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Add to Hand"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 5,
+                  "y": 8
+                },
+                "opt_vals": {
+                  "0": "ezc"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
               }
             ],
             "choose_n": null,
@@ -52,46 +286,79 @@
             "condition_id": null,
             "condition_vals": {},
             "trigger_id": "Trig_Movement",
-            "trigger_vals": {
-              "X": 3
-            },
+            "trigger_vals": {},
             "ability_type": "Trigger",
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Fire"
-                },
-                "opt_vals": {
-                  "0": "Blood"
-                }
+                "vals": {},
+                "opt_vals": {}
               },
               {
-                "cost_id": "Mana",
+                "cost_id": "Change_This_Card_Position_Play",
                 "vals": {},
                 "opt_vals": {
-                  "0": "Meta"
+                  "0": "Forget"
                 }
               }
             ],
-            "effects": [],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 8,
+                  "y": 2
+                },
+                "opt_vals": {
+                  "0": "ezc"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
             "choose_n": null,
             "choose_repeat": false
           }
         ]
       }
     ],
-    "_cv": -1.1,
-    "_complexity": 30.472
+    "_cv": -1.73,
+    "_complexity": 52.74
   },
   {
-    "name": "Spell_Metal_1298",
+    "name": "Spell_Nature_7420",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Metal",
-    "elements": [
-      "Metal"
-    ],
+    "element": "Nature",
     "blocks": [
       {
         "type": "Play",
@@ -105,18 +372,19 @@
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Metal"
-                },
-                "opt_vals": {
-                  "0": "Nature"
-                }
+                "vals": {},
+                "opt_vals": {}
               },
               {
                 "cost_id": "Mana",
                 "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Meta"
+                  "0": "Forget"
                 }
               }
             ],
@@ -125,8 +393,897 @@
                 "effect_id": "Change_This_Card_Position",
                 "vals": {},
                 "opt_vals": {
+                  "0": "Discard"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 10,
+                  "y": 9
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.7,
+    "_complexity": 32.105
+  },
+  {
+    "name": "Spell_Meta_3739",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Meta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
                   "0": "Forget"
                 }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Lose"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 10,
+                  "y": 5
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -1.7,
+    "_complexity": 32.105
+  },
+  {
+    "name": "Spell_Metal_6044",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Add to Hand"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 7,
+                  "y": 2
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -2.2,
+    "_complexity": 32.105
+  },
+  {
+    "name": "Spell_Meta_7392",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Meta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Reveal"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Lose"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 9,
+                  "y": 10
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 6,
+                  "y": 4
+                },
+                "opt_vals": {
+                  "0": "any"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -2.18,
+    "_complexity": 52.74
+  },
+  {
+    "name": "Spell_Blood_5837",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Blood",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 7,
+                  "y": 4
+                },
+                "opt_vals": {
+                  "0": "any"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Enchantment",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 4,
+                  "y": 1
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Forgotten",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 9,
+                  "y": 6
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -3.74,
+    "_complexity": 73.374
+  },
+  {
+    "name": "Spell_Ice_2552",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Ice",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Lose"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 7,
+                  "y": 10
+                },
+                "opt_vals": {
+                  "0": "ezc"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -2.2,
+    "_complexity": 32.105
+  },
+  {
+    "name": "Spell_Fire_1606",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Change_This_Card_Position",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Lose"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 1,
+                  "y": 10
+                },
+                "opt_vals": {
+                  "0": "ezc"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
               }
             ],
             "choose_n": null,
@@ -140,38 +1297,80 @@
           {
             "condition_id": null,
             "condition_vals": {},
-            "trigger_id": "Trig_Death",
+            "trigger_id": "Trig_Card_Changes_Position",
             "trigger_vals": {},
             "ability_type": "Trigger",
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Metal"
-                },
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Ice"
+                  "0": "Reveal"
                 }
               }
             ],
-            "effects": [],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 5,
+                  "y": 7
+                },
+                "opt_vals": {
+                  "0": "any"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
             "choose_n": null,
             "choose_repeat": false
           }
         ]
       }
     ],
-    "_cv": -1.0,
-    "_complexity": 42.019
+    "_cv": -3.5,
+    "_complexity": 58.602
   },
   {
-    "name": "Spell_Meta_8183",
+    "name": "Spell_Metal_7844",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Meta",
-    "elements": [
-      "Meta"
-    ],
+    "element": "Metal",
     "blocks": [
       {
         "type": "Play",
@@ -185,48 +1384,19 @@
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Generic"
-                },
-                "opt_vals": {
-                  "0": "Fire"
-                }
-              }
-            ],
-            "effects": [
-              {
-                "effect_id": "Change_Any_Cards_Position",
-                "vals": {
-                  "x": 4,
-                  "y": 4
-                },
-                "opt_vals": {
-                  "0": "news"
-                }
-              }
-            ],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Lost",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "trigger_id": "Trig_Death",
-            "trigger_vals": {},
-            "ability_type": "Trigger",
-            "costs": [
+                "vals": {},
+                "opt_vals": {}
+              },
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Meta"
-                },
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Meta"
+                  "0": "Reveal"
                 }
               }
             ],
@@ -235,8 +1405,201 @@
                 "effect_id": "Change_This_Card_Position",
                 "vals": {},
                 "opt_vals": {
+                  "0": "Add to Hand"
+                }
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 10,
+                  "y": 3
+                },
+                "opt_vals": {
+                  "0": "any"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
                   "0": "Forget"
                 }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 3,
+                  "y": 4
+                },
+                "opt_vals": {
+                  "0": "news"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_Any_Cards_Position",
+                "vals": {
+                  "x": 8,
+                  "y": 2
+                },
+                "opt_vals": {
+                  "0": "ezc"
+                }
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Change_This_Card_Position_Discard",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
               }
             ],
             "choose_n": null,
@@ -245,46 +1608,17 @@
         ]
       }
     ],
-    "_cv": -1.0,
-    "_complexity": 36.642
+    "_cv": -2.88,
+    "_complexity": 73.374
   },
   {
-    "name": "Spell_Nature_8845",
+    "name": "Spell_Fire_2387",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Nature",
-    "elements": [
-      "Nature"
-    ],
+    "element": "Fire",
     "blocks": [
       {
         "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "trigger_id": "Trig_Death",
-            "trigger_vals": {},
-            "ability_type": "Trigger",
-            "costs": [
-              {
-                "cost_id": "Mana",
-                "vals": {
-                  "element": "Nature"
-                },
-                "opt_vals": {
-                  "0": "Blood"
-                }
-              }
-            ],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Lost",
         "abilities": [
           {
             "condition_id": null,
@@ -295,39 +1629,198 @@
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Nature"
-                },
-                "opt_vals": {
-                  "0": "Metal"
-                }
+                "vals": {},
+                "opt_vals": {}
               },
               {
                 "cost_id": "Mana",
                 "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Meta"
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Hand"
                 }
               }
             ],
-            "effects": [],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Hand"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              }
+            ],
             "choose_n": null,
             "choose_repeat": false
           }
         ]
       }
     ],
-    "_cv": -1.0,
-    "_complexity": 35.549
+    "_cv": -6.63,
+    "_complexity": 57.048
   },
   {
-    "name": "Spell_Blood_7310",
+    "name": "Spell_Nature_6030",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Blood",
-    "elements": [
-      "Blood"
-    ],
+    "element": "Nature",
     "blocks": [
       {
         "type": "Play",
@@ -335,25 +1828,821 @@
           {
             "condition_id": null,
             "condition_vals": {},
-            "trigger_id": "Trig_Movement",
-            "trigger_vals": {
-              "X": 8
-            },
-            "ability_type": "Trigger",
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Blood"
-                },
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Metal"
+                  "0": "Recycle"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
                 }
               }
             ],
             "effects": [
               {
-                "effect_id": "Damage",
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -2.5,
+    "_complexity": 31.024
+  },
+  {
+    "name": "Spell_Metal_6740",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -7.4,
+    "_complexity": 57.048
+  },
+  {
+    "name": "Spell_Metal_3391",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Recycle"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Play_Skill",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Reveal"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -4.6,
+    "_complexity": 57.048
+  },
+  {
+    "name": "Spell_Meta_2094",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Meta",
+    "blocks": [
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Recycle"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -2.5,
+    "_complexity": 27.024
+  },
+  {
+    "name": "Spell_Fire_6995",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Fleeting",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Play_Skill",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
                 "vals": {
                   "X": 5
                 },
@@ -364,77 +2653,89 @@
             "choose_repeat": false
           }
         ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 13.85
-  },
-  {
-    "name": "Spell_Fire_8488",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Fire",
-    "elements": [
-      "Fire"
-    ],
-    "blocks": [
+      },
       {
-        "type": "Play",
+        "type": "Forgotten",
         "abilities": [
           {
             "condition_id": null,
             "condition_vals": {},
-            "trigger_id": "Trig_Death",
+            "trigger_id": "Play_Skill",
             "trigger_vals": {},
             "ability_type": "Trigger",
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Fire"
-                },
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Generic"
+                  "0": "Forget"
                 }
               },
               {
-                "cost_id": "Mana",
+                "cost_id": "Recycle_Cards",
                 "vals": {},
                 "opt_vals": {
-                  "0": "Fire"
-                }
-              }
-            ],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Hand",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "trigger_id": null,
-            "trigger_vals": {},
-            "ability_type": "Play",
-            "costs": [
-              {
-                "cost_id": "Mana",
-                "vals": {
-                  "element": "Fire"
-                },
-                "opt_vals": {
-                  "0": "Ice"
+                  "0": "Hand"
                 }
               }
             ],
             "effects": [
               {
-                "effect_id": "Use_Weapon",
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
                 "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 4
+                },
                 "opt_vals": {}
               }
             ],
@@ -444,53 +2745,17 @@
         ]
       }
     ],
-    "_cv": -1.0,
-    "_complexity": 35.749
+    "_cv": -10.48,
+    "_complexity": 88.934
   },
   {
-    "name": "Spell_Blood_1966",
+    "name": "Spell_Metal_9411",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Blood",
-    "elements": [
-      "Blood"
-    ],
+    "element": "Metal",
     "blocks": [
       {
         "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "trigger_id": "Trig_Death",
-            "trigger_vals": {},
-            "ability_type": "Trigger",
-            "costs": [
-              {
-                "cost_id": "Mana",
-                "vals": {
-                  "element": "Blood"
-                },
-                "opt_vals": {
-                  "0": "Fire"
-                }
-              },
-              {
-                "cost_id": "Mana",
-                "vals": {},
-                "opt_vals": {
-                  "0": "Blood"
-                }
-              }
-            ],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Lost",
         "abilities": [
           {
             "condition_id": null,
@@ -501,24 +2766,92 @@
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Blood"
-                },
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Fire"
+                  "0": "Forget"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Hand"
                 }
               }
             ],
             "effects": [
               {
-                "effect_id": "Change_Any_Cards_Position",
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
                 "vals": {
-                  "x": 4,
-                  "y": 8
+                  "X": 1
                 },
-                "opt_vals": {
-                  "0": "news"
-                }
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
               }
             ],
             "choose_n": null,
@@ -527,19 +2860,14 @@
         ]
       }
     ],
-    "_cv": -1.0,
-    "_complexity": 42.022
+    "_cv": -3.7,
+    "_complexity": 31.024
   },
   {
-    "name": "Spell_Ice_Nature_Metal_4514",
+    "name": "Spell_Fire_2516",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Ice",
-    "elements": [
-      "Ice",
-      "Nature",
-      "Metal"
-    ],
+    "element": "Fire",
     "blocks": [
       {
         "type": "Play",
@@ -553,24 +2881,383 @@
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Ice"
-                },
-                "opt_vals": {
-                  "0": "Ice"
-                }
+                "vals": {},
+                "opt_vals": {}
               },
               {
                 "cost_id": "Mana",
                 "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Nature"
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
                 }
               }
             ],
             "effects": [
               {
-                "effect_id": "Damage",
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": -4.2,
+    "_complexity": 31.024
+  },
+  {
+    "name": "Spell_Ice_3699",
+    "card_type": "Spells",
+    "artwork": "",
+    "element": "Ice",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Reveal"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Hand"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Excavate",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Forgotten",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {},
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 9
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 8
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
                 "vals": {
                   "X": 3
                 },
@@ -588,40 +3275,99 @@
           {
             "condition_id": null,
             "condition_vals": {},
-            "trigger_id": "Trig_Movement",
-            "trigger_vals": {
-              "X": 2
-            },
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {},
             "ability_type": "Trigger",
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Ice"
-                },
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Nature"
+                  "0": "Reveal"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
                 }
               }
             ],
-            "effects": [],
+            "effects": [
+              {
+                "effect_id": "Draw",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 6
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              }
+            ],
             "choose_n": null,
             "choose_repeat": false
           }
         ]
       }
     ],
-    "_cv": -1.0,
-    "_complexity": 37.549
+    "_cv": -10.47,
+    "_complexity": 109.096
   },
   {
-    "name": "Spell_Blood_4463",
+    "name": "Spell_Fire_8872",
     "card_type": "Spells",
     "artwork": "",
-    "element": "Blood",
-    "elements": [
-      "Blood"
-    ],
+    "element": "Fire",
     "blocks": [
       {
         "type": "Play",
@@ -635,95 +3381,88 @@
             "costs": [
               {
                 "cost_id": "Mana",
-                "vals": {
-                  "element": "Blood"
-                },
-                "opt_vals": {
-                  "0": "Generic"
-                }
+                "vals": {},
+                "opt_vals": {}
               },
               {
                 "cost_id": "Mana",
                 "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
                 "opt_vals": {
-                  "0": "Fire"
+                  "0": "Forget"
+                }
+              },
+              {
+                "cost_id": "Recycle_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
                 }
               }
             ],
             "effects": [
               {
-                "effect_id": "Ranged_Damage",
-                "vals": {
-                  "X": 3,
-                  "Y": 5
-                },
+                "effect_id": "Use_Weapon",
+                "vals": {},
                 "opt_vals": {}
               },
               {
                 "effect_id": "Draw",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 10
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
                 "vals": {
                   "X": 9
                 },
                 "opt_vals": {}
               },
               {
-                "effect_id": "Change_Any_Cards_Position_Cost",
-                "vals": {
-                  "X": 7
-                },
-                "opt_vals": {
-                  "0": "Recycle"
-                }
-              }
-            ],
-            "choose_n": 1,
-            "choose_repeat": true
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 39.849
-  },
-  {
-    "name": "Spell_Nature_2679",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Nature",
-    "elements": [
-      "Nature"
-    ],
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "trigger_id": "Trig_Movement",
-            "trigger_vals": {
-              "X": 5
-            },
-            "ability_type": "Trigger",
-            "costs": [
-              {
-                "cost_id": "Mana",
-                "vals": {
-                  "element": "Nature"
-                },
-                "opt_vals": {
-                  "0": "Generic"
-                }
-              },
-              {
-                "cost_id": "Reveal_Self",
+                "effect_id": "Multicast",
                 "vals": {},
                 "opt_vals": {}
-              }
-            ],
-            "effects": [
+              },
               {
-                "effect_id": "Draw",
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Forget_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Recycle_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Drain",
                 "vals": {
                   "X": 5
                 },
@@ -736,345 +3475,7 @@
         ]
       }
     ],
-    "_cv": -1.1,
-    "_complexity": 13.45
-  },
-  {
-    "name": "Spell_Fire_4897",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Fire",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Lost",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Meta_2012",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Meta",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Hand",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Nature_3676",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Nature",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Nature_8463",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Nature",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Fleeting",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Lost",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Nature_2024",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Nature",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Metal_7043",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Metal",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Meta_2704",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Meta",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Fleeting",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Lost",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Metal_7454",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Metal",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Fire_6356",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Fire",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      },
-      {
-        "type": "Fleeting",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
-  },
-  {
-    "name": "Spell_Fire_8926",
-    "card_type": "Spells",
-    "artwork": "",
-    "element": "Fire",
-    "blocks": [
-      {
-        "type": "Play",
-        "abilities": [
-          {
-            "condition_id": null,
-            "condition_vals": {},
-            "ability_type": "Play",
-            "costs": [],
-            "effects": [],
-            "choose_n": null,
-            "choose_repeat": false
-          }
-        ]
-      }
-    ],
-    "_cv": -1.0,
-    "_complexity": 0.0
+    "_cv": -3.7,
+    "_complexity": 31.024
   }
 ]
