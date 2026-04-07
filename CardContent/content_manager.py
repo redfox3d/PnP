@@ -25,6 +25,9 @@ FILES = {
     "Trigger":   os.path.join(_HERE, "cc_data", "triggers.json"),
     "Condition": os.path.join(_HERE, "cc_data", "conditions.json"),
     "Cost":      os.path.join(_HERE, "cc_data", "costs.json"),
+    "Insert":    os.path.join(_HERE, "cc_data", "inserts.json"),
+    "Enchant":   os.path.join(_HERE, "cc_data", "enchants.json"),
+    "Curse":     os.path.join(_HERE, "cc_data", "curses.json"),
 }
 
 ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Potion", "Skills"]

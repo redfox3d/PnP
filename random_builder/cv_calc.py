@@ -1,13 +1,16 @@
 """
 random_builder/cv_calc.py – CV and complexity calculation.
 
-User's naming (mental model → stored field):
-  "cv"  → cv1   (constant term)
-  "cv1" → cv2   (linear coefficient)
-  "cv2" → cv3   (quadratic coefficient)
+Formula:
+  Item-level constant (single value, stored as "cv"):
+      cv_item
 
-So for a variable/choice with value X:
-    cv_contribution = stat["cv1"] + stat["cv2"] * X + stat["cv3"] * X²
+  Per variable with value x:
+      cv_var = cv1·x  +  cv2·x²  +  cv3·x³
+
+  Total CV of a content item:
+      cv_total = cv_item  +  Σ_vars(cv1·x + cv2·x² + cv3·x³)
+               + Σ_options(selected_choice.cv)
 
 CV of a box (one ability):
     CV_box = CV_condition * CV_trigger * (sum_cv_effects - sum_cv_costs)
@@ -27,10 +30,15 @@ import math
 # ── Stat helpers ──────────────────────────────────────────────────────────────
 
 def cv_stat(stat: dict, x: float = 0.0) -> float:
-    """CV contribution of a stat dict given variable value x."""
-    return (float(stat.get("cv1", 0.0))
-            + float(stat.get("cv2", 0.0)) * x
-            + float(stat.get("cv3", 0.0)) * x * x)
+    """
+    CV contribution of a variable/choice stat for value x.
+    Formula:  cv1·x  +  cv2·x²  +  cv3·x³
+    (no constant term – constants live at item level only)
+    """
+    c1 = float(stat.get("cv1", 0.0))
+    c2 = float(stat.get("cv2", 0.0))
+    c3 = float(stat.get("cv3", 0.0))
+    return c1 * x + c2 * x * x + c3 * x * x * x
 
 
 # ── Content item CV ────────────────────────────────────────────────────────────
@@ -41,21 +49,21 @@ def cv_content_item(item: dict, vals: dict, opt_vals: dict) -> float:
     vals:     {var_name: numeric_value}
     opt_vals: {opt_index_str: selected_choice_str}
     """
-    # Item-level constant (cv1 = constant term)
-    total = float(item.get("cv1", 0.0))
+    # Item-level constant – stored as "cv"; fall back to "cv1" for legacy data
+    total = float(item.get("cv", item.get("cv1", 0.0)))
 
-    # Variable contributions
+    # Variable contributions:  cv1·x + cv2·x² + cv3·x³
     for var_name, stat in item.get("variables", {}).items():
         x = _to_float(vals.get(var_name, 0))
         total += cv_stat(stat, x)
 
-    # Option contributions: selected choice's cv1 (constant, no variable dimension)
+    # Option contributions: selected choice's cv (constant, evaluated at x=0)
     for opt_key, opt in item.get("options", {}).items():
-        choices = opt.get("choices", [])
+        choices  = opt.get("choices", [])
         selected = opt_vals.get(opt_key, choices[0] if choices else "")
-        stat = opt.get("per_choice", {}).get(selected, {})
+        stat     = opt.get("per_choice", {}).get(selected, {})
         if stat:
-            total += cv_stat(stat, 0.0)
+            total += float(stat.get("cv", stat.get("cv1", 0.0)))
 
     return total
 
@@ -146,45 +154,43 @@ def complexity_card(card: dict, effects_lookup: dict, costs_lookup: dict) -> flo
 
 def max_x_for_budget(stat: dict, cv_budget: float) -> float:
     """
-    Find the maximum integer X such that cv_stat(stat, X) ≤ cv_budget.
-    Returns the maximum allowed X within [var_min, var_max] from conditions.
-    If cv increases with X, constrains X accordingly.
-    If cv decreases or is flat with X, returns var_max freely.
+    Find the largest x in [var_min, var_max] such that
+    cv_stat(stat, x) = cv1·x + cv2·x² + cv3·x³  ≤  cv_budget.
+
+    Uses binary search for robustness with the cubic formula.
     """
     cond = stat.get("conditions", {})
     vmin = float(cond.get("var_min", 1))
     vmax = float(cond.get("var_max", 10))
 
-    c0 = float(stat.get("cv1", 0.0))  # constant term
-    c1 = float(stat.get("cv2", 0.0))  # linear coeff
-    c2 = float(stat.get("cv3", 0.0))  # quadratic coeff
+    c1 = float(stat.get("cv1", 0.0))
+    c2 = float(stat.get("cv2", 0.0))
+    c3 = float(stat.get("cv3", 0.0))
 
-    remaining = cv_budget - c0
+    def _cv(x):
+        return c1 * x + c2 * x * x + c3 * x * x * x
 
-    # If CV doesn't depend on X at all, pick freely
-    if abs(c1) < 1e-9 and abs(c2) < 1e-9:
+    # If all coefficients ≤ 0, increasing x doesn't raise CV → pick max freely
+    if c1 <= 0 and c2 <= 0 and c3 <= 0:
         return vmax
 
-    # If increasing X decreases CV (negative coefficients), pick max freely
-    if c1 <= 0 and c2 <= 0:
-        return vmax
-
-    # Solve c1*X + c2*X² ≤ remaining  →  find X_max
-    if remaining <= 0:
+    # If even vmin already exceeds budget, stay at vmin
+    if _cv(vmin) > cv_budget:
         return vmin
 
-    if abs(c2) < 1e-9:
-        # Linear: X_max = remaining / c1
-        x_budget = remaining / c1 if c1 > 0 else vmax
-    else:
-        # Quadratic (c2 > 0): c2*X² + c1*X - remaining = 0
-        disc = c1 * c1 + 4.0 * c2 * remaining
-        if disc < 0:
-            x_budget = vmin
-        else:
-            x_budget = (-c1 + math.sqrt(disc)) / (2.0 * c2)
+    # If vmax is within budget, pick max freely
+    if _cv(vmax) <= cv_budget:
+        return vmax
 
-    return max(vmin, min(vmax, x_budget))
+    # Binary search
+    lo, hi = vmin, vmax
+    for _ in range(60):
+        mid = (lo + hi) / 2.0
+        if _cv(mid) <= cv_budget:
+            lo = mid
+        else:
+            hi = mid
+    return lo
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

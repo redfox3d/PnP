@@ -41,17 +41,17 @@ class SpellCardEditor(BaseCardEditor):
         # Block controls – default = Play
         ctrl = tk.Frame(ef, bg=self.BG)
         ctrl.pack(fill="x", padx=8, pady=4)
-        tk.Label(ctrl, text="Add Block:", bg=self.BG, fg="#ccc",
+        tk.Label(ctrl, text="Sigil hinzufügen:", bg=self.BG, fg="#ccc",
                  font=("Arial", 9, "bold")).pack(side="left")
         self._new_block_var = tk.StringVar(value="Play")
         ttk.Combobox(ctrl, textvariable=self._new_block_var,
                      values=BOX_TYPES, width=16, state="readonly").pack(
             side="left", padx=4)
-        tk.Button(ctrl, text="+ Add Block", command=self._add_block,
+        tk.Button(ctrl, text="+ Sigil", command=self._add_block,
                   bg="#1a6e3c", fg="white", font=("Arial", 8)).pack(
             side="left", padx=4)
         count = len(card.get("blocks", []))
-        tk.Label(ctrl, text=f"({count}/4 blocks)",
+        tk.Label(ctrl, text=f"({count}/4 Sigils)",
                  bg=self.BG, fg="#888", font=("Arial", 8)).pack(side="left")
 
         self._blocks_frame = tk.Frame(ef, bg=self.BG)

@@ -34,7 +34,8 @@ def _load_content_data() -> dict:
     for fname, key in [("effects.json",    "Effect"),
                         ("costs.json",      "Cost"),
                         ("conditions.json", "Condition"),
-                        ("triggers.json",   "Trigger")]:
+                        ("triggers.json",   "Trigger"),
+                        ("inserts.json",    "Insert")]:
         path = os.path.join(cc_dir, fname)
         try:
             with open(path, "r", encoding="utf-8") as f:
@@ -52,6 +53,26 @@ def _load_content_data() -> dict:
     return data
 
 
+def _save_content_data(data: dict):
+    """Write all cc_data back to their JSON files."""
+    cc_dir = os.path.join(_ROOT, "CardContent", "cc_data")
+    for fname, key in [("effects.json",    "Effect"),
+                        ("costs.json",      "Cost"),
+                        ("conditions.json", "Condition"),
+                        ("triggers.json",   "Trigger"),
+                        ("inserts.json",    "Insert"),
+                        ("enchants.json",   "Enchant"),
+                        ("curses.json",     "Curse")]:
+        if key not in data:
+            continue
+        path = os.path.join(cc_dir, fname)
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump({key: data[key]}, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[save_content_data] Fehler beim Schreiben {fname}: {e}")
+
+
 def _load_containers() -> dict:
     try:
         from container_manager.models import load_containers
@@ -66,7 +87,7 @@ def _render_card_summary(card: dict) -> str:
     cv  = card.get("_cv", "?")
     cmx = card.get("_complexity", "?")
     nb  = len(card.get("blocks", []))
-    return f"{el:<8}  CV={cv:<6}  Cmplx={cmx:<5}  Boxen={nb}"
+    return f"{el:<8}  CV={cv:<6}  Cmplx={cmx:<5}  Sigils={nb}"
 
 
 # ── Main panel ────────────────────────────────────────────────────────────────
@@ -76,10 +97,12 @@ class RandomBuilder(tk.Frame):
     def __init__(self, parent, **kw):
         kw.setdefault("bg", "#1a1a1a")
         super().__init__(parent, **kw)
-        self._content_data  = _load_content_data()
-        self._effects_lu    = _list_to_lookup(self._content_data.get("Effect", []))
-        self._costs_lu      = _list_to_lookup(self._content_data.get("Cost",   []))
-        self._containers    = _load_containers()
+        self._content_data   = _load_content_data()
+        self._effects_lu     = _list_to_lookup(self._content_data.get("Effect",    []))
+        self._costs_lu       = _list_to_lookup(self._content_data.get("Cost",      []))
+        self._triggers_lu    = _list_to_lookup(self._content_data.get("Trigger",   []))
+        self._conditions_lu  = _list_to_lookup(self._content_data.get("Condition", []))
+        self._containers     = _load_containers()
         self._content_probs = load_content_probs()
         self._box_config    = load_box_config()
         self._gen_config    = load_gen_config()
@@ -189,10 +212,10 @@ class RandomBuilder(tk.Frame):
         self._sep(f)
 
         # ── Block Regeln ──────────────────────────────────────────────────────
-        tk.Label(f, text="Box Regeln  (Wahrscheinlichkeit):",
+        tk.Label(f, text="Sigil Regeln  (Wahrscheinlichkeit):",
                  bg="#1a1a1a", fg="#aaa",
                  font=("Arial", 9, "bold")).pack(anchor="w", **pad)
-        tk.Label(f, text="Wie oft erscheint jede Box auf einer Karte?",
+        tk.Label(f, text="Wie oft erscheint jedes Sigil auf einer Karte?",
                  bg="#1a1a1a", fg="#555", font=("Arial", 7, "italic")).pack(
             anchor="w", padx=16)
 
@@ -268,13 +291,208 @@ class RandomBuilder(tk.Frame):
         self._cv_target_var.trace_add("write", self._schedule_autosave)
         tk.Entry(cv_row, textvariable=self._cv_target_var, width=5,
                  bg="#2a2a2a", fg="white").pack(side="left", padx=4)
-        tk.Label(cv_row, text="  Box ≤", bg="#1a1a1a", fg="#888",
+        tk.Label(cv_row, text="  Sigil ≤", bg="#1a1a1a", fg="#888",
                  font=("Arial", 8)).pack(side="left", padx=(4, 0))
         self._cv_box_var = tk.StringVar(
             value=str(self._gen_config.get("cv_per_box_max", 3.0)))
         self._cv_box_var.trace_add("write", self._schedule_autosave)
         tk.Entry(cv_row, textvariable=self._cv_box_var, width=5,
                  bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+
+        self._sep(f)
+
+        # ── Kosten Limits ─────────────────────────────────────────────────────
+        tk.Label(f, text="Kosten Limits:", bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+        tk.Label(f, text="Mana ist unabhängig von anderen Kosten",
+                 bg="#1a1a1a", fg="#555", font=("Arial", 7, "italic")).pack(
+            anchor="w", padx=16)
+
+        # Mana Chance
+        mana_row = tk.Frame(f, bg="#1a1a1a")
+        mana_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(mana_row, text="Mana Chance", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._mana_chance_var = tk.StringVar(
+            value=str(self._gen_config.get("mana_chance", 0.95)))
+        self._mana_chance_var.trace_add("write", self._schedule_autosave)
+        tk.Entry(mana_row, textvariable=self._mana_chance_var, width=6,
+                 bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(mana_row, text="(0–1)", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        # Mana Hauptwert (peak of distribution)
+        mana_main_row = tk.Frame(f, bg="#1a1a1a")
+        mana_main_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(mana_main_row, text="Mana Hauptwert", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._mana_main_var = tk.StringVar(
+            value=str(self._gen_config.get("mana_main_count", 2)))
+        self._mana_main_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(mana_main_row, from_=0, to=10, textvariable=self._mana_main_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(mana_main_row, text="(häufigster Wert)", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        # Mana max Anzahl (hard cap)
+        mana_max_row = tk.Frame(f, bg="#1a1a1a")
+        mana_max_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(mana_max_row, text="Mana max Anzahl", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._mana_max_var = tk.StringVar(
+            value=str(self._gen_config.get("mana_max_count", 6)))
+        self._mana_max_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(mana_max_row, from_=1, to=10, textvariable=self._mana_max_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(mana_max_row, text="Kreise (max)", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        # Andere Kosten max
+        other_row = tk.Frame(f, bg="#1a1a1a")
+        other_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(other_row, text="Andere Kosten max", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._max_other_costs_var = tk.StringVar(
+            value=str(self._gen_config.get("max_other_costs", 1)))
+        self._max_other_costs_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(other_row, from_=0, to=10, textvariable=self._max_other_costs_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(other_row, text="verschiedene", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        # Effekte max
+        eff_row = tk.Frame(f, bg="#1a1a1a")
+        eff_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(eff_row, text="Effekte max", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._max_effects_var = tk.StringVar(
+            value=str(self._gen_config.get("max_effects", -1)))
+        self._max_effects_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(eff_row, from_=-1, to=50, textvariable=self._max_effects_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(eff_row, text="(-1 = unbegrenzt)", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        # Effekte min
+        eff_min_row = tk.Frame(f, bg="#1a1a1a")
+        eff_min_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(eff_min_row, text="Effekte min", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._min_effects_var = tk.StringVar(
+            value=str(self._gen_config.get("min_effects", 0)))
+        self._min_effects_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(eff_min_row, from_=0, to=50, textvariable=self._min_effects_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+
+        # Sigils min
+        sig_min_row = tk.Frame(f, bg="#1a1a1a")
+        sig_min_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(sig_min_row, text="Sigils min", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._min_blocks_var = tk.StringVar(
+            value=str(self._gen_config.get("min_blocks", 1)))
+        self._min_blocks_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(sig_min_row, from_=1, to=4, textvariable=self._min_blocks_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(sig_min_row, text="(1–4)", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        # Condition Chance
+        cond_row = tk.Frame(f, bg="#1a1a1a")
+        cond_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(cond_row, text="Condition Chance", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._cond_chance_var = tk.StringVar(
+            value=str(self._gen_config.get("condition_chance", 0.15)))
+        self._cond_chance_var.trace_add("write", self._schedule_autosave)
+        tk.Entry(cond_row, textvariable=self._cond_chance_var, width=6,
+                 bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(side="left", padx=2)
+
+        # Choose N Chance
+        choose_row = tk.Frame(f, bg="#1a1a1a")
+        choose_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(choose_row, text="Choose N Chance", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._choose_chance_var = tk.StringVar(
+            value=str(self._gen_config.get("choose_n_chance", 0.10)))
+        self._choose_chance_var.trace_add("write", self._schedule_autosave)
+        tk.Entry(choose_row, textvariable=self._choose_chance_var, width=6,
+                 bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(side="left", padx=2)
+        tk.Label(choose_row, text="(0–1)", bg="#1a1a1a", fg="#555",
+                 font=("Arial", 7)).pack(side="left", padx=2)
+
+        self._sep(f)
+
+        # ── Sigil Regeln ──────────────────────────────────────────────────────
+        tk.Label(f, text="Sigil Regeln:", bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+
+        self._sigil_rules_data = {
+            bt: [dict(r) for r in rules]
+            for bt, rules in self._gen_config.get("sigil_rules", {}).items()
+        }
+        self._incompatible_pairs = [list(p)
+                                    for p in self._gen_config.get("incompatible_pairs", [])]
+
+        # Block types from box_config or block_rules
+        box_cfg = self._box_config if self._box_config else {}
+        bt_names = sorted(box_cfg.keys()) if box_cfg else [
+            r["block_type"] for r in self._gen_config.get("block_rules", [])
+            if r.get("block_type")
+        ]
+        if not bt_names:
+            bt_names = ["Play", "Hand", "Lost", "Discard", "Forgotten",
+                        "Concentration", "Excavate", "Enchantment",
+                        "Equipped", "Exhausted"]
+
+        # Sigil selector + Add button
+        self._sigil_rules_var = tk.StringVar(value=bt_names[0] if bt_names else "")
+        sig_ctrl_row = tk.Frame(f, bg="#1a1a1a")
+        sig_ctrl_row.pack(fill="x", padx=8, pady=2)
+        sig_cb = ttk.Combobox(sig_ctrl_row, textvariable=self._sigil_rules_var,
+                               values=bt_names, state="readonly", width=12)
+        sig_cb.pack(side="left")
+        sig_cb.bind("<<ComboboxSelected>>", lambda _: self._rebuild_sigil_rules_panel())
+        tk.Button(sig_ctrl_row, text="+ Regel", font=("Arial", 8),
+                  bg="#1a3a1a", fg="#88ff88", cursor="hand2",
+                  command=self._add_sigil_rule).pack(side="left", padx=4)
+
+        # Rules panel (inner frame refreshed per sigil)
+        rules_border = tk.Frame(f, bg="#333", bd=1, relief="sunken")
+        rules_border.pack(fill="x", padx=8, pady=2)
+        self._sigil_rules_inner = tk.Frame(rules_border, bg="#1a1a1a")
+        self._sigil_rules_inner.pack(fill="x", padx=1, pady=1)
+
+        # Incompatible pairs
+        tk.Label(f, text="Unverträgliche Paare:",
+                 bg="#1a1a1a", fg="#ffcc44", font=("Arial", 8)).pack(
+            anchor="w", padx=12, pady=(6, 0))
+        self._incompat_frame = tk.Frame(f, bg="#1a1a1a")
+        self._incompat_frame.pack(fill="x", padx=12, pady=1)
+        self._incompat_lb = tk.Listbox(self._incompat_frame, height=3,
+                                        bg="#2a2a1a", fg="#ffcc44",
+                                        selectbackground="#5a5a2a",
+                                        font=("Consolas", 8))
+        self._incompat_lb.pack(side="left", fill="x", expand=True)
+        ic_btn_f = tk.Frame(self._incompat_frame, bg="#1a1a1a")
+        ic_btn_f.pack(side="left", padx=2)
+        tk.Button(ic_btn_f, text="+", width=2, font=("Arial", 8),
+                  bg="#2a2a2a", fg="#aaa", cursor="hand2",
+                  command=self._add_incompat_pair).pack()
+        tk.Button(ic_btn_f, text="✕", width=2, font=("Arial", 8),
+                  bg="#2a2a2a", fg="#aaa", cursor="hand2",
+                  command=self._remove_incompat_pair).pack(pady=1)
+
+        for pair in self._incompatible_pairs:
+            self._incompat_lb.insert("end", f"{pair[0]}  ↔  {pair[1]}")
+
+        self._rebuild_sigil_rules_panel()
 
         self._sep(f)
 
@@ -421,6 +639,154 @@ class RandomBuilder(tk.Frame):
         self._containers    = _load_containers()
         self._content_probs = load_content_probs()
         self._rebuild_content_rules()
+
+    # ── Sigil rules helpers ───────────────────────────────────────────────────
+
+    def _rebuild_sigil_rules_panel(self):
+        bt = self._sigil_rules_var.get()
+        frame = self._sigil_rules_inner
+        for w in frame.winfo_children():
+            w.destroy()
+
+        rules = self._sigil_rules_data.get(bt, [])
+        container_choices = list(self._containers.keys()) if self._containers else []
+
+        if not rules:
+            tk.Label(frame, text="Keine Regeln — '+ Regel' klicken.",
+                     bg="#1a1a1a", fg="#555", font=("Arial", 8)).pack(
+                anchor="w", padx=6, pady=4)
+            return
+
+        # Header
+        hdr = tk.Frame(frame, bg="#1a1a1a")
+        hdr.pack(fill="x", padx=2)
+        tk.Label(hdr, text="Container", bg="#1a1a1a", fg="#888",
+                 width=16, anchor="w", font=("Arial", 7, "italic")).pack(side="left")
+        tk.Label(hdr, text="Prob", bg="#1a1a1a", fg="#888",
+                 width=5, font=("Arial", 7, "italic")).pack(side="left")
+        tk.Label(hdr, text="Min", bg="#1a1a1a", fg="#888",
+                 width=4, font=("Arial", 7, "italic")).pack(side="left")
+        tk.Label(hdr, text="Max", bg="#1a1a1a", fg="#888",
+                 width=4, font=("Arial", 7, "italic")).pack(side="left")
+
+        for idx, rule in enumerate(rules):
+            row = tk.Frame(frame, bg="#1e1e2a")
+            row.pack(fill="x", padx=2, pady=1)
+
+            c_var = tk.StringVar(value=rule.get("container", ""))
+            cb = ttk.Combobox(row, textvariable=c_var,
+                              values=container_choices, width=14)
+            cb.pack(side="left", padx=2)
+
+            tk.Label(row, text="P:", bg="#1e1e2a", fg="#888",
+                     font=("Arial", 7)).pack(side="left")
+            p_var = tk.StringVar(value=str(rule.get("probability", 1.0)))
+            tk.Entry(row, textvariable=p_var, width=5,
+                     bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(side="left")
+
+            tk.Label(row, text="↓", bg="#1e1e2a", fg="#888",
+                     font=("Arial", 7)).pack(side="left", padx=(4, 0))
+            min_var = tk.StringVar(value=str(rule.get("min", 0)))
+            tk.Spinbox(row, textvariable=min_var, from_=0, to=20, width=3,
+                       bg="#2a2a2a", fg="white", font=("Arial", 8),
+                       buttonbackground="#2a2a2a").pack(side="left")
+
+            tk.Label(row, text="↑", bg="#1e1e2a", fg="#888",
+                     font=("Arial", 7)).pack(side="left", padx=(2, 0))
+            max_var = tk.StringVar(value=str(rule.get("max", 1)))
+            tk.Spinbox(row, textvariable=max_var, from_=0, to=20, width=3,
+                       bg="#2a2a2a", fg="white", font=("Arial", 8),
+                       buttonbackground="#2a2a2a").pack(side="left")
+
+            tk.Button(row, text="✕", width=2, font=("Arial", 8),
+                      bg="#3a1a1a", fg="#ff8888", cursor="hand2",
+                      command=lambda i=idx: self._remove_sigil_rule(i)
+                      ).pack(side="right", padx=2)
+
+            # Sync vars → rule dict on change
+            def _sync(*_, r=rule, cv=c_var, pv=p_var, mnv=min_var, mxv=max_var):
+                try:
+                    r["container"] = cv.get()
+                    r["probability"] = float(pv.get())
+                    r["min"] = int(mnv.get())
+                    r["max"] = int(mxv.get())
+                except Exception:
+                    pass
+                self._schedule_autosave()
+
+            for _v in (c_var, p_var, min_var, max_var):
+                _v.trace_add("write", _sync)
+
+    def _add_sigil_rule(self):
+        bt = self._sigil_rules_var.get()
+        container_choices = list(self._containers.keys()) if self._containers else []
+        default_c = container_choices[0] if container_choices else ""
+        self._sigil_rules_data.setdefault(bt, []).append(
+            {"container": default_c, "probability": 1.0, "min": 0, "max": 1}
+        )
+        self._rebuild_sigil_rules_panel()
+        self._schedule_autosave()
+
+    def _remove_sigil_rule(self, idx: int):
+        bt = self._sigil_rules_var.get()
+        rules = self._sigil_rules_data.get(bt, [])
+        if 0 <= idx < len(rules):
+            rules.pop(idx)
+        self._rebuild_sigil_rules_panel()
+        self._schedule_autosave()
+
+    def _pick_effect_id(self) -> str:
+        """Show a Toplevel with effect/cost IDs to pick from."""
+        all_ids = (
+            [item["id"] for item in self._content_data.get("Effect", [])] +
+            [item["id"] for item in self._content_data.get("Cost",   [])]
+        )
+        if not all_ids:
+            return ""
+        top = tk.Toplevel(self.winfo_toplevel())
+        top.title("Effekt/Cost auswählen")
+        top.configure(bg="#1a1a1a")
+        top.grab_set()
+        result = [""]
+        lb = tk.Listbox(top, bg="#2a2a2a", fg="white",
+                        font=("Consolas", 9), height=20, width=36)
+        lb.pack(padx=8, pady=8)
+        for iid in sorted(all_ids):
+            lb.insert("end", iid)
+
+        def _ok():
+            sel = lb.curselection()
+            if sel:
+                result[0] = lb.get(sel[0])
+            top.destroy()
+
+        tk.Button(top, text="OK", command=_ok,
+                  bg="#1a6e3c", fg="white", font=("Arial", 9)).pack(pady=(0, 8))
+        top.wait_window()
+        return result[0]
+
+    def _add_incompat_pair(self):
+        eid1 = self._pick_effect_id()
+        if not eid1:
+            return
+        eid2 = self._pick_effect_id()
+        if not eid2 or eid2 == eid1:
+            return
+        pair = sorted([eid1, eid2])
+        if pair not in [sorted(p) for p in self._incompatible_pairs]:
+            self._incompatible_pairs.append(pair)
+            self._incompat_lb.insert("end", f"{pair[0]}  ↔  {pair[1]}")
+        self._schedule_autosave()
+
+    def _remove_incompat_pair(self):
+        sel = self._incompat_lb.curselection()
+        if not sel:
+            return
+        idx = sel[0]
+        self._incompat_lb.delete(idx)
+        if 0 <= idx < len(self._incompatible_pairs):
+            self._incompatible_pairs.pop(idx)
+        self._schedule_autosave()
 
     # ══════════════════════════════════════════════════════════════════════════
     # CENTER – Card list
@@ -585,22 +951,40 @@ class RandomBuilder(tk.Frame):
             lambda e: self._detail_canvas.itemconfig(
                 self._detail_win, width=e.width))
 
+    def _refresh_content_and_recalculate(self):
+        """Save content data to disk, reload, and recalculate CV/complexity for all cards."""
+        _save_content_data(self._content_data)
+        self._content_data  = _load_content_data()
+        self._effects_lu    = _list_to_lookup(self._content_data.get("Effect",    []))
+        self._costs_lu      = _list_to_lookup(self._content_data.get("Cost",      []))
+        self._triggers_lu   = _list_to_lookup(self._content_data.get("Trigger",   []))
+        self._conditions_lu = _list_to_lookup(self._content_data.get("Condition", []))
+        for card in self._cards:
+            self._recompute_card(card)
+        save_random_cards(self._cards)
+        self._refresh_list()
+        # Re-show detail panel if a card is selected
+        sel = self._card_lb.curselection()
+        if sel:
+            vis_idx = sel[0]
+            if 0 <= vis_idx < len(self._visible_indices):
+                self._show_detail(self._cards[self._visible_indices[vis_idx]])
+
     def _open_content_editor(self, item_id: str, type_name: str):
-        """Open ContentEditor for an effect or cost by ID."""
-        lookup = {"Effect": self._effects_lu, "Cost": self._costs_lu}
+        """Open ContentEditor for an effect, cost, trigger, or condition by ID."""
+        lookup = {
+            "Effect":    self._effects_lu,
+            "Cost":      self._costs_lu,
+            "Trigger":   self._triggers_lu,
+            "Condition": self._conditions_lu,
+        }
         item = lookup.get(type_name, {}).get(item_id)
         if not item:
             return
         from CardContent.content_editor import ContentEditor
 
-        def _on_save():
-            # Reload lookup tables so rendered text updates on next card select
-            self._content_data = _load_content_data()
-            self._effects_lu   = _list_to_lookup(self._content_data.get("Effect", []))
-            self._costs_lu     = _list_to_lookup(self._content_data.get("Cost",   []))
-
         ContentEditor(self.winfo_toplevel(), item, self._content_data,
-                      on_save=_on_save)
+                      on_save=self._refresh_content_and_recalculate)
 
     def _to_render_card(self, card: dict) -> dict:
         """Convert random card format → card_builder renderer format."""
@@ -638,7 +1022,7 @@ class RandomBuilder(tk.Frame):
             fg="#cc8833")
         self._metrics_label.config(
             text=f"CV: {card.get('_cv', '?')}   Complexity: {card.get('_complexity', '?')}"
-                 f"   Boxen: {len(card.get('blocks', []))}")
+                 f"   Sigils: {len(card.get('blocks', []))}")
 
         # Render visual card preview
         try:
@@ -699,6 +1083,54 @@ class RandomBuilder(tk.Frame):
                          text=f"CV={ab_cv:+.2f}   Cmplx={ab_cmplx:.1f}",
                          bg=BG, fg="#aaaaaa",
                          font=("Consolas", 8)).pack(side="right", padx=6)
+
+                # ── Condition ─────────────────────────────────────────────────
+                if ab.get("condition_id"):
+                    cid2   = ab["condition_id"]
+                    cv2    = ab.get("condition_vals", {})
+                    co2    = ab.get("condition_opt_vals", {})
+                    ci2    = self._conditions_lu.get(cid2, {})
+                    ct2    = _render_effect(ci2, cv2, co2, fallback_id=cid2)
+                    cdrow  = tk.Frame(ab_frame, bg="#1e1424")
+                    cdrow.pack(fill="x", padx=8, pady=1)
+                    tk.Button(cdrow, text=f"  ◈ Cond: {cid2}",
+                              bg="#1e1424", fg="#cc88ff", relief="flat", cursor="hand2",
+                              font=("Consolas", 8), anchor="w",
+                              command=lambda i=cid2: self._open_content_editor(i, "Condition")
+                              ).pack(side="left")
+                    tk.Label(cdrow, text=f"→  {ct2}",
+                             bg="#1e1424", fg="#ddaaff",
+                             font=("Consolas", 8)).pack(side="left", padx=4)
+
+                # ── Trigger ────────────────────────────────────────────────────
+                if ab.get("trigger_id"):
+                    tid2   = ab["trigger_id"]
+                    tv2    = ab.get("trigger_vals", {})
+                    to2    = ab.get("trigger_opt_vals", {})
+                    ti2    = self._triggers_lu.get(tid2, {})
+                    tt2    = _render_effect(ti2, tv2, to2, fallback_id=tid2)
+                    trrow  = tk.Frame(ab_frame, bg="#141e14")
+                    trrow.pack(fill="x", padx=8, pady=1)
+                    tk.Button(trrow, text=f"  ⚡ Trig: {tid2}",
+                              bg="#141e14", fg="#aaff88", relief="flat", cursor="hand2",
+                              font=("Consolas", 8), anchor="w",
+                              command=lambda i=tid2: self._open_content_editor(i, "Trigger")
+                              ).pack(side="left")
+                    tk.Label(trrow, text=f"→  {tt2}",
+                             bg="#141e14", fg="#ccffaa",
+                             font=("Consolas", 8)).pack(side="left", padx=4)
+                    for vk2, vv2 in tv2.items():
+                        tvrow = tk.Frame(ab_frame, bg="#141e14")
+                        tvrow.pack(fill="x", padx=24, pady=0)
+                        tk.Label(tvrow, text=f"  {{{vk2}}} = {vv2}",
+                                 bg="#141e14", fg="#88bb66",
+                                 font=("Consolas", 7)).pack(side="left")
+                    for oi2, ch2 in sorted(to2.items()):
+                        torow = tk.Frame(ab_frame, bg="#141e14")
+                        torow.pack(fill="x", padx=24, pady=0)
+                        tk.Label(torow, text=f"  [opt{oi2}] = {ch2}",
+                                 bg="#141e14", fg="#88aa66",
+                                 font=("Consolas", 7)).pack(side="left")
 
                 # ── Costs ─────────────────────────────────────────────────────
                 for cost in ab.get("costs", []):
@@ -978,6 +1410,58 @@ class RandomBuilder(tk.Frame):
             cfg["cv_card_min"] = float(self._cv_min_var.get())
         except Exception:
             pass
+        try:
+            cfg["mana_chance"] = float(self._mana_chance_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["mana_main_count"] = int(self._mana_main_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["mana_max_count"] = int(self._mana_max_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["max_other_costs"] = int(self._max_other_costs_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["max_effects"] = int(self._max_effects_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["min_effects"] = int(self._min_effects_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["condition_chance"] = float(self._cond_chance_var.get())
+        except Exception:
+            pass
+        try:
+            cfg["choose_n_chance"] = float(self._choose_chance_var.get())
+        except Exception:
+            pass
+
+        # Sigil rules (guarded – vars might not exist if build is incomplete)
+        try:
+            sigil_rules = {}
+            for bt, rules in self._sigil_rules_data.items():
+                clean = [
+                    {k: v for k, v in r.items() if k != "_vars"}
+                    for r in rules
+                ]
+                if clean:
+                    sigil_rules[bt] = clean
+            cfg["sigil_rules"] = sigil_rules
+            cfg["incompatible_pairs"] = [list(p) for p in self._incompatible_pairs]
+        except AttributeError:
+            pass
+
+        try:
+            cfg["min_blocks"] = int(self._min_blocks_var.get())
+        except Exception:
+            pass
 
         return cfg
 
@@ -990,11 +1474,13 @@ class RandomBuilder(tk.Frame):
 
         # Reload live data
         print("[generate] Lade Content-Daten ...")
-        self._content_data = _load_content_data()
-        self._effects_lu   = _list_to_lookup(self._content_data.get("Effect", []))
-        self._costs_lu     = _list_to_lookup(self._content_data.get("Cost",   []))
-        self._containers   = _load_containers()
-        self._box_config   = load_box_config()
+        self._content_data  = _load_content_data()
+        self._effects_lu    = _list_to_lookup(self._content_data.get("Effect",    []))
+        self._costs_lu      = _list_to_lookup(self._content_data.get("Cost",      []))
+        self._triggers_lu   = _list_to_lookup(self._content_data.get("Trigger",   []))
+        self._conditions_lu = _list_to_lookup(self._content_data.get("Condition", []))
+        self._containers    = _load_containers()
+        self._box_config    = load_box_config()
         print(f"[generate] Effekte: {len(self._effects_lu)}, Kosten: {len(self._costs_lu)}, "
               f"Container: {len(self._containers)}, BoxConfig: {len(self._box_config)}")
         print(f"[generate] Triggers: {len(self._content_data.get('Trigger', []))}")

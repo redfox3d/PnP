@@ -304,7 +304,7 @@ class BoxEditor(tk.LabelFrame):
         hdr.pack(fill="x")
         tk.Button(hdr, text="+ Ability", command=self._add_ability,
                   font=("Arial", 8)).pack(side="left", padx=4)
-        tk.Button(hdr, text="Remove Block", command=self.on_delete,
+        tk.Button(hdr, text="✕ Sigil entfernen", command=self.on_delete,
                   fg="red", font=("Arial", 8)).pack(side="right", padx=4)
 
         self._ab_frame = tk.Frame(self, bg=self.cget("bg"))

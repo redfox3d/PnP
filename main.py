@@ -43,8 +43,10 @@ class App:
         self.root.configure(bg="#1a1a1a")
         self._apply_style()
         self._current_panel = None
+
         from utils import enable_mousewheel_scroll
         enable_mousewheel_scroll(self.root)
+
         self.show_launcher()
         self.root.mainloop()
 
@@ -120,6 +122,16 @@ class App:
         tk.Button(f, text="📦  Container Manager",
                   bg="#3a3a1a", fg="white",
                   command=self.show_container_manager,
+                  **btn_kw).pack(pady=5)
+
+        tk.Button(f, text="✨  Enchant Bubble",
+                  bg="#0d2233", fg="#66ccff",
+                  command=self.open_enchant_bubble,
+                  **btn_kw).pack(pady=5)
+
+        tk.Button(f, text="💀  Curse Bubble",
+                  bg="#1a0000", fg="#ff6666",
+                  command=self.open_curse_bubble,
                   **btn_kw).pack(pady=5)
 
     # ── Card Builder ──────────────────────────────────────────────────────────
@@ -229,6 +241,16 @@ class App:
         self._current_panel = ContainerManager(container)
         self._current_panel.pack(fill="both", expand=True)
 
+    # ── Context Bubbles ───────────────────────────────────────────────────────
+
+    def open_enchant_bubble(self):
+        from CardContent.context_bubble import ContextBubble
+        ContextBubble(self.root, "Enchant")
+
+    def open_curse_bubble(self):
+        from CardContent.context_bubble import ContextBubble
+        ContextBubble(self.root, "Curse")
+
     # ── Shared switch bar ─────────────────────────────────────────────────────
 
     def _add_switch_bar(self, current: str, others: list):
@@ -244,6 +266,18 @@ class App:
                   bg="#2a2a2a", fg="#aaaaaa",
                   font=("Arial", 8), relief="flat",
                   cursor="hand2").pack(side="right", padx=4)
+
+        # Context Bubble quick-access buttons (always visible in switch bar)
+        tk.Button(bar, text="💀 Curse",
+                  command=self.open_curse_bubble,
+                  bg="#330000", fg="#ff8888",
+                  font=("Arial", 8), relief="flat",
+                  cursor="hand2").pack(side="left", padx=2)
+        tk.Button(bar, text="✨ Enchant",
+                  command=self.open_enchant_bubble,
+                  bg="#001833", fg="#66ccff",
+                  font=("Arial", 8), relief="flat",
+                  cursor="hand2").pack(side="left", padx=2)
 
         for label, cmd in reversed(others):
             tk.Button(bar, text=f"⇄  {label}",

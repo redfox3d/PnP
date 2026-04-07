@@ -5,7 +5,8 @@
     "effects": [
       "Damage",
       "Ranged_Damage",
-      "Use_Weapon"
+      "Use_Weapon",
+      "Drain"
     ],
     "no_repeat": true
   },
@@ -17,7 +18,11 @@
     "element_weights": {},
     "sub_containers": [],
     "effects": [
-      "Change_This_Card_Position"
+      "Change_This_Card_Position",
+      "Forget_This_Card",
+      "Loose_This_Card",
+      "Discard_This_Card",
+      "Recycle_This_Card"
     ],
     "costs": [
       "Reveal_Self"

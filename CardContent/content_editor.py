@@ -2,8 +2,12 @@
 content_editor.py – ContentEditor window and sub-dialogs.
 """
 
+import json as _json
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 from CardContent.template_parser import (
     parse_template, render_content_text,
@@ -74,6 +78,9 @@ class ContentEditor(tk.Toplevel):
 
         self._f.columnconfigure(1, weight=1)
         self._row = 0
+        # Sync variables/options from the sigil template on every open,
+        # so items created before this feature existed get their {X} detected.
+        sync_item_template(self.item)
         self._build_basic_fields()
         self._sep()
         self._build_var_section()
@@ -157,18 +164,17 @@ class ContentEditor(tk.Toplevel):
             row=self._row, column=1, sticky="w", padx=8, pady=3)
         self._row += 1
 
-        # cv1 / cv2 / cv3 – content value fields for the whole item
-        lbl("cv1")
-        cv_f = tk.Frame(self._f)
-        cv_f.grid(row=self._row, column=1, columnspan=5, sticky="w", padx=8, pady=3)
-        self._cv1_var = tk.StringVar(value=str(self.item.get("cv1", "")))
-        tk.Entry(cv_f, textvariable=self._cv1_var, width=10).pack(side="left", padx=2)
-        tk.Label(cv_f, text="cv2", font=("Arial", 9, "bold")).pack(side="left", padx=(8, 2))
-        self._cv2_var = tk.StringVar(value=str(self.item.get("cv2", "")))
-        tk.Entry(cv_f, textvariable=self._cv2_var, width=10).pack(side="left", padx=2)
-        tk.Label(cv_f, text="cv3", font=("Arial", 9, "bold")).pack(side="left", padx=(8, 2))
-        self._cv3_var = tk.StringVar(value=str(self.item.get("cv3", "")))
-        tk.Entry(cv_f, textvariable=self._cv3_var, width=10).pack(side="left", padx=2)
+        # CV – single item-level constant (no polynomial terms at item level)
+        lbl("CV")
+        # Backward-compat: fall back to cv1 if cv not present
+        _cv_raw = self.item.get("cv", self.item.get("cv1", ""))
+        self._cv_var = tk.StringVar(
+            value="" if (_cv_raw == "" or _cv_raw is None) else str(_cv_raw))
+        tk.Entry(self._f, textvariable=self._cv_var, width=10).grid(
+            row=self._row, column=1, sticky="w", padx=8, pady=3)
+        tk.Label(self._f, text="(Konstanter Basiswert, unabhängig von Variablen)",
+                 fg="#888", font=("Arial", 8)).grid(
+            row=self._row, column=2, columnspan=3, sticky="w", padx=4)
         self._row += 1
 
         bf = tk.Frame(self._f)
@@ -334,13 +340,35 @@ class ContentEditor(tk.Toplevel):
 
     # ── Stat header & row ──────────────────────────────────────────────────────
 
+    # Grid-column pixel minsizes shared between header and every data row.
+    # Columns: Name | Prefix | ID-entry | CopyBtn | Rarity | Cmplx | ×x | ×x² | ×x³ | Cond | 🎲? | 🎲! | Del
+    _SC = [80, 98, 78, 26, 56, 56, 56, 56, 56, 50, 38, 38, 26]
+
+    @staticmethod
+    def _apply_stat_cols(frame):
+        for i, ms in enumerate(ContentEditor._SC):
+            frame.columnconfigure(i, minsize=ms)
+
     def _stat_header(self, parent):
         hdr = tk.Frame(parent)
-        hdr.pack(fill="x")
-        for txt, w in [("Name", 10), ("ID", 16), ("Rarity", 7), ("Cmplx", 7),
-                       ("cv1", 5), ("cv2", 5), ("cv3", 5), ("", 8), ("🎲?", 4), ("🎲!", 4), ("", 3)]:
+        hdr.pack(fill="x", pady=(2, 0))
+        self._apply_stat_cols(hdr)
+        # Name spans col 0; ID spans cols 1-2 (prefix+entry); then per-column labels
+        for col, txt in [
+            (0,  "Name"),
+            (4,  "Rarity"),
+            (5,  "Cmplx"),
+            (6,  "×x"),
+            (7,  "×x²"),
+            (8,  "×x³"),
+            (10, "🎲?"),
+            (11, "🎲!"),
+        ]:
             tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
-                     width=w, anchor="w").pack(side="left", padx=1)
+                     anchor="w").grid(row=0, column=col, sticky="w", padx=2)
+        # "ID" spans the prefix + entry columns
+        tk.Label(hdr, text="ID", font=("Arial", 8, "bold"),
+                 anchor="w").grid(row=0, column=1, columnspan=2, sticky="w", padx=2)
 
     def _stat_row(self, parent, label: str, label_color: str,
                   stat: dict,
@@ -352,20 +380,22 @@ class ContentEditor(tk.Toplevel):
 
         row = tk.Frame(parent, relief="groove", bd=1)
         row.pack(fill="x", pady=1)
+        self._apply_stat_cols(row)
 
-        tk.Label(row, text=label, width=10,
-                 fg=label_color, font=("Arial", 9, "bold")).pack(side="left", padx=4)
+        # Col 0 – Name label
+        tk.Label(row, text=label, fg=label_color,
+                 font=("Arial", 9, "bold"), anchor="w").grid(
+            row=0, column=0, sticky="w", padx=4, pady=2)
 
         full_id = stat.get("id", "")
         ext_val = full_id[len(id_prefix):] if (id_prefix and full_id.startswith(id_prefix)) else full_id
 
+        # Col 1 – Prefix label (with tooltip)
         if id_prefix:
-            # Truncate display to max 14 chars, show full prefix as tooltip
             display_pfx = id_prefix if len(id_prefix) <= 14 else "…" + id_prefix[-12:]
             pfx_lbl = tk.Label(row, text=display_pfx, fg="#666688",
-                               font=("Arial", 7), width=14, anchor="e")
-            pfx_lbl.pack(side="left", padx=0)
-            # Tooltip: show full prefix on hover
+                               font=("Arial", 7), anchor="e")
+            pfx_lbl.grid(row=0, column=1, sticky="ew", padx=(2, 0))
             def _enter(e, w=pfx_lbl, full=id_prefix):
                 w._tip = tk.Toplevel(w); w._tip.wm_overrideredirect(True)
                 x, y = w.winfo_rootx(), w.winfo_rooty() + 18
@@ -377,17 +407,19 @@ class ContentEditor(tk.Toplevel):
             pfx_lbl.bind("<Enter>", _enter)
             pfx_lbl.bind("<Leave>", _leave)
 
+        # Col 2 – ID entry
         id_var   = tk.StringVar(value=ext_val)
         id_entry = tk.Entry(row, textvariable=id_var, width=10,
                             font=("Arial", 8), fg="#aaaaff", bg="#1a1a2e")
-        id_entry.pack(side="left", padx=2)
+        id_entry.grid(row=0, column=2, sticky="ew", padx=2, pady=1)
 
+        # Col 3 – Copy button
         def _copy_id(fid=full_id):
             self.clipboard_clear()
             self.clipboard_append(fid)
             self._flash(f"Kopiert: {fid}")
         tk.Button(row, text="⧉", command=_copy_id,
-                  font=("Arial", 7), padx=2, pady=0).pack(side="left", padx=1)
+                  font=("Arial", 7), padx=1, pady=0).grid(row=0, column=3, padx=1)
 
         old_ref = [full_id]
 
@@ -405,12 +437,13 @@ class ContentEditor(tk.Toplevel):
         id_entry.bind("<FocusOut>", _on_id)
         id_entry.bind("<Return>",   _on_id)
 
+        # Cols 4-8 – numeric stat fields
         fields = [
-            ("rarity",     tk.StringVar(value=str(stat.get("rarity",     10))),  7),
-            ("complexity", tk.StringVar(value=str(stat.get("complexity", 1.0))), 7),
-            ("cv1",        tk.StringVar(value=str(stat.get("cv1", 1))),           5),
-            ("cv2",        tk.StringVar(value=str(stat.get("cv2", 0))),           5),
-            ("cv3",        tk.StringVar(value=str(stat.get("cv3", 0))),           5),
+            ("rarity",     tk.StringVar(value=str(stat.get("rarity",     10))),  4),
+            ("complexity", tk.StringVar(value=str(stat.get("complexity", 1.0))), 5),
+            ("cv1",        tk.StringVar(value=str(stat.get("cv1", 1))),           6),
+            ("cv2",        tk.StringVar(value=str(stat.get("cv2", 0))),           7),
+            ("cv3",        tk.StringVar(value=str(stat.get("cv3", 0))),           8),
         ]
         casts = {"rarity": int, "complexity": float,
                  "cv1": float, "cv2": float, "cv3": float}
@@ -420,34 +453,39 @@ class ContentEditor(tk.Toplevel):
                 try:    s[key] = ca[key](var.get())
                 except: pass
 
-        for key, var, w in fields:
+        for key, var, col in fields:
             var.trace_add("write", _trace)
-            tk.Entry(row, textvariable=var, width=w).pack(side="left", padx=1)
+            tk.Entry(row, textvariable=var, width=6).grid(
+                row=0, column=col, sticky="ew", padx=1, pady=1)
 
+        # Col 9 – Conditions button
         tk.Button(
             row, text="Cond.",
             command=lambda s=stat, st=stat_type, ch=choices: ConditionsEditor(
                 self, s, self.data, stat_type=st, choices=ch or []),
             font=("Arial", 8)
-        ).pack(side="left", padx=3)
+        ).grid(row=0, column=9, padx=3, pady=1)
 
-        # Dice checkboxes – only for variable rows
+        # Cols 10-11 – Dice checkboxes (variables only)
         if stat_type == "variable":
-            for dk, dl, tt in [
-                ("dice_allowed", "🎲?", "Würfel erlaubt"),
-                ("dice_only",    "🎲!", "Nur Würfel"),
-            ]:
+            for col, (dk, dl) in zip([10, 11], [
+                ("dice_allowed", "🎲?"),
+                ("dice_only",    "🎲!"),
+            ]):
                 bv = tk.BooleanVar(value=bool(stat.get(dk, False)))
                 bv.trace_add("write",
                              lambda *_, k=dk, v=bv, s=stat: s.__setitem__(k, v.get()))
                 tk.Checkbutton(row, text=dl, variable=bv,
                                font=("Arial", 7),
-                               activebackground="#2a2a3a").pack(side="left", padx=1)
+                               activebackground="#2a2a3a").grid(
+                    row=0, column=col, padx=1, pady=1)
 
+        # Col 12 – Delete button
         if can_delete and on_delete:
             tk.Button(row, text="✕", fg="red",
                       command=lambda s=stat: on_delete(s),
-                      font=("Arial", 8, "bold"), width=2).pack(side="left", padx=2)
+                      font=("Arial", 8, "bold"), width=2).grid(
+                row=0, column=12, padx=2)
 
     # ── Rebuild vars ───────────────────────────────────────────────────────────
 
@@ -554,16 +592,15 @@ class ContentEditor(tk.Toplevel):
         try:    self.item["complexity_base"] = float(self._cpx_var.get())
         except: pass
 
-        # cv1 / cv2 / cv3 item-level values
-        for key, var in [("cv1", self._cv1_var),
-                         ("cv2", self._cv2_var),
-                         ("cv3", self._cv3_var)]:
-            raw = var.get().strip()
-            if raw:
-                try:    self.item[key] = float(raw)
-                except: pass
-            else:
-                self.item.pop(key, None)
+        # CV – single item-level constant; remove legacy cv1/cv2/cv3 keys
+        _cv_raw = self._cv_var.get().strip()
+        if _cv_raw:
+            try:    self.item["cv"] = float(_cv_raw)
+            except: pass
+        else:
+            self.item.pop("cv", None)
+        for _legacy in ("cv1", "cv2", "cv3"):
+            self.item.pop(_legacy, None)
 
         # Card type weights
         if hasattr(self, "_ct_weight_vars"):
@@ -596,9 +633,33 @@ class ContentEditor(tk.Toplevel):
             else:
                 self.item.pop("element_weights", None)
 
+        # ── Write directly to disk (always, regardless of caller) ────────────
+        self._flush_to_disk()
+
         self.destroy()
         if self.on_save:
             self.on_save()
+
+    def _flush_to_disk(self):
+        """Write every content type back to its JSON file immediately."""
+        _FILES = {
+            "Effect":    os.path.join(_HERE, "cc_data", "effects.json"),
+            "Trigger":   os.path.join(_HERE, "cc_data", "triggers.json"),
+            "Condition": os.path.join(_HERE, "cc_data", "conditions.json"),
+            "Cost":      os.path.join(_HERE, "cc_data", "costs.json"),
+            "Insert":    os.path.join(_HERE, "cc_data", "inserts.json"),
+            "Enchant":   os.path.join(_HERE, "cc_data", "enchants.json"),
+            "Curse":     os.path.join(_HERE, "cc_data", "curses.json"),
+        }
+        for type_name, path in _FILES.items():
+            items = self.data.get(type_name)
+            if items is None:
+                continue
+            try:
+                with open(path, "w", encoding="utf-8") as f:
+                    _json.dump({type_name: items}, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"[ContentEditor] Fehler beim Speichern {path}: {e}")
 
 
 # ── Conditions Editor ──────────────────────────────────────────────────────────
@@ -757,7 +818,7 @@ class ConditionsEditor(tk.Toplevel):
             row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
 
         # ── Allowed box types ─────────────────────────────────────────────────
-        tk.Label(f, text="Erlaubte Box-Typen",
+        tk.Label(f, text="Erlaubte Sigil-Typen",
                  font=("Arial", 9, "bold")).grid(
             row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
         tk.Label(f, text="☑ = erlaubt   (leer = alle erlaubt)",

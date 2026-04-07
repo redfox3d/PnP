@@ -27,12 +27,30 @@ _DEFAULT_GEN_CONFIG = {
         {"block_type": "Play",    "probability": 0.95},
         {"block_type": "Hand",    "probability": 0.15},
         {"block_type": "Lost",    "probability": 0.15},
-        {"block_type": "Fleeting","probability": 0.10},
+        {"block_type": "Discard","probability": 0.10},
     ],
     "content_rules": [],   # [{container: str, probability: float}]
-    "cost_rules":    [],   # [{cost_id: str, probability: float}]
-    "cv_target":     3.0,
+    "cost_rules":    [],   # [{cost_id: str, probability: float}]  (Mana excluded – see below)
+    "cv_target":      3.0,
     "cv_per_box_max": 3.0,
+    # ── Mana (independent of other costs) ──────────────────────────────────────
+    "mana_chance":     0.95,  # probability mana appears at all (per Play-ability)
+    "mana_main_count": 2,    # mode of the mana-count bell curve (most likely count)
+    "mana_max_count":  6,    # hard cap on mana-cost entries
+    # ── Other costs ────────────────────────────────────────────────────────────
+    "max_other_costs": 1,    # max number of non-mana costs per ability
+    # ── Effects ────────────────────────────────────────────────────────────────
+    "max_effects":    -1,    # max effects per ability  (-1 = no limit)
+    "min_effects":     0,    # min effects per ability  (0 = no minimum)
+    "min_blocks":      1,    # min sigils per card      (1 = no minimum extra)
+    # ── Conditions / Choose N ──────────────────────────────────────────────────
+    "condition_chance": 0.15,  # probability a sigil gets a condition
+    "choose_n_chance":  0.10,  # probability a sigil uses "choose N of effects"
+    # ── Sigil Constraints ──────────────────────────────────────────────────────
+    # sigil_rules: {block_type: [{container, probability, min, max}, ...]}
+    "sigil_rules": {},
+    # incompatible_pairs: [[eid1, eid2], ...]  (cannot appear together on same sigil)
+    "incompatible_pairs": [],
 }
 
 

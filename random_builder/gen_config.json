@@ -1,5 +1,5 @@
 {
-  "count": 10,
+  "count": 100,
   "element_mode": "equal",
   "custom_element_weights": {
     "Fire": 10.0,
@@ -35,7 +35,11 @@
       "probability": 0.01
     },
     {
-      "block_type": "Fleeting",
+      "block_type": "Exhausted",
+      "probability": 0.01
+    },
+    {
+      "block_type": "Discard",
       "probability": 0.1
     },
     {
@@ -77,23 +81,11 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Forget_This_Card",
+      "effect_id": "Cleanse",
       "probability": 1.0
     },
     {
-      "effect_id": "Loose_This_Card",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Discard_This_Card",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Recycle_This_Card",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Drain",
+      "effect_id": "Heal",
       "probability": 1.0
     },
     {
@@ -105,7 +97,7 @@
       "probability": 1.0
     },
     {
-      "cost_id": "Recycle_Cards",
+      "cost_id": "Move_Cards",
       "probability": 1.0
     },
     {
@@ -131,7 +123,41 @@
       "probability": 0.1
     }
   ],
-  "cv_target": 3.0,
+  "cv_target": 2.0,
   "cv_per_box_max": 3.0,
-  "cv_card_min": -999.0
+  "cv_card_min": 1.0,
+  "mana_chance": 0.95,
+  "mana_max_count": 6,
+  "max_other_costs": 2,
+  "max_effects": 3,
+  "min_effects": 1,
+  "condition_chance": 0.15,
+  "choose_n_chance": 0.1,
+  "sigil_constraints": {
+    "Lost": {
+      "forbidden": [
+        "Loose_This_Card"
+      ],
+      "required": []
+    },
+    "Play": {
+      "forbidden": [
+        "Discard_This_Card"
+      ],
+      "required": []
+    },
+    "Hand": {
+      "forbidden": [],
+      "required": [
+        "Loose_This_Card",
+        "Forget_This_Card",
+        "Discard_This_Card",
+        "Recycle_This_Card"
+      ]
+    }
+  },
+  "incompatible_pairs": [],
+  "min_blocks": 1,
+  "mana_main_count": 2,
+  "sigil_rules": {}
 }
