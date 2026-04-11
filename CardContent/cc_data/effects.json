@@ -1,822 +1,822 @@
 {
-    "Effect": [
-        {
-            "id": "Draw",
-            "content_text": "Draw {X} Cards",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "variables": {
-                "X": {
-                    "rarity": 10,
-                    "complexity": 0.3,
-                    "conditions": {
-                        "var_min": 1.0,
-                        "var_max": 20.0
-                    },
-                    "id": "Draw.X",
-                    "cv1": 0.9,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "dice_allowed": true
-                }
-            },
-            "options": {},
-            "conditions": {},
-            "sigil": "{X}",
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ],
-            "weights_open": true
-        },
-        {
-            "id": "Use_Weapon",
-            "content_text": "Use your Weapon",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {},
-            "options": {},
-            "sigil": "",
-            "primary_types": [
-                "Target Enemy"
-            ],
-            "weights_open": true,
-            "cv": 2.0
-        },
-        {
-            "id": "Pulverize",
-            "content_text": "Pulverize {X}",
-            "reminder_text": "Create {X} Powder Tokens based on the Metal Sources you sacrificed for this Card.",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "id_conditions": [
-                    {
-                        "id": "Mana.o3",
-                        "mode": "required"
-                    }
-                ]
-            },
-            "variables": {
-                "X": {
-                    "id": "Pulverize.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1.0,
-                    "cv2": 0.05,
-                    "cv3": 0.0,
-                    "conditions": {
-                        "allowed_elements": [
-                            "Metal"
-                        ],
-                        "var_min": 1.0
-                    }
-                }
-            },
-            "options": {},
-            "sigil": "{X}",
-            "primary_types": [
-                "Non Targeting"
-            ],
-            "weights_open": true,
-            "allowed_elements": [
-                "Metal",
-                "Quinta"
-            ]
-        },
-        {
-            "id": "Grow",
-            "content_text": "Forage {X}",
-            "reminder_text": "Create {X} Herb Tokens of your Choice",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Grow.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1.0,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "conditions": {
-                        "var_min": 1.0,
-                        "var_max": 10.0,
-                        "allowed_elements": [
-                            "Nature"
-                        ]
-                    }
-                }
-            },
-            "options": {},
-            "sigil": "{X}",
-            "primary_types": [
-                "Non Targeting"
-            ],
-            "weights_open": true
-        },
-        {
-            "id": "Multicast",
-            "content_text": "Copy this cards play effect X Times",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 3.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "allowed_box_types": [
-                    "Play"
-                ]
-            },
-            "variables": {},
-            "options": {},
-            "weights_open": true,
-            "sigil": "",
-            "card_type_weights": {}
-        },
-        {
-            "id": "Precise",
-            "content_text": "Precise",
-            "reminder_text": "this Sigils damage can't miss",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "allowed_elements": [
-                    "Metal",
-                    "Ice",
-                    "Nature",
-                    "Quinta"
-                ],
-                "element_weights": {
-                    "Nature": 2.0
-                }
-            },
-            "variables": {},
-            "options": {},
-            "sigil": "",
-            "cv": 2.0,
-            "primary_types": [
-                "Target Enemy"
-            ]
-        },
-        {
-            "id": "Forget_This_Card",
-            "content_text": "Forget this Card",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "conditions": {},
-            "variables": {},
-            "options": {},
-            "sigil": "",
-            "cv": -0.3,
-            "primary_types": [
-                "Non Targeting"
-            ],
-            "weights_open": true
-        },
-        {
-            "id": "Loose_This_Card",
-            "content_text": "Loose this Carrd",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {},
-            "options": {},
-            "sigil": "",
-            "cv": -0.5,
-            "primary_types": [
-                "Non Targeting"
-            ]
-        },
-        {
-            "id": "Discard_This_Card",
-            "content_text": "Discard this Card",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {},
-            "options": {},
-            "sigil": "",
-            "cv": -0.2,
-            "primary_types": [
-                "Non Targeting"
-            ]
-        },
-        {
-            "id": "Recycle_This_Card",
-            "content_text": "Recycle this Card",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {},
-            "options": {},
-            "sigil": "",
-            "cv": -0.1,
-            "primary_types": [
-                "Non Targeting"
-            ]
-        },
-        {
-            "id": "Drain",
-            "content_text": "Drain {X}",
-            "reminder_text": "Deal {X} Damage, Heal {X}",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "allowed_elements": [
-                    "Nature",
-                    "Blood",
-                    "Quinta"
-                ],
-                "element_weights": {
-                    "Blood": 20.0,
-                    "Quinta": 4.0
-                }
-            },
-            "variables": {
-                "X": {
-                    "id": "Drain.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 0.43,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "conditions": {
-                        "allowed_elements": [
-                            "Nature",
-                            "Blood",
-                            "Quinta"
-                        ],
-                        "element_weights": {
-                            "Nature": 20.0,
-                            "Blood": 35.0,
-                            "Quinta": 8.0
-                        }
-                    },
-                    "dice_only": true
-                }
-            },
-            "options": {},
-            "sigil": "{X}",
-            "primary_types": [
-                "Target Enemy"
-            ]
-        },
-        {
-            "id": "Cleanse",
-            "sigil": "",
-            "content_text": "Cleanse",
-            "reminder_text": "Remove an Enchantment or Curse ",
-            "rarity": 3,
-            "complexity_base": 2.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "allowed_elements": [
-                    "Fire",
-                    "Metal",
-                    "Ice",
-                    "Nature",
-                    "Quinta"
-                ]
-            },
-            "variables": {},
-            "options": {},
-            "cv": 1.7,
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ]
-        },
-        {
-            "id": "Heal",
-            "sigil": "{X}",
-            "content_text": "Heal {X}",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "allowed_elements": [
-                    "Fire",
-                    "Metal",
-                    "Nature",
-                    "Blood",
-                    "Quinta"
-                ],
-                "element_weights": {
-                    "Fire": 3.0,
-                    "Metal": 5.0,
-                    "Ice": 3.0,
-                    "Nature": 50.0,
-                    "Blood": 30.0
-                }
-            },
-            "variables": {
-                "X": {
-                    "id": "Heal.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 0.2,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "conditions": {
-                        "allowed_elements": [
-                            "Fire",
-                            "Ice",
-                            "Nature",
-                            "Blood",
-                            "Quinta"
-                        ],
-                        "element_weights": {
-                            "Fire": 3.0,
-                            "Ice": 4.0,
-                            "Nature": 20.0,
-                            "Blood": 28.0,
-                            "Quinta": 7.0
-                        },
-                        "var_min": 1.0,
-                        "var_max": 50.0
-                    },
-                    "dice_allowed": true
-                }
-            },
-            "options": {},
-            "cv": 0.0,
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ]
-        },
-        {
-            "id": "Move",
-            "sigil": "{X}",
-            "content_text": "Move {X} ",
-            "reminder_text": "",
-            "rarity": 6,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Move.v0",
-                    "rarity": 6,
-                    "complexity": 2.0,
-                    "cv1": 0.5,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "conditions": {}
-                }
-            },
-            "options": {},
-            "cv": 0.0,
-            "weights_open": true,
-            "allowed_elements": [
-                "Metal",
-                "Ice",
-                "Nature",
-                "Blood",
-                "Quinta"
-            ],
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ]
-        },
-        {
-            "id": "Jump",
-            "sigil": " {X}",
-            "content_text": "Jump {X} Steps",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Jump.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 0.7,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "conditions": {
-                        "var_min": 1.0
-                    }
-                }
-            },
-            "options": {},
-            "cv": 0.0,
-            "primary_types": [
-                "Non Targeting"
-            ],
-            "element_weights": {}
-        },
-        {
-            "id": "Teleport",
-            "sigil": "",
-            "content_text": "Teleport anywhere",
-            "reminder_text": "",
-            "rarity": 3,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {
-                "allowed_elements": [
-                    "Quinta"
-                ]
-            },
-            "variables": {},
-            "options": {},
-            "cv": 4.0,
-            "weights_open": true,
-            "allowed_elements": [
-                "Metal",
-                "Ice",
-                "Nature",
-                "Blood",
-                "Quinta"
-            ],
-            "primary_types": [
-                "Target Neutral"
-            ]
-        },
-        {
-            "id": "Ranged",
-            "sigil": "{X}",
-            "content_text": "Range {X}",
-            "reminder_text": "This Effect can hit Enemys {X} steps away",
-            "rarity": 10,
-            "complexity_base": 0.02,
-            "element_weights": {
-                "Fire": 11.0,
-                "Metal": 10.0,
-                "Ice": 10.0,
-                "Nature": 10.0,
-                "Blood": 3.0,
-                "Quinta": 8.0
-            },
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Ranged.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {}
-                }
-            },
-            "options": {},
-            "cv": 1.0,
-            "weights_open": true,
-            "primary_types": [
-                "Target Neutral"
-            ]
-        },
-        {
-            "id": "Poision",
-            "sigil": "{X}",
-            "content_text": "Poison {X}",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Poision.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {
-                        "allowed_elements": [
-                            "Nature"
-                        ]
-                    }
-                }
-            },
-            "options": {},
-            "cv": 1.0,
-            "card_type_weights": {},
-            "primary_types": [
-                "Target Enemy"
-            ]
-        },
-        {
-            "id": "Kick",
-            "sigil": "{X}",
-            "content_text": "Kick {X}",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Kick.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {},
-                    "dice_only": true
-                }
-            },
-            "options": {},
-            "cv": 1.0,
-            "primary_types": [
-                "Target Enemy"
-            ]
-        },
-        {
-            "id": "Scry",
-            "sigil": "{X}",
-            "content_text": "Scry {X}",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Scry.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 0.5,
-                    "cv2": 0.0,
-                    "cv3": 0.0,
-                    "conditions": {}
-                }
-            },
-            "options": {},
-            "cv": 1.0,
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ]
-        },
-        {
-            "id": "Shuffle",
-            "sigil": "",
-            "content_text": "Shuffle your Deck",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "element_weights": {
-                "Fire": 0.0,
-                "Metal": 0.0,
-                "Ice": 0.0,
-                "Nature": 0.0,
-                "Blood": 0.0,
-                "Quinta": 0.0,
-                "Potion": 0,
-                "Skills": 0
-            },
-            "conditions": {},
-            "variables": {},
-            "options": {},
-            "cv": 1.0,
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ]
-        },
-        {
-            "id": "Dash",
-            "sigil": "{X}",
-            "content_text": "Dash {X}",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Dash.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {}
-                }
-            },
-            "options": {},
-            "cv": 1.0,
-            "weights_open": true,
-            "allowed_elements": [
-                "Fire",
-                "Quinta"
-            ],
-            "element_weights": {},
-            "primary_types": [
-                "Non Targeting"
-            ]
-        },
-        {
-            "id": "Rummage",
-            "sigil": "{X}{Y}",
-            "content_text": "Rummage {X} Sources {Y} Cards deep.",
-            "reminder_text": "",
-            "rarity": 10,
-            "complexity_base": 1.0,
-            "conditions": {},
-            "variables": {
-                "X": {
-                    "id": "Rummage.v0",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {}
-                },
-                "Y": {
-                    "id": "Rummage.v1",
-                    "rarity": 10,
-                    "complexity": 1.0,
-                    "cv1": 1,
-                    "cv2": 0,
-                    "cv3": 0,
-                    "conditions": {}
-                }
-            },
-            "options": {},
-            "cv": 1.0,
-            "element_weights": {},
-            "primary_types": [
-                "Non Targeting",
-                "Target Ally"
-            ]
+  "Effect": [
+    {
+      "id": "Draw",
+      "content_text": "Draw {X} Cards",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "variables": {
+        "X": {
+          "rarity": 10,
+          "complexity": 0.3,
+          "conditions": {
+            "var_min": 1.0,
+            "var_max": 20.0
+          },
+          "id": "Draw.X",
+          "cv1": 0.9,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "dice_allowed": true
         }
-    ]
+      },
+      "options": {},
+      "conditions": {},
+      "sigil": "{X}",
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ],
+      "weights_open": true
+    },
+    {
+      "id": "Use_Weapon",
+      "content_text": "Use your Weapon",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "sigil": "",
+      "primary_types": [
+        "Target Enemy"
+      ],
+      "weights_open": true,
+      "cv": 2.0
+    },
+    {
+      "id": "Pulverize",
+      "content_text": "Pulverize {X}",
+      "reminder_text": "Create {X} Powder Tokens based on the Metal Sources you sacrificed for this Card.",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "id_conditions": [
+          {
+            "id": "Mana.o3",
+            "mode": "required"
+          }
+        ]
+      },
+      "variables": {
+        "X": {
+          "id": "Pulverize.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1.0,
+          "cv2": 0.05,
+          "cv3": 0.0,
+          "conditions": {
+            "allowed_elements": [
+              "Metal"
+            ],
+            "var_min": 1.0
+          }
+        }
+      },
+      "options": {},
+      "sigil": "{X}",
+      "primary_types": [
+        "Non Targeting"
+      ],
+      "weights_open": true,
+      "allowed_elements": [
+        "Metal",
+        "Quinta"
+      ]
+    },
+    {
+      "id": "Grow",
+      "content_text": "Forage {X}",
+      "reminder_text": "Create {X} Herb Tokens of your Choice",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Grow.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1.0,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {
+            "var_min": 1.0,
+            "var_max": 10.0,
+            "allowed_elements": [
+              "Nature"
+            ]
+          }
+        }
+      },
+      "options": {},
+      "sigil": "{X}",
+      "primary_types": [
+        "Non Targeting"
+      ],
+      "weights_open": true
+    },
+    {
+      "id": "Multicast",
+      "content_text": "Copy this cards play effect X Times",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 3.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "allowed_box_types": [
+          "Play"
+        ]
+      },
+      "variables": {},
+      "options": {},
+      "weights_open": true,
+      "sigil": "",
+      "card_type_weights": {}
+    },
+    {
+      "id": "Precise",
+      "content_text": "Precise",
+      "reminder_text": "this Sigils damage can't miss",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "allowed_elements": [
+          "Metal",
+          "Ice",
+          "Nature",
+          "Quinta"
+        ],
+        "element_weights": {
+          "Nature": 2.0
+        }
+      },
+      "variables": {},
+      "options": {},
+      "sigil": "",
+      "cv": 2.0,
+      "primary_types": [
+        "Target Enemy"
+      ]
+    },
+    {
+      "id": "Forget_This_Card",
+      "content_text": "Forget this Card",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "sigil": "",
+      "cv": -0.3,
+      "primary_types": [
+        "Non Targeting"
+      ],
+      "weights_open": true
+    },
+    {
+      "id": "Loose_This_Card",
+      "content_text": "Loose this Carrd",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "sigil": "",
+      "cv": -0.5,
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Discard_This_Card",
+      "content_text": "Discard this Card",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "sigil": "",
+      "cv": -0.2,
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Recycle_This_Card",
+      "content_text": "Recycle this Card",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "sigil": "",
+      "cv": -0.1,
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Drain",
+      "content_text": "Drain {X}",
+      "reminder_text": "Deal {X} Damage, Heal {X}",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "allowed_elements": [
+          "Nature",
+          "Blood",
+          "Quinta"
+        ],
+        "element_weights": {
+          "Blood": 20.0,
+          "Quinta": 4.0
+        }
+      },
+      "variables": {
+        "X": {
+          "id": "Drain.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 0.43,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {
+            "allowed_elements": [
+              "Nature",
+              "Blood",
+              "Quinta"
+            ],
+            "element_weights": {
+              "Nature": 20.0,
+              "Blood": 35.0,
+              "Quinta": 8.0
+            }
+          },
+          "dice_only": true
+        }
+      },
+      "options": {},
+      "sigil": "{X}",
+      "primary_types": [
+        "Target Enemy"
+      ]
+    },
+    {
+      "id": "Cleanse",
+      "sigil": "",
+      "content_text": "Cleanse",
+      "reminder_text": "Remove an Enchantment or Curse ",
+      "rarity": 3,
+      "complexity_base": 2.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "allowed_elements": [
+          "Fire",
+          "Metal",
+          "Ice",
+          "Nature",
+          "Quinta"
+        ]
+      },
+      "variables": {},
+      "options": {},
+      "cv": 1.7,
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Heal",
+      "sigil": "{X}",
+      "content_text": "Heal {X}",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "allowed_elements": [
+          "Fire",
+          "Metal",
+          "Nature",
+          "Blood",
+          "Quinta"
+        ],
+        "element_weights": {
+          "Fire": 3.0,
+          "Metal": 5.0,
+          "Ice": 3.0,
+          "Nature": 50.0,
+          "Blood": 30.0
+        }
+      },
+      "variables": {
+        "X": {
+          "id": "Heal.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 0.2,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {
+            "allowed_elements": [
+              "Fire",
+              "Ice",
+              "Nature",
+              "Blood",
+              "Quinta"
+            ],
+            "element_weights": {
+              "Fire": 3.0,
+              "Ice": 4.0,
+              "Nature": 20.0,
+              "Blood": 28.0,
+              "Quinta": 7.0
+            },
+            "var_min": 1.0,
+            "var_max": 50.0
+          },
+          "dice_allowed": true
+        }
+      },
+      "options": {},
+      "cv": 0.0,
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Move",
+      "sigil": "{X}",
+      "content_text": "Move {X} ",
+      "reminder_text": "",
+      "rarity": 6,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Move.v0",
+          "rarity": 6,
+          "complexity": 2.0,
+          "cv1": 0.5,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {}
+        }
+      },
+      "options": {},
+      "cv": 0.0,
+      "weights_open": true,
+      "allowed_elements": [
+        "Metal",
+        "Ice",
+        "Nature",
+        "Blood",
+        "Quinta"
+      ],
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Jump",
+      "sigil": " {X}",
+      "content_text": "Jump {X} Steps",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Jump.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 0.7,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {
+            "var_min": 1.0
+          }
+        }
+      },
+      "options": {},
+      "cv": 0.0,
+      "primary_types": [
+        "Non Targeting"
+      ],
+      "element_weights": {}
+    },
+    {
+      "id": "Teleport",
+      "sigil": "",
+      "content_text": "Teleport anywhere",
+      "reminder_text": "",
+      "rarity": 3,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {
+        "allowed_elements": [
+          "Quinta"
+        ]
+      },
+      "variables": {},
+      "options": {},
+      "cv": 4.0,
+      "weights_open": true,
+      "allowed_elements": [
+        "Metal",
+        "Ice",
+        "Nature",
+        "Blood",
+        "Quinta"
+      ],
+      "primary_types": [
+        "Target Neutral"
+      ]
+    },
+    {
+      "id": "Ranged",
+      "sigil": "{X}",
+      "content_text": "Range {X}",
+      "reminder_text": "This Effect can hit Enemys {X} steps away",
+      "rarity": 10,
+      "complexity_base": 0.02,
+      "element_weights": {
+        "Fire": 11.0,
+        "Metal": 10.0,
+        "Ice": 10.0,
+        "Nature": 10.0,
+        "Blood": 3.0,
+        "Quinta": 8.0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Ranged.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {}
+        }
+      },
+      "options": {},
+      "cv": 1.0,
+      "weights_open": true,
+      "primary_types": [
+        "Target Neutral"
+      ]
+    },
+    {
+      "id": "Poision",
+      "sigil": "{X}",
+      "content_text": "Poison {X}",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Poision.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {
+            "allowed_elements": [
+              "Nature"
+            ]
+          }
+        }
+      },
+      "options": {},
+      "cv": 1.0,
+      "card_type_weights": {},
+      "primary_types": [
+        "Target Enemy"
+      ]
+    },
+    {
+      "id": "Kick",
+      "sigil": "{X}",
+      "content_text": "Kick {X}",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Kick.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {},
+          "dice_only": true
+        }
+      },
+      "options": {},
+      "cv": 1.0,
+      "primary_types": [
+        "Target Enemy"
+      ]
+    },
+    {
+      "id": "Scry",
+      "sigil": "{X}",
+      "content_text": "Scry {X}",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Scry.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 0.5,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {}
+        }
+      },
+      "options": {},
+      "cv": 1.0,
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Shuffle",
+      "sigil": "",
+      "content_text": "Shuffle your Deck",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0,
+        "Potion": 0,
+        "Skills": 0
+      },
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "cv": 1.0,
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Dash",
+      "sigil": "{X}",
+      "content_text": "Dash {X}",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Dash.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {}
+        }
+      },
+      "options": {},
+      "cv": 1.0,
+      "weights_open": true,
+      "allowed_elements": [
+        "Fire",
+        "Quinta"
+      ],
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Rummage",
+      "sigil": "{X}{Y}",
+      "content_text": "Rummage {X} Sources {Y} Cards deep.",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Rummage.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {}
+        },
+        "Y": {
+          "id": "Rummage.v1",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {}
+        }
+      },
+      "options": {},
+      "cv": 1.0,
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    }
+  ]
 }

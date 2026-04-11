@@ -19,10 +19,6 @@
     },
     {
       "block_type": "Hand",
-      "probability": 0.15
-    },
-    {
-      "block_type": "Discard",
       "probability": 0.1
     },
     {

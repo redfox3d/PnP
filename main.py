@@ -135,12 +135,12 @@ class App:
 
         tk.Button(f, text="🎲  Random Builder",
                   bg=BTN_NEUTRAL,
-                  command=lambda: None,
+                  command=self.show_random_builder,
                   **btn_kw).pack(pady=3, fill="x")
 
         tk.Button(f, text="📦  Container Manager",
                   bg=BTN_NEUTRAL,
-                  command=lambda: None,
+                  command=self.show_container_manager,
                   **btn_kw).pack(pady=3, fill="x")
 
         ttk.Separator(f, orient="horizontal").pack(fill="x", pady=12)
@@ -156,7 +156,7 @@ class App:
 
         tk.Button(f, text="⚗️  Material-Effekte",
                   bg=BTN_NEUTRAL,
-                  command=lambda: None,
+                  command=self._open_material_effects,
                   **btn_kw).pack(pady=3, fill="x")
 
         tk.Button(f, text="🎯  Effekt Primärtypen",
@@ -174,6 +174,48 @@ class App:
             data = {"Effect": []}
         from CardContent.effect_type_panel import EffectTypePanel
         EffectTypePanel(self.root, data)
+
+    def _open_material_effects(self):
+        from card_builder.material_editor import MaterialEffectEditor
+        MaterialEffectEditor(self.root)
+
+    # ── Container Manager ─────────────────────────────────────────────────────
+
+    def show_container_manager(self):
+        self._clear()
+        self.root.title("Container Manager")
+        self.root.geometry("1200x750")
+        self.root.resizable(True, True)
+
+        self._add_switch_bar("📦 Container Manager", [
+            ("🃏 Card Builder",   self.show_card_builder),
+            ("📝 Content Editor", self.show_content_manager),
+        ])
+
+        from container_manager.app import ContainerManager
+        container = tk.Frame(self.root, bg=BG_ROOT)
+        container.pack(fill="both", expand=True)
+        self._current_panel = ContainerManager(container)
+        self._current_panel.pack(fill="both", expand=True)
+
+    # ── Random Builder ────────────────────────────────────────────────────────
+
+    def show_random_builder(self):
+        self._clear()
+        self.root.title("Random Builder")
+        self.root.geometry("1500x860")
+        self.root.resizable(True, True)
+
+        self._add_switch_bar("🎲 Random Builder", [
+            ("🃏 Card Builder",   self.show_card_builder),
+            ("📝 Content Editor", self.show_content_manager),
+        ])
+
+        from random_builder.app import RandomBuilder
+        container = tk.Frame(self.root, bg=BG_ROOT)
+        container.pack(fill="both", expand=True)
+        self._current_panel = RandomBuilder(container)
+        self._current_panel.pack(fill="both", expand=True)
 
     # ── Card Builder ──────────────────────────────────────────────────────────
 

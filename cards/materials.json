@@ -2,21 +2,5 @@
     "materials": [
         "Gold",
         "Iron"
-    ],
-    "material_effects": {
-        "Gold": {
-            "effect_id": "Draw",
-            "vals": {
-                "X": ""
-            },
-            "opt_vals": {}
-        },
-        "Iron": {
-            "effect_id": "Heal",
-            "vals": {
-                "X": ""
-            },
-            "opt_vals": {}
-        }
-    }
+    ]
 }

@@ -137,24 +137,17 @@ class SpellCardRenderer:
 
         if ct == "Spells":
             # Element icon top-right
-            cx = self.W - self.AW//2 - 4
+            cx = self.W - 30
             cy = 26
             c.create_oval(cx-22, cy-22, cx+22, cy+22,
                           fill=color, outline="gold", width=2)
             c.create_text(cx, cy, text=ELEMENT_ICONS.get(elem, "?"),
                           font=("Arial", 16))
-            # Artwork strip right side
-            self._draw_artwork_strip(card)
-            # Artwork box
-            self._draw_artwork_box(card, 6, 40, self.W-self.AW-8, 200)
-            content_left = 6 + MANA_STRIP_W
-            content_top  = 206
-        else:
-            # Prowess: no artwork, no strip, but still reserve mana strip
-            content_left = 6 + MANA_STRIP_W
-            content_top  = 40
 
-        content_right = self.W - (self.AW + 8 if ct == "Spells" else 6)
+        # Both Spells and Prowess: full width, mana strip, no artwork
+        content_left  = 6 + MANA_STRIP_W
+        content_top   = 40
+        content_right = self.W - 6
         self._draw_blocks(card, top=content_top,
                           left=content_left, right=content_right)
 

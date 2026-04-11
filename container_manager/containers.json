@@ -6,7 +6,9 @@
       "Damage",
       "Ranged_Damage",
       "Use_Weapon",
-      "Drain"
+      "Drain",
+      "Poision",
+      "Kick"
     ],
     "no_repeat": true
   },
@@ -25,7 +27,8 @@
       "Recycle_This_Card"
     ],
     "costs": [
-      "Reveal_Self"
+      "Reveal_Self",
+      "Change_This_Card_Position_Play"
     ],
     "conditions": [],
     "triggers": [],

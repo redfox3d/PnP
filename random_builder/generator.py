@@ -136,7 +136,8 @@ class CardGenerator:
         if self.is_recipes:
             return self._generate_recipe()
 
-        element     = self._pick_element()
+        is_prowess = (self.profile_name == "Prowess")
+        element    = "" if is_prowess else self._pick_element()
         block_types = self._pick_blocks(element)
 
         # Container no_repeat dedup is shared across all boxes on a card.
@@ -160,12 +161,13 @@ class CardGenerator:
             blocks.append(block)
 
         card = {
-            "name": _make_card_name(element),
+            "name": _make_card_name(element) if element else _make_card_name("Prowess"),
             "card_type": self.card_type_output,
             "artwork": "",
-            "element": element,
             "blocks": blocks,
         }
+        if element:
+            card["element"] = element
 
         # Attach computed metrics
         card["_cv"]         = round(cv_card(card, self.box_config,
@@ -195,12 +197,14 @@ class CardGenerator:
         recipe_type = self._pick_recipe_type()
         ingredient_cv = int(self.cfg.get("ingredient_cv", 4))
 
-        # Pick 1-3 materials as ingredients
+        # Pick materials as ingredients (count from config)
         from card_builder.materials import load_central_materials
         all_mats = load_central_materials()
         if not all_mats:
             all_mats = ["Gold", "Silver", "Wood"]
-        n_ings = random.randint(1, min(3, len(all_mats)))
+        ing_min = max(1, int(self.cfg.get("ingredient_min", 1)))
+        ing_max = max(ing_min, int(self.cfg.get("ingredient_max", 3)))
+        n_ings = random.randint(ing_min, min(ing_max, len(all_mats)))
         chosen_mats = random.sample(all_mats, n_ings)
 
         ingredients = [{"material": m, "cv": ingredient_cv} for m in chosen_mats]
@@ -791,7 +795,9 @@ class CardGenerator:
             # Drive the renderer: vals["element"] = the chosen mana type
             vals["element"] = opt_vals.get("0", element)
         else:
-            # Generic cost: pass card element through variable if the item uses it
+            # Generic cost: pick variable values (X, Y, etc.) within a CV budget
+            vals = self._pick_variable_values(item, cv_budget=2.0)
+            # Ensure element variable is set to card's element
             if "element" in item.get("variables", {}):
                 vals["element"] = element
             opt_vals = self._pick_options(item, element)

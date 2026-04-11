@@ -111,7 +111,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.7,
-    "_complexity": 24.48
+    "_complexity": 21.48
   },
   {
     "name": "Fractured Pact",
@@ -179,7 +179,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.0,
-    "_complexity": 13.066
+    "_complexity": 11.066
   },
   {
     "name": "Paradox Vow",
@@ -239,8 +239,8 @@
       }
     ],
     "recipe_type": "Phials",
-    "_cv": 0.3,
-    "_complexity": 11.066
+    "_cv": -0.7,
+    "_complexity": 9.066
   },
   {
     "name": "Unraveling Oath",
@@ -317,7 +317,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.8,
-    "_complexity": 18.948
+    "_complexity": 16.948
   },
   {
     "name": "Echoing Curse",
@@ -371,7 +371,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.25,
-    "_complexity": 6.553
+    "_complexity": 5.553
   },
   {
     "name": "Echoing Edict",
@@ -434,7 +434,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.6,
-    "_complexity": 10.086
+    "_complexity": 8.086
   },
   {
     "name": "Echoing Pulse",
@@ -499,7 +499,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.4,
-    "_complexity": 12.598
+    "_complexity": 9.598
   },
   {
     "name": "Hollow Pact",
@@ -549,7 +549,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.0,
-    "_complexity": 6.533
+    "_complexity": 5.533
   },
   {
     "name": "Paradox Ward",
@@ -601,7 +601,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.3,
-    "_complexity": 6.533
+    "_complexity": 5.533
   },
   {
     "name": "Null Mark",
@@ -662,7 +662,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 2.4,
-    "_complexity": 8.833
+    "_complexity": 7.833
   },
   {
     "name": "Paradox Grasp",
@@ -743,7 +743,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 2.2,
-    "_complexity": 8.833
+    "_complexity": 7.833
   },
   {
     "name": "Paradox Brand",
@@ -817,7 +817,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.7,
-    "_complexity": 7.533
+    "_complexity": 6.533
   },
   {
     "name": "Fractured Hex",
@@ -881,8 +881,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 0.7,
-    "_complexity": 12.598
+    "_cv": -0.3,
+    "_complexity": 9.598
   },
   {
     "name": "Hollow Ward",
@@ -985,7 +985,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.45,
-    "_complexity": 11.066
+    "_complexity": 9.066
   },
   {
     "name": "Null Shard",
@@ -1074,7 +1074,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.2,
-    "_complexity": 14.598
+    "_complexity": 11.598
   },
   {
     "name": "Fractured Grasp",
@@ -1181,7 +1181,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.45,
-    "_complexity": 17.618
+    "_complexity": 14.618
   },
   {
     "name": "Null Grasp",
@@ -1228,7 +1228,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.3,
-    "_complexity": 5.533
+    "_complexity": 4.533
   },
   {
     "name": "Echoing Chain",
@@ -1300,7 +1300,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.8,
-    "_complexity": 13.898
+    "_complexity": 10.898
   },
   {
     "name": "Paradox Toll",
@@ -1492,8 +1492,8 @@
       }
     ],
     "recipe_type": "Phials",
-    "_cv": 2.03,
-    "_complexity": 17.131
+    "_cv": 1.13,
+    "_complexity": 13.131
   },
   {
     "name": "Paradox Veil",
@@ -1566,7 +1566,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.65,
-    "_complexity": 20.557
+    "_complexity": 19.557
   },
   {
     "name": "Null Ward",
@@ -1652,7 +1652,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.2,
-    "_complexity": 19.131
+    "_complexity": 15.131
   },
   {
     "name": "Fractured Brand",
@@ -1699,7 +1699,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.25,
-    "_complexity": 5.533
+    "_complexity": 4.533
   },
   {
     "name": "Fractured Pact",
@@ -1777,8 +1777,8 @@
       }
     ],
     "recipe_type": "Tinctures",
-    "_cv": 2.25,
-    "_complexity": 15.898
+    "_cv": 1.25,
+    "_complexity": 12.898
   },
   {
     "name": "Fractured Vow",
@@ -1823,7 +1823,7 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 0.89,
+    "_cv": 0.19,
     "_complexity": 3.02
   },
   {
@@ -1871,7 +1871,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.05,
-    "_complexity": 5.533
+    "_complexity": 4.533
   },
   {
     "name": "Hollow Hex",
@@ -1925,7 +1925,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.8,
-    "_complexity": 7.533
+    "_complexity": 6.533
   },
   {
     "name": "Unraveling Rite",
@@ -2073,8 +2073,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 1.65,
-    "_complexity": 26.131
+    "_cv": 0.95,
+    "_complexity": 22.131
   },
   {
     "name": "Null Mark",
@@ -2203,8 +2203,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 2.98,
-    "_complexity": 12.066
+    "_cv": 2.28,
+    "_complexity": 10.066
   },
   {
     "name": "Hollow Sigil",
@@ -2305,7 +2305,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.151,
-    "_complexity": 16.618
+    "_complexity": 13.618
   },
   {
     "name": "Unraveling Grasp",
@@ -2390,7 +2390,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 2.635,
-    "_complexity": 8.833
+    "_complexity": 7.833
   },
   {
     "name": "Paradox Omen",
@@ -2514,7 +2514,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.7,
-    "_complexity": 23.928
+    "_complexity": 21.928
   },
   {
     "name": "Unraveling Toll",
@@ -2570,7 +2570,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.2,
-    "_complexity": 8.366
+    "_complexity": 6.366
   },
   {
     "name": "Unraveling Toll",
@@ -2620,7 +2620,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.3,
-    "_complexity": 7.533
+    "_complexity": 6.533
   },
   {
     "name": "Paradox Strike",
@@ -2685,7 +2685,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.9,
-    "_complexity": 13.598
+    "_complexity": 10.598
   },
   {
     "name": "Hollow Mark",
@@ -2744,7 +2744,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 3.0,
-    "_complexity": 9.533
+    "_complexity": 8.533
   },
   {
     "name": "Fractured Omen",
@@ -2821,7 +2821,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.5,
-    "_complexity": 14.618
+    "_complexity": 11.618
   },
   {
     "name": "Paradox Hex",
@@ -2904,7 +2904,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.55,
-    "_complexity": 14.928
+    "_complexity": 12.928
   },
   {
     "name": "Null Seal",
@@ -2988,7 +2988,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.1,
-    "_complexity": 19.131
+    "_complexity": 15.131
   },
   {
     "name": "Hollow Rite",
@@ -3054,7 +3054,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.3,
-    "_complexity": 12.066
+    "_complexity": 10.066
   },
   {
     "name": "Unraveling Mark",
@@ -3139,7 +3139,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 2.5,
-    "_complexity": 9.366
+    "_complexity": 7.366
   },
   {
     "name": "Paradox Pact",
@@ -3195,7 +3195,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.6,
-    "_complexity": 9.066
+    "_complexity": 7.066
   },
   {
     "name": "Paradox Rite",
@@ -3265,7 +3265,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.75,
-    "_complexity": 12.898
+    "_complexity": 9.898
   },
   {
     "name": "Unraveling Decree",
@@ -3333,7 +3333,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.6,
-    "_complexity": 12.066
+    "_complexity": 10.066
   },
   {
     "name": "Paradox Vow",
@@ -3394,7 +3394,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.8,
-    "_complexity": 8.553
+    "_complexity": 7.553
   },
   {
     "name": "Echoing Rite",
@@ -3439,7 +3439,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.3,
-    "_complexity": 4.533
+    "_complexity": 3.533
   },
   {
     "name": "Echoing Omen",
@@ -3513,7 +3513,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.2,
-    "_complexity": 17.131
+    "_complexity": 13.131
   },
   {
     "name": "Null Toll",
@@ -3593,7 +3593,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.9,
-    "_complexity": 17.598
+    "_complexity": 14.598
   },
   {
     "name": "Hollow Lash",
@@ -3658,7 +3658,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.5,
-    "_complexity": 5.533
+    "_complexity": 4.533
   },
   {
     "name": "Hollow Shard",
@@ -3723,7 +3723,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.35,
-    "_complexity": 12.598
+    "_complexity": 9.598
   },
   {
     "name": "Hollow Ward",
@@ -3799,8 +3799,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 2.6,
-    "_complexity": 16.598
+    "_cv": 1.6,
+    "_complexity": 13.598
   },
   {
     "name": "Fractured Veil",
@@ -3872,7 +3872,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.85,
-    "_complexity": 14.598
+    "_complexity": 11.598
   },
   {
     "name": "Echoing Strike",
@@ -3963,7 +3963,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.61,
-    "_complexity": 13.695
+    "_complexity": 12.695
   },
   {
     "name": "Hollow Toll",
@@ -4034,8 +4034,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 0.55,
-    "_complexity": 14.598
+    "_cv": -0.45,
+    "_complexity": 11.598
   },
   {
     "name": "Unraveling Mark",
@@ -4097,7 +4097,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.6,
-    "_complexity": 11.066
+    "_complexity": 9.066
   },
   {
     "name": "Hollow Vow",
@@ -4142,7 +4142,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.3,
-    "_complexity": 4.533
+    "_complexity": 3.533
   },
   {
     "name": "Hollow Ward",
@@ -4207,7 +4207,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.8,
-    "_complexity": 11.618
+    "_complexity": 8.618
   },
   {
     "name": "Paradox Burst",
@@ -4286,7 +4286,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.2,
-    "_complexity": 19.48
+    "_complexity": 16.48
   },
   {
     "name": "Echoing Brand",
@@ -4371,7 +4371,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.32,
-    "_complexity": 10.066
+    "_complexity": 8.066
   },
   {
     "name": "Null Veil",
@@ -4446,7 +4446,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 3.0,
-    "_complexity": 8.533
+    "_complexity": 7.533
   },
   {
     "name": "Unraveling Surge",
@@ -4507,7 +4507,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.8,
-    "_complexity": 10.533
+    "_complexity": 9.533
   },
   {
     "name": "Fractured Mark",
@@ -4611,7 +4611,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 2.7,
-    "_complexity": 17.066
+    "_complexity": 15.066
   },
   {
     "name": "Paradox Surge",
@@ -4682,7 +4682,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.3,
-    "_complexity": 5.533
+    "_complexity": 4.533
   },
   {
     "name": "Echoing Grasp",
@@ -4781,7 +4781,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.8,
-    "_complexity": 13.898
+    "_complexity": 10.898
   },
   {
     "name": "Paradox Sigil",
@@ -4855,7 +4855,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.2,
-    "_complexity": 16.131
+    "_complexity": 12.131
   },
   {
     "name": "Echoing Edict",
@@ -4952,8 +4952,8 @@
       }
     ],
     "recipe_type": "Phials",
-    "_cv": 0.94,
-    "_complexity": 17.948
+    "_cv": -0.06,
+    "_complexity": 15.948
   },
   {
     "name": "Null Omen",
@@ -5016,7 +5016,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 2.65,
-    "_complexity": 12.066
+    "_complexity": 10.066
   },
   {
     "name": "Null Brand",
@@ -5061,7 +5061,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.3,
-    "_complexity": 4.533
+    "_complexity": 3.533
   },
   {
     "name": "Hollow Rite",
@@ -5164,7 +5164,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 2.31,
-    "_complexity": 16.366
+    "_complexity": 14.366
   },
   {
     "name": "Paradox Edict",
@@ -5237,7 +5237,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.3,
-    "_complexity": 18.928
+    "_complexity": 16.928
   },
   {
     "name": "Paradox Vow",
@@ -5300,7 +5300,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.6,
-    "_complexity": 12.066
+    "_complexity": 10.066
   },
   {
     "name": "Hollow Strike",
@@ -5388,7 +5388,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.01,
-    "_complexity": 23.993
+    "_complexity": 19.993
   },
   {
     "name": "Hollow Brand",
@@ -5459,7 +5459,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 3.0,
-    "_complexity": 7.533
+    "_complexity": 6.533
   },
   {
     "name": "Fractured Burst",
@@ -5570,7 +5570,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.85,
-    "_complexity": 25.46
+    "_complexity": 22.46
   },
   {
     "name": "Hollow Hex",
@@ -5709,7 +5709,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.85,
-    "_complexity": 42.184
+    "_complexity": 39.184
   },
   {
     "name": "Fractured Brand",
@@ -5764,8 +5764,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 0.7,
-    "_complexity": 9.066
+    "_cv": -0.3,
+    "_complexity": 7.066
   },
   {
     "name": "Fractured Oath",
@@ -5876,7 +5876,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.7,
-    "_complexity": 22.131
+    "_complexity": 18.131
   },
   {
     "name": "Unraveling Brand",
@@ -5973,7 +5973,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.52,
-    "_complexity": 6.833
+    "_complexity": 5.833
   },
   {
     "name": "Null Omen",
@@ -6045,7 +6045,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.8,
-    "_complexity": 14.598
+    "_complexity": 11.598
   },
   {
     "name": "Echoing Shard",
@@ -6113,7 +6113,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.6,
-    "_complexity": 11.086
+    "_complexity": 9.086
   },
   {
     "name": "Hollow Strike",
@@ -6193,7 +6193,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 2.4,
-    "_complexity": 21.46
+    "_complexity": 18.46
   },
   {
     "name": "Hollow Burst",
@@ -6245,7 +6245,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.8,
-    "_complexity": 6.833
+    "_complexity": 5.833
   },
   {
     "name": "Hollow Burst",
@@ -6316,7 +6316,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 0.3,
-    "_complexity": 5.533
+    "_complexity": 4.533
   },
   {
     "name": "Paradox Pulse",
@@ -6370,7 +6370,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 2.8,
-    "_complexity": 7.533
+    "_complexity": 6.533
   },
   {
     "name": "Echoing Seal",
@@ -6483,7 +6483,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.9,
-    "_complexity": 23.46
+    "_complexity": 20.46
   },
   {
     "name": "Null Omen",
@@ -6558,7 +6558,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.25,
-    "_complexity": 17.228
+    "_complexity": 15.228
   },
   {
     "name": "Fractured Edict",
@@ -6652,7 +6652,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 1.3,
-    "_complexity": 13.066
+    "_complexity": 11.066
   },
   {
     "name": "Paradox Omen",
@@ -6736,7 +6736,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 2.5,
-    "_complexity": 8.533
+    "_complexity": 7.533
   },
   {
     "name": "Null Seal",
@@ -6808,7 +6808,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.62,
-    "_complexity": 13.618
+    "_complexity": 10.618
   },
   {
     "name": "Hollow Curse",
@@ -6941,7 +6941,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.1,
-    "_complexity": 23.48
+    "_complexity": 20.48
   },
   {
     "name": "Fractured Strike",
@@ -7002,7 +7002,7 @@
     ],
     "recipe_type": "Tinctures",
     "_cv": 0.95,
-    "_complexity": 10.366
+    "_complexity": 8.366
   },
   {
     "name": "Fractured Oath",
@@ -7067,7 +7067,7 @@
     ],
     "recipe_type": "Potions",
     "_cv": 1.9,
-    "_complexity": 12.598
+    "_complexity": 9.598
   },
   {
     "name": "Echoing Ward",
@@ -7122,8 +7122,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 0.7,
-    "_complexity": 9.066
+    "_cv": -0.3,
+    "_complexity": 7.066
   },
   {
     "name": "Fractured Omen",
@@ -7181,8 +7181,8 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 2.65,
-    "_complexity": 7.833
+    "_cv": 1.65,
+    "_complexity": 6.833
   },
   {
     "name": "Unraveling Hex",
@@ -7229,7 +7229,7 @@
       }
     ],
     "recipe_type": "Potions",
-    "_cv": 2.4,
+    "_cv": 1.4,
     "_complexity": 4.0
   },
   {
@@ -7297,8 +7297,8 @@
       }
     ],
     "recipe_type": "Phials",
-    "_cv": 1.3,
-    "_complexity": 14.066
+    "_cv": 0.3,
+    "_complexity": 12.066
   },
   {
     "name": "Echoing Curse",
@@ -7397,7 +7397,7 @@
     ],
     "recipe_type": "Phials",
     "_cv": 0.5,
-    "_complexity": 14.618
+    "_complexity": 11.618
   },
   {
     "name": "Unraveling Edict",
@@ -7462,6 +7462,6 @@
     ],
     "recipe_type": "Phials",
     "_cv": 1.4,
-    "_complexity": 11.898
+    "_complexity": 8.898
   }
 ]

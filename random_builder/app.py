@@ -78,7 +78,7 @@ def _load_containers() -> dict:
 
 def _render_card_summary(card: dict) -> str:
     """One-line summary for the card list."""
-    el  = card.get("recipe_type") or card.get("element") or "?"
+    el  = card.get("recipe_type") or card.get("element") or card.get("card_type") or "?"
     cv  = card.get("_cv", "?")
     cmx = card.get("_complexity", "?")
     if card.get("ingredients") is not None:
@@ -259,6 +259,93 @@ class RandomBuilder(tk.Frame):
             self._toggle_rt_weights()
 
         self._sep(f)
+
+        if _is_recipes:
+            self._build_recipe_rules(f, pad)
+        else:
+            self._build_spell_rules(f, pad)
+
+    def _build_recipe_rules(self, f, pad):
+        """Recipe-specific: ingredient count + CV per ingredient."""
+        _is_recipes = True
+
+        tk.Label(f, text="Zutaten Regeln:", bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+
+        row1 = tk.Frame(f, bg="#1a1a1a")
+        row1.pack(fill="x", padx=12, pady=2)
+        tk.Label(row1, text="Zutaten min", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._ing_min_var = tk.StringVar(
+            value=str(self._gen_config.get("ingredient_min", 1)))
+        self._ing_min_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(row1, from_=1, to=6, textvariable=self._ing_min_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+
+        row2 = tk.Frame(f, bg="#1a1a1a")
+        row2.pack(fill="x", padx=12, pady=2)
+        tk.Label(row2, text="Zutaten max", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._ing_max_var = tk.StringVar(
+            value=str(self._gen_config.get("ingredient_max", 3)))
+        self._ing_max_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(row2, from_=1, to=6, textvariable=self._ing_max_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+
+        row3 = tk.Frame(f, bg="#1a1a1a")
+        row3.pack(fill="x", padx=12, pady=2)
+        tk.Label(row3, text="CV pro Zutat", bg="#1a1a1a", fg="#ccc",
+                 width=16, anchor="w", font=("Arial", 8)).pack(side="left")
+        self._ing_cv_var = tk.StringVar(
+            value=str(self._gen_config.get("ingredient_cv", 4)))
+        self._ing_cv_var.trace_add("write", self._schedule_autosave)
+        tk.Spinbox(row3, from_=1, to=20, textvariable=self._ing_cv_var,
+                   width=5, bg="#2a2a2a", fg="white",
+                   buttonbackground="#333", font=("Arial", 8)).pack(side="left", padx=2)
+
+        self._sep(f)
+
+        # CV filter still applies
+        tk.Label(f, text="CV Filter:", bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+        cv_row = tk.Frame(f, bg="#1a1a1a")
+        cv_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(cv_row, text="Karte ≥", bg="#1a1a1a", fg="#888",
+                 font=("Arial", 8)).pack(side="left")
+        self._cv_min_var = tk.StringVar(
+            value=str(self._gen_config.get("cv_card_min", -999.0)))
+        self._cv_min_var.trace_add("write", self._schedule_autosave)
+        tk.Entry(cv_row, textvariable=self._cv_min_var, width=5,
+                 bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+        tk.Label(cv_row, text="≤", bg="#1a1a1a", fg="#888",
+                 font=("Arial", 8)).pack(side="left")
+        self._cv_target_var = tk.StringVar(
+            value=str(self._gen_config.get("cv_target", 999.0)))
+        self._cv_target_var.trace_add("write", self._schedule_autosave)
+        tk.Entry(cv_row, textvariable=self._cv_target_var, width=5,
+                 bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+
+        # Dummy vars so _collect_config doesn't crash
+        self._block_rule_vars = {}
+        self._content_rules_frame = tk.Frame(f)
+        self._content_rule_vars = {}
+        self._cost_rules_frame = tk.Frame(f)
+        self._cost_rule_vars = {}
+        self._cv_box_var = tk.StringVar(value="999")
+        self._mana_chance_var = tk.StringVar(value="0")
+        self._mana_main_var = tk.StringVar(value="0")
+        self._mana_max_var = tk.StringVar(value="0")
+        self._max_other_costs_var = tk.StringVar(value="0")
+        self._max_effects_var = tk.StringVar(value="-1")
+        self._min_effects_var = tk.StringVar(value="0")
+        self._min_blocks_var = tk.StringVar(value="1")
+        self._cond_chance_var = tk.StringVar(value="0")
+        self._choose_chance_var = tk.StringVar(value="0")
+
+    def _build_spell_rules(self, f, pad):
+        """Spell/Prowess rules: sigils, content, costs, mana, etc."""
 
         # ── Block Regeln ──────────────────────────────────────────────────────
         tk.Label(f, text="Sigil Regeln  (Wahrscheinlichkeit):",
@@ -1647,6 +1734,18 @@ class RandomBuilder(tk.Frame):
                 except Exception:
                     rtw[rt] = 10.0
             cfg["recipe_type_weights"] = rtw
+            try:
+                cfg["ingredient_min"] = int(self._ing_min_var.get())
+            except Exception:
+                pass
+            try:
+                cfg["ingredient_max"] = int(self._ing_max_var.get())
+            except Exception:
+                pass
+            try:
+                cfg["ingredient_cv"] = int(self._ing_cv_var.get())
+            except Exception:
+                pass
         elif hasattr(self, "_el_mode_var"):
             cfg["element_mode"] = self._el_mode_var.get()
             ew = {}

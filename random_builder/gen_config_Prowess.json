@@ -27,10 +27,6 @@
       "probability": 0.08
     },
     {
-      "block_type": "Discard",
-      "probability": 0.4
-    },
-    {
       "block_type": "Lost",
       "probability": 0.15
     }

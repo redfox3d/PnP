@@ -1,17 +1,16 @@
 """
 recipe_card.py – Editor and renderer for Recipe cards (Potions, Phials, Tinctures).
 
-Recipes:
-  - Name, artwork, recipe type icon (top-right)
-  - Frame colour depends on recipe type
-  - No sigils/blocks — instead: Ingredients list + Use/Effect section
-  - Each ingredient is a material with a CV value
+Recipes have two sigils:
+  - Ingredient sigil: lists materials (each is a cost with its own CV)
+  - Effect/Recipe sigil: shows effects derived from ingredients
+No artwork, no triggers, no mana costs.
 """
 
 import tkinter as tk
 from tkinter import ttk
 
-from card_builder.CardTypes.base_card import BaseCardEditor, ArtworkPicker, _render_content
+from card_builder.CardTypes.base_card import BaseCardEditor, _render_content
 from card_builder.constants import (
     CARD_W, CARD_H,
     RECIPE_TYPES, RECIPE_TYPE_COLORS, RECIPE_TYPE_ICONS,
@@ -35,19 +34,17 @@ class RecipeCardEditor(BaseCardEditor):
     def _build_type_fields(self):
         ef   = self._f
         card = self.card
-        ct   = card.get("card_type", "Potions")
 
         # ── Ingredients section ───────────────────────────────────────────────
-        self._lbl("Zutaten:").pack(anchor="w", padx=8)
+        self._lbl("Zutaten (Kosten):").pack(anchor="w", padx=8)
 
         ctrl = tk.Frame(ef, bg=self.BG)
         ctrl.pack(fill="x", padx=8, pady=2)
 
         all_mats = merged_materials()
         self._new_ing_var = tk.StringVar()
-        cb = ttk.Combobox(ctrl, textvariable=self._new_ing_var,
-                          values=all_mats, width=20)
-        cb.pack(side="left", padx=2)
+        ttk.Combobox(ctrl, textvariable=self._new_ing_var,
+                     values=all_mats, width=20).pack(side="left", padx=2)
         tk.Button(ctrl, text="+ Zutat", command=self._add_ingredient,
                   bg="#1a6e3c", fg="white", font=("Arial", 8)).pack(
             side="left", padx=4)
@@ -58,8 +55,8 @@ class RecipeCardEditor(BaseCardEditor):
 
         self._sep()
 
-        # ── Use/Effect text ───────────────────────────────────────────────────
-        self._lbl("Effekt / Use:").pack(anchor="w", padx=8)
+        # ── Effects section ───────────────────────────────────────────────────
+        self._lbl("Effekte:").pack(anchor="w", padx=8)
         self._use_text = tk.Text(ef, height=5, bg="#2a2a2a", fg="white",
                                  insertbackground="white", font=("Arial", 9),
                                  wrap="word")
@@ -72,8 +69,7 @@ class RecipeCardEditor(BaseCardEditor):
     def _rebuild_ingredients(self):
         for w in self._ing_frame.winfo_children():
             w.destroy()
-        ingredients = self.card.get("ingredients", [])
-        for idx, ing in enumerate(ingredients):
+        for idx, ing in enumerate(self.card.get("ingredients", [])):
             self._build_ingredient_row(idx, ing)
 
     def _build_ingredient_row(self, idx: int, ing: dict):
@@ -86,18 +82,16 @@ class RecipeCardEditor(BaseCardEditor):
                   command=lambda i=idx: self._remove_ingredient(i)
                   ).pack(side="left", padx=2, pady=2)
 
-        mat_name = ing.get("material", "?")
-        tk.Label(row, text=mat_name, bg=bg, fg="#aaffaa",
+        tk.Label(row, text=ing.get("material", "?"), bg=bg, fg="#aaffaa",
                  font=("Arial", 9, "bold"), width=16, anchor="w"
                  ).pack(side="left", padx=4)
 
         tk.Label(row, text="CV:", bg=bg, fg="#888",
                  font=("Arial", 8)).pack(side="left", padx=2)
         cv_var = tk.StringVar(value=str(ing.get("cv", INGREDIENT_CV)))
-        e = tk.Entry(row, textvariable=cv_var, width=4,
-                     bg="#2a2a2a", fg="white", insertbackground="white",
-                     font=("Arial", 8))
-        e.pack(side="left", padx=2)
+        tk.Entry(row, textvariable=cv_var, width=4,
+                 bg="#2a2a2a", fg="white", insertbackground="white",
+                 font=("Arial", 8)).pack(side="left", padx=2)
 
         def _cv_change(*_, v=cv_var, i=idx):
             try:
@@ -114,7 +108,6 @@ class RecipeCardEditor(BaseCardEditor):
             return
         ingredients = self.card.setdefault("ingredients", [])
         ingredients.append({"material": mat, "cv": INGREDIENT_CV})
-        # Save to central materials
         existing = load_central_materials()
         save_central_materials(existing + [mat])
         self._rebuild_ingredients()
@@ -155,13 +148,13 @@ class RecipeCardRenderer:
     def render(self, card: dict):
         c  = self.canvas
         c.delete("all")
-        ct = card.get("card_type", "Potions")
+        ct    = card.get("card_type", "Potions")
         rtype = card.get("recipe_type", ct)
 
         color = RECIPE_TYPE_COLORS.get(rtype, "#333")
         icon  = RECIPE_TYPE_ICONS.get(rtype, "?")
 
-        # Background
+        # Background + colored border
         c.create_rectangle(0, 0, self.W, self.H, fill="#1a1a1a", outline="")
         c.create_rectangle(0, 0, self.W, self.H, fill=color, outline="",
                            stipple="gray25")
@@ -180,54 +173,65 @@ class RecipeCardRenderer:
                       fill=color, outline="gold", width=2)
         c.create_text(cx, cy, text=icon, font=("Arial", 16))
 
-        # Recipe type label
-        c.create_text(cx, cy+28, text=rtype,
-                      font=(self.FF, 8), fill="#ccc", anchor="center")
-
         # Artwork
         ART_Y0 = 36
-        ART_Y1 = ART_Y0 + 180
+        ART_Y1 = ART_Y0 + 160
         self._artwork_box(card.get("artwork", ""), PAD, ART_Y0,
                           self.W - 60, ART_Y1)
 
-        # ── Ingredients section ───────────────────────────────────────────────
-        y = ART_Y1 + 8
-        c.create_text(PAD, y, text="Zutaten:", anchor="nw",
-                      fill="#888", font=(self.FF, 10, "bold"))
-        y += 20
-
         ingredients = card.get("ingredients", [])
+
+        # ── Sigil layout: split remaining space into two blocks ───────────────
+        SIGIL_TOP = ART_Y1 + 6
+        SIGIL_BOT = self.H - 40
+        SIGIL_MID = SIGIL_TOP + (SIGIL_BOT - SIGIL_TOP) // 2
+
+        # ── Ingredient Sigil (top half) ───────────────────────────────────────
+        ing_color = "#8B6914"  # amber/golden
+        c.create_rectangle(PAD, SIGIL_TOP, self.W - PAD, SIGIL_MID - 2,
+                           fill=ing_color, outline="#888", width=1,
+                           stipple="gray50")
+        c.create_text(PAD + 4, SIGIL_TOP + 4, text="[Ingredients]",
+                      anchor="nw", font=(self.FF, 10, "bold"), fill="white")
+
+        y = SIGIL_TOP + 26
         for ing in ingredients:
-            mat  = ing.get("material", "?")
-            cv   = ing.get("cv", INGREDIENT_CV)
-            text = f"• {mat}  (CV {cv})"
-            c.create_text(PAD + 6, y, text=text, anchor="nw",
-                          fill="#aaffaa", font=(self.FF, self.FS_S))
+            mat = ing.get("material", "?")
+            cv  = ing.get("cv", INGREDIENT_CV)
+            if y + 18 > SIGIL_MID - 4:
+                break
+            c.create_text(PAD + 12, y, text=f"• {mat}",
+                          anchor="nw", fill="#ffdd88",
+                          font=(self.FF, self.FS_S))
+            c.create_text(self.W - PAD - 8, y, text=f"CV {cv}",
+                          anchor="ne", fill="#aa8833",
+                          font=(self.FF, 9))
             y += 18
 
-        y += 10
-
-        # ── Use/Effect section ────────────────────────────────────────────────
-        BOX_Y0 = y
-        BOX_Y1 = self.H - PAD - 6
-        c.create_rectangle(PAD, BOX_Y0, self.W - PAD, BOX_Y1,
-                           fill="#111", outline="#555")
-        c.create_text(PAD + 4, BOX_Y0 + 4, text="Effekt / Use",
-                      anchor="nw", fill="#888",
-                      font=(self.FF, 9, "bold"))
+        # ── Effect Sigil (bottom half) ────────────────────────────────────────
+        eff_color = "#1a3e8e"  # blue
+        c.create_rectangle(PAD, SIGIL_MID + 2, self.W - PAD, SIGIL_BOT,
+                           fill=eff_color, outline="#888", width=1,
+                           stipple="gray50")
+        c.create_text(PAD + 4, SIGIL_MID + 6, text="[Recipe Effect]",
+                      anchor="nw", font=(self.FF, 10, "bold"), fill="white")
 
         use = card.get("use_text", "")
         if use:
-            self._wrap(use, PAD + 4, BOX_Y0 + 20,
-                       self.W - PAD*2 - 8, (self.FF, self.FS_S),
-                       "white", BOX_Y1 - 4)
+            self._wrap(use, PAD + 12, SIGIL_MID + 28,
+                       self.W - PAD*2 - 16, (self.FF, self.FS_S),
+                       "white", SIGIL_BOT - 4)
 
-        # ── CV badge (bottom-right) ───────────────────────────────────────────
+        # ── CV badge (bottom) ─────────────────────────────────────────────────
         total_cv = sum(ing.get("cv", INGREDIENT_CV) for ing in ingredients)
-        c.create_rectangle(self.W-70, self.H-34, self.W-PAD, self.H-PAD,
+        c.create_rectangle(self.W - 70, self.H - 34, self.W - PAD, self.H - PAD,
                            fill="#2a2200", outline="gold", width=2)
-        c.create_text(self.W-38, self.H-18, text=f"CV {total_cv}",
+        c.create_text(self.W - 38, self.H - 18, text=f"CV {total_cv}",
                       fill="gold", font=(self.FF, 11, "bold"))
+
+        # Recipe type label bottom-left
+        c.create_text(PAD, self.H - 18, text=rtype,
+                      anchor="w", font=(self.FF, 9, "italic"), fill="#aaa")
 
     def _artwork_box(self, path, x0, y0, x1, y1):
         c = self.canvas
