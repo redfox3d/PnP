@@ -8,26 +8,29 @@ Usage:
     RendererClass = get_renderer(card_type)
 """
 
-from card_builder.CardTypes.spell_card   import SpellCardEditor,   SpellCardRenderer
-from card_builder.CardTypes.loot_card    import SuppliesCardEditor,    LootCardRenderer
-from card_builder.CardTypes.loot_card    import EquipmentCardEditor
+from card_builder.CardTypes.spell_card import SpellCardEditor,    SpellCardRenderer
+from card_builder.CardTypes.loot_card  import LootCardEditor,     LootCardRenderer
+from card_builder.CardTypes.loot_card  import EquipmentCardEditor
 from card_builder.CardTypes.alchemy_card import AlchemyCardEditor, AlchemyCardRenderer
+from card_builder.CardTypes.trank_card import TrankCardEditor, TrankCardRenderer
 
 
 _EDITORS = {
     "Spells":    SpellCardEditor,
     "Prowess":   SpellCardEditor,
-    "Supplies":  SuppliesCardEditor,   # ← war "Loot"
+    "Loot":      LootCardEditor,
     "Equipment": EquipmentCardEditor,
     "Alchemy":   AlchemyCardEditor,
+    "Trank":     TrankCardEditor,
 }
 
 _RENDERERS = {
     "Spells":    SpellCardRenderer,
     "Prowess":   SpellCardRenderer,
-    "Supplies":  LootCardRenderer,     # ← war "Loot"
+    "Loot":      LootCardRenderer,
     "Equipment": LootCardRenderer,
     "Alchemy":   AlchemyCardRenderer,
+    "Trank":     TrankCardRenderer,
 }
 
 

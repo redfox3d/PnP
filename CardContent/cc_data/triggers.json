@@ -1,343 +1,553 @@
 {
-  "Trigger": [
-    {
-      "id": "Trig_Card_Changes_Position",
-      "content_text": "[if OPT0=Fire]If you play a Fire Skill.[/if]\n[elif OPT0=Metal]If you play a Metal Skill.[/if]\n[elif OPT0=Ice]If you play an Ice Skill.[/if]\n[elif OPT0=Nature]If you play a Nature Skill.[/if]\n[elif OPT0=Blood]If you play a Blood Skill.[/if]\n[elif OPT0=Meta]If you play a Meta Skill.[/if]",
-      "reminder_text": "",
-      "rarity": 10,
-      "complexity_base": 1.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Meta": 0.0
-      },
-      "conditions": {},
-      "variables": {
-        "X": {
-          "id": "Trig_Card_Changes_Position_0",
-          "rarity": 10,
-          "complexity": 1.0,
-          "cv1": 0,
-          "cv2": 0,
-          "cv3": 0,
-          "conditions": {}
-        }
-      },
-      "options": {
-        "0": {
-          "choices": [
-            "You",
-            "Players",
-            "Anyone"
-          ],
-          "per_choice": {
-            "You": {
-              "id": "Trig_Card_Changes_Position_1",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+    "Trigger": [
+        {
+            "id": "Trig_Card_Changes_Position",
+            "content_text": "[if OPT0=You]If you[elif OPT0=Players]If a player[else]If anyone[/if]\n[if OPT1=Discards] discards[elif OPT1=Forgets] forgets[elif OPT1=Recycles] recycles[elif OPT1=Looses] loses[else] plays[/if]\n[if OPT2=any] {X} card(s)[elif OPT2=Prowess] {X} Prowess card(s)[else] {X} {OPT2} card(s)[/if].",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Quinta": 0.0,
+                "Potion": 0,
+                "Skills": 0
             },
-            "Players": {
-              "id": "Trig_Card_Changes_Position_2",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Trig_Card_Changes_Position_0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 0,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {}
+                }
             },
-            "Anyone": {
-              "id": "Trig_Card_Changes_Position_3",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            }
-          }
+            "options": {
+                "0": {
+                    "choices": [
+                        "You",
+                        "Players",
+                        "Anyone"
+                    ],
+                    "per_choice": {
+                        "You": {
+                            "id": "Trig_Card_Changes_Position_1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Players": {
+                            "id": "Trig_Card_Changes_Position_2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Anyone": {
+                            "id": "Trig_Card_Changes_Position_3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "1": {
+                    "choices": [
+                        "Discards",
+                        "Forgets",
+                        "Recycles",
+                        "Looses",
+                        "Plays"
+                    ],
+                    "per_choice": {
+                        "Discards": {
+                            "id": "Trig_Card_Changes_Position_4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Forgets": {
+                            "id": "Trig_Card_Changes_Position_5",
+                            "rarity": 10,
+                            "complexity": 1.5,
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Recycles": {
+                            "id": "Trig_Card_Changes_Position_6",
+                            "rarity": 10,
+                            "complexity": 1.5,
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Looses": {
+                            "id": "Trig_Card_Changes_Position_7",
+                            "rarity": 10,
+                            "complexity": 1.9,
+                            "cv1": 0.0,
+                            "cv2": 0.0,
+                            "cv3": 0.0,
+                            "conditions": {}
+                        },
+                        "Plays": {
+                            "id": "Trig_Card_Changes_Position_8",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "2": {
+                    "choices": [
+                        "any",
+                        "Fire",
+                        "Metal",
+                        "Ice",
+                        "Nature",
+                        "Blood",
+                        "Quinta",
+                        "Prowess"
+                    ],
+                    "per_choice": {
+                        "any": {
+                            "id": "Trig_Card_Changes_Position_9",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 0,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Fire": {
+                            "id": "Trig_Card_Changes_Position.o0",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Metal": {
+                            "id": "Trig_Card_Changes_Position.o2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Ice": {
+                            "id": "Trig_Card_Changes_Position.o3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Nature": {
+                            "id": "Trig_Card_Changes_Position.o4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Blood": {
+                            "id": "Trig_Card_Changes_Position.o5",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Quinta": {
+                            "id": "Trig_Card_Changes_Position.o6",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Prowess": {
+                            "id": "Trig_Card_Changes_Position.o1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            },
+            "sigil": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, \\Elements, Prowess]"
         },
-        "1": {
-          "choices": [
-            "Discards",
-            "Forgets",
-            "Recycles",
-            "Looses",
-            "Plays"
-          ],
-          "per_choice": {
-            "Discards": {
-              "id": "Trig_Card_Changes_Position_4",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+        {
+            "id": "Trig_Movement",
+            "content_text": "[if OPT0=You][if OPT1=any]If you move in a turn.[elif OPT1!=any]If you move {X} tiles in one turn.[/if][elif OPT0=Ally]If an ally moves in a turn.[elif OPT0=Enemys]If an enemy moves in a turn.[else]If anyone moves in a turn.[/if]",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Quinta": 0.0,
+                "Potion": 0,
+                "Skills": 0
             },
-            "Forgets": {
-              "id": "Trig_Card_Changes_Position_5",
-              "rarity": 10,
-              "complexity": 1.5,
-              "cv1": 0.0,
-              "cv2": 0.0,
-              "cv3": 0.0,
-              "conditions": {}
+            "conditions": {},
+            "variables": {
+                "X": {
+                    "id": "Trig_Movement.v0",
+                    "rarity": 10,
+                    "complexity": 1.0,
+                    "cv1": 1,
+                    "cv2": 0,
+                    "cv3": 0,
+                    "conditions": {
+                        "id_conditions": [
+                            {
+                                "id": "Trig_Movement.o1",
+                                "mode": "required"
+                            }
+                        ]
+                    }
+                }
             },
-            "Recycles": {
-              "id": "Trig_Card_Changes_Position_6",
-              "rarity": 10,
-              "complexity": 1.5,
-              "cv1": 0.0,
-              "cv2": 0.0,
-              "cv3": 0.0,
-              "conditions": {}
+            "options": {
+                "0": {
+                    "choices": [
+                        "You",
+                        "Ally",
+                        "Enemys",
+                        "Anyone"
+                    ],
+                    "per_choice": {
+                        "You": {
+                            "id": "Trig_Movement.o1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Ally": {
+                            "id": "Trig_Movement.o4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Enemys": {
+                            "id": "Trig_Movement.o5",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Anyone": {
+                            "id": "Trig_Movement.o6",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "1": {
+                    "choices": [
+                        "any",
+                        "{X}"
+                    ],
+                    "per_choice": {
+                        "any": {
+                            "id": "Trig_Movement.o0",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "{X}": {
+                            "id": "Trig_Movement.o3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                },
+                "2": {
+                    "choices": [
+                        "-",
+                        "one_eff",
+                        "one_turn"
+                    ],
+                    "per_choice": {
+                        "-": {
+                            "id": "Trig_Movement.o2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "id_conditions": [
+                                    {
+                                        "id": "Trig_Movement.o1",
+                                        "mode": "required"
+                                    },
+                                    {
+                                        "id": "Trig_Movement.o4",
+                                        "mode": "required"
+                                    }
+                                ]
+                            }
+                        },
+                        "one_eff": {
+                            "id": "Trig_Movement.o7",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "id_conditions": [
+                                    {
+                                        "id": "Trig_Movement.o1",
+                                        "mode": "required"
+                                    },
+                                    {
+                                        "id": "Trig_Movement.o3",
+                                        "mode": "required"
+                                    }
+                                ]
+                            }
+                        },
+                        "one_turn": {
+                            "id": "Trig_Movement.o8",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "id_conditions": [
+                                    {
+                                        "id": "Trig_Movement.o1",
+                                        "mode": "required"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
             },
-            "Looses": {
-              "id": "Trig_Card_Changes_Position_7",
-              "rarity": 10,
-              "complexity": 1.9,
-              "cv1": 0.0,
-              "cv2": 0.0,
-              "cv3": 0.0,
-              "conditions": {}
-            },
-            "Plays": {
-              "id": "Trig_Card_Changes_Position_8",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            }
-          }
+            "sigil": "[You,Ally,Enemys,Anyone] [any,{X}] [-, one_eff, one_turn]"
         },
-        "2": {
-          "choices": [
-            "any",
-            "Element_List"
-          ],
-          "per_choice": {
-            "any": {
-              "id": "Trig_Card_Changes_Position_9",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+        {
+            "id": "Play_Skill",
+            "content_text": "[if OPT0=Skill]If you play a Skill.[elif OPT0=Fire]If you play a Fire Skill.[elif OPT0=Metal]If you play a Metal Skill.[elif OPT0=Ice]If you play an Ice Skill.[elif OPT0=Nature]If you play a Nature Skill.[elif OPT0=Blood]If you play a Blood Skill.[elif OPT0=Quinta]If you play a Quinta Skill.[elif OPT0=Recipe]If you play a Recipe.[/if]",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Quinta": 0.0,
+                "Potion": 0,
+                "Skills": 0
             },
-            "Element_List": {
-              "id": "Trig_Card_Changes_Position_10",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            }
-          }
-        }
-      },
-      "sigil": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, Element_List]"
-    },
-    {
-      "id": "Trig_Movement",
-      "content_text": "You/Players/Opponents/Anyone ",
-      "reminder_text": "",
-      "rarity": 10,
-      "complexity_base": 1.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Meta": 0.0
-      },
-      "conditions": {},
-      "variables": {
-        "X": {
-          "id": "Trig_Movement_0",
-          "rarity": 10,
-          "complexity": 1.0,
-          "cv1": 0,
-          "cv2": 0,
-          "cv3": 0,
-          "conditions": {}
-        }
-      },
-      "options": {
-        "0": {
-          "choices": [
-            "You/Players/Opponents/Anyone"
-          ],
-          "per_choice": {
-            "You/Players/Opponents/Anyone": {
-              "id": "Trig_Movement_1",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            }
-          }
+            "conditions": {},
+            "variables": {},
+            "options": {
+                "0": {
+                    "choices": [
+                        "Skill",
+                        "Fire",
+                        "Metal",
+                        "Ice",
+                        "Nature",
+                        "Blood",
+                        "Quinta",
+                        "Recipe"
+                    ],
+                    "per_choice": {
+                        "Skill": {
+                            "id": "Play_Skill.o0",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Fire": {
+                            "id": "Play_Skill.o7",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Metal": {
+                            "id": "Play_Skill.o1",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        },
+                        "Ice": {
+                            "id": "Play_Skill.o2",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "element_weights": {
+                                    "Fire": 2.0,
+                                    "Metal": 2.0,
+                                    "Ice": 50.0,
+                                    "Nature": 2.0,
+                                    "Blood": 2.0,
+                                    "Quinta": 2.0
+                                }
+                            }
+                        },
+                        "Nature": {
+                            "id": "Play_Skill.o3",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "element_weights": {
+                                    "Fire": 2.0,
+                                    "Metal": 2.0,
+                                    "Ice": 2.0,
+                                    "Nature": 60.0,
+                                    "Blood": 2.0,
+                                    "Quinta": 2.0
+                                }
+                            }
+                        },
+                        "Blood": {
+                            "id": "Play_Skill.o4",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "element_weights": {
+                                    "Fire": 2.0,
+                                    "Metal": 2.0,
+                                    "Ice": 2.0,
+                                    "Nature": 2.0,
+                                    "Blood": 50.0,
+                                    "Quinta": 2.0
+                                }
+                            }
+                        },
+                        "Quinta": {
+                            "id": "Play_Skill.o5",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {
+                                "element_weights": {
+                                    "Quinta": 30.0
+                                }
+                            }
+                        },
+                        "Recipe": {
+                            "id": "Play_Skill.o8",
+                            "rarity": 10,
+                            "complexity": 1.0,
+                            "cv1": 1,
+                            "cv2": 0,
+                            "cv3": 0,
+                            "conditions": {}
+                        }
+                    }
+                }
+            },
+            "sigil": "[Skill, \\Elements, Recipe]",
+            "cv": 1.0
         },
-        "1": {
-          "choices": [
-            "any",
-            "{X}"
-          ],
-          "per_choice": {
-            "any": {
-              "id": "Trig_Movement.o0",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+        {
+            "id": "Manual_Trigger",
+            "sigil": "",
+            "content_text": "During your Turn",
+            "reminder_text": "",
+            "rarity": 10,
+            "complexity_base": 1.0,
+            "element_weights": {
+                "Fire": 0.0,
+                "Metal": 0.0,
+                "Ice": 0.0,
+                "Nature": 0.0,
+                "Blood": 0.0,
+                "Quinta": 0.0,
+                "Potion": 0,
+                "Skills": 0
             },
-            "{X}": {
-              "id": "Trig_Movement_2",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            }
-          }
+            "conditions": {},
+            "variables": {},
+            "options": {},
+            "weights_open": true,
+            "cv": 3.0
         }
-      },
-      "sigil": "[You/Players/Opponents/Anyone] [any,{X}]"
-    },
-    {
-      "id": "Play_Skill",
-      "content_text": "[if OPT0=Fire]If you play a Fire Skill.[/if]\n[elif OPT0=Metal]If you play a Metal Skill.[/if]\n[elif OPT0=Ice]If you play an Ice Skill.[/if]\n[elif OPT0=Nature]If you play a Nature Skill.[/if]\n[elif OPT0=Blood]If you play a Blood Skill.[/if]\n[elif OPT0=Meta]If you play a Meta Skill.[/if]",
-      "reminder_text": "",
-      "rarity": 10,
-      "complexity_base": 1.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Meta": 0.0
-      },
-      "conditions": {},
-      "variables": {},
-      "options": {
-        "0": {
-          "choices": [
-            "Fire",
-            "Metal",
-            "Ice",
-            "Nature",
-            "Blood",
-            "Meta"
-          ],
-          "per_choice": {
-            "Fire": {
-              "id": "Play_Skill.o0",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            },
-            "Metal": {
-              "id": "Play_Skill.o1",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
-            },
-            "Ice": {
-              "id": "Play_Skill.o2",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {
-                "element_weights": {
-                  "Fire": 2.0,
-                  "Metal": 2.0,
-                  "Ice": 50.0,
-                  "Nature": 2.0,
-                  "Blood": 2.0,
-                  "Meta": 2.0
-                }
-              }
-            },
-            "Nature": {
-              "id": "Play_Skill.o3",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {
-                "element_weights": {
-                  "Fire": 2.0,
-                  "Metal": 2.0,
-                  "Ice": 2.0,
-                  "Nature": 60.0,
-                  "Blood": 2.0,
-                  "Meta": 2.0
-                }
-              }
-            },
-            "Blood": {
-              "id": "Play_Skill.o4",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {
-                "element_weights": {
-                  "Fire": 2.0,
-                  "Metal": 2.0,
-                  "Ice": 2.0,
-                  "Nature": 2.0,
-                  "Blood": 50.0,
-                  "Meta": 2.0
-                }
-              }
-            },
-            "Meta": {
-              "id": "Play_Skill.o5",
-              "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 1,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {
-                "element_weights": {
-                  "Meta": 30.0
-                }
-              }
-            }
-          }
-        }
-      },
-      "sigil": "[\\Elements]",
-      "cv": 1.0,
-      "card_type_weights": {}
-    }
-  ]
+    ]
 }

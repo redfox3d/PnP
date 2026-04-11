@@ -1,24 +1,22 @@
 {
     "materials": [
-        "Asche",
-        "Bronze",
-        "Eisen",
-        "Erde",
-        "Glas",
         "Gold",
-        "Holz",
-        "Knochen",
-        "Kristall",
-        "Leder",
-        "Minze",
-        "Papier",
-        "Seide",
-        "Silber",
-        "Stahl",
-        "Stein",
-        "Stoff",
-        "Wasser",
-        "Wolle",
-        "Öl"
-    ]
+        "Iron"
+    ],
+    "material_effects": {
+        "Gold": {
+            "effect_id": "Draw",
+            "vals": {
+                "X": ""
+            },
+            "opt_vals": {}
+        },
+        "Iron": {
+            "effect_id": "Heal",
+            "vals": {
+                "X": ""
+            },
+            "opt_vals": {}
+        }
+    }
 }

@@ -7,7 +7,7 @@ class Element(str, Enum):
     ICE     = "Ice"
     NATURE  = "Nature"
     BLOOD   = "Blood"
-    META    = "Meta"
+    QUINTA  = "Quinta"
     GENERIC = "Generic"
 
 
@@ -41,7 +41,7 @@ ELEMENT_COMBAT_STAT: dict[Element, str] = {
     Element.BLOOD:  "beweglichkeit",
     Element.NATURE: "wahrnehmung",
     Element.ICE:    "geschwindigkeit",
-    Element.META:   "basteln",
+    Element.QUINTA:   "basteln",
 }
 
 ELEMENT_HIT_SKILL: dict[Element, str] = {
@@ -50,7 +50,7 @@ ELEMENT_HIT_SKILL: dict[Element, str] = {
     Element.BLOOD:  "ueberzeugungskraft",
     Element.NATURE: "naturwissen",
     Element.ICE:    "selbstbewusstsein",
-    Element.META:   "intelligenz",
+    Element.QUINTA:   "intelligenz",
 }
 
 # Die sides for attack roll per element
@@ -60,7 +60,7 @@ ELEMENT_DIE: dict[Element, int] = {
     Element.BLOOD:   6,
     Element.NATURE:  6,
     Element.ICE:     6,
-    Element.META:    6,
+    Element.QUINTA:    6,
     Element.GENERIC: 6,
 }
 

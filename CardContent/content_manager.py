@@ -13,8 +13,9 @@ from CardContent.template_parser import (
     make_default_stat, sync_item_template,
     collect_all_ids, has_broken_refs,
 )
-from CardContent.window_memory  import wm
-from CardContent.content_editor import ContentEditor
+from CardContent.window_memory     import wm
+from CardContent.content_editor    import ContentEditor
+from CardContent.effect_type_panel import EffectTypePanel
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 _HERE        = os.path.dirname(os.path.abspath(__file__))
@@ -26,11 +27,9 @@ FILES = {
     "Condition": os.path.join(_HERE, "cc_data", "conditions.json"),
     "Cost":      os.path.join(_HERE, "cc_data", "costs.json"),
     "Insert":    os.path.join(_HERE, "cc_data", "inserts.json"),
-    "Enchant":   os.path.join(_HERE, "cc_data", "enchants.json"),
-    "Curse":     os.path.join(_HERE, "cc_data", "curses.json"),
 }
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Potion", "Skills"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta", "Potion", "Skills"]
 
 
 class ContentManager:
@@ -65,17 +64,9 @@ class ContentManager:
 
         for items in self.data.values():
             for item in items:
-                # Migrate legacy key content_box → sigil
-                if "content_box" in item and "sigil" not in item:
-                    item["sigil"] = item.pop("content_box")
-                elif "content_box" in item:
-                    item.pop("content_box")
-
-                w = item.setdefault("element_weights", {})
-                for el in ELEMENTS:
-                    w.setdefault(el, 0)
-                item.setdefault("sigil",           item.get("effect_text", ""))
-                item.setdefault("content_text",    item.get("effect_text", ""))
+                item.setdefault("element_weights", {})
+                item.setdefault("sigil",           "")
+                item.setdefault("content_text",    "")
                 item.setdefault("reminder_text",   "")
                 item.setdefault("rarity",          10)
                 item.setdefault("complexity_base", 1.0)
@@ -141,6 +132,9 @@ class ContentManager:
         tk.Button(bf, text="🗑 Delete", command=self._delete_selected,
                   bg="#6e1a1a", fg="white").pack(side="left", padx=6)
         tk.Button(bf, text="Add Column", command=self._add_column).pack(side="left", padx=6)
+        tk.Button(bf, text="Effekt Typen", command=self._open_effect_types,
+                  bg="#3a1a5a", fg="#cc88ff",
+                  font=("Arial", 8, "bold")).pack(side="left", padx=6)
         tk.Button(bf, text="💾 Save All", command=self.save_all,
                   bg="#1a3e8e", fg="white").pack(side="right", padx=6)
 
@@ -425,6 +419,10 @@ class ContentManager:
 
     # ── Open editors ───────────────────────────────────────────────────────────
 
+    def _open_effect_types(self):
+        EffectTypePanel(self.root, self.data,
+                        on_save=lambda: (self.load_all(), self._refresh_table()))
+
     def _open_editor(self, event):
         if self.tree.identify_region(event.x, event.y) == "heading":
             return
@@ -529,7 +527,7 @@ class ContentManager:
                 "cv1":             1.0,
                 "cv2":             0.0,
                 "cv3":             0.0,
-                "element_weights": {el: 0 for el in ELEMENTS},
+                "element_weights": {},
                 "conditions":      {},
                 "variables":       {},
                 "options":         {},

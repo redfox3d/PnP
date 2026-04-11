@@ -22,7 +22,8 @@ from .cv_calc import (
     max_x_for_budget,
 )
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
+RECIPE_TYPES = ["Potions", "Phials", "Tinctures"]
 
 # ── Card name generation ──────────────────────────────────────────────────────
 _NAME_PREFIXES = {
@@ -31,7 +32,7 @@ _NAME_PREFIXES = {
     "Ice":    ["Frozen", "Glacial", "Bitter", "Crystalline", "Frostbound", "Shivering"],
     "Nature": ["Overgrown", "Withered", "Blooming", "Ancient", "Twisted", "Verdant"],
     "Blood":  ["Crimson", "Severed", "Pulsing", "Tainted", "Visceral", "Coagulated"],
-    "Meta":   ["Unraveling", "Fractured", "Hollow", "Echoing", "Null", "Paradox"],
+    "Quinta":   ["Unraveling", "Fractured", "Hollow", "Echoing", "Null", "Paradox"],
 }
 _NAME_NOUNS = [
     "Strike", "Ward", "Surge", "Veil", "Oath", "Pact", "Brand", "Rite",
@@ -81,6 +82,20 @@ class CardGenerator:
         self.box_config = box_config
         self.cfg        = gen_config
 
+        # Profile settings
+        self.profile_name      = gen_config.get("profile_name", "Spells")
+        self.card_type_output  = gen_config.get("card_type_output", "Spells")
+        self.generic_mana_only = gen_config.get("generic_mana_only", False)
+        self.generic_mana_cv   = gen_config.get("generic_mana_cv", None)
+        self.is_recipes        = (self.profile_name == "Recipes")
+
+    # ── Profile filter ────────────────────────────────────────────────────────
+
+    def _allowed_for_profile(self, item: dict) -> bool:
+        """Return True if this content item is usable by the current profile."""
+        allowed = item.get("allowed_card_types", [])
+        return not allowed or self.profile_name in allowed
+
     # ── Public API ────────────────────────────────────────────────────────────
 
     def generate(self, count: int) -> list:
@@ -88,7 +103,9 @@ class CardGenerator:
         cv_max = float(self.cfg.get("cv_target",    999.0))
         cards = []
         attempts = 0
-        max_attempts = count * 30  # more attempts since both min and max must be satisfied
+        too_low = 0
+        too_high = 0
+        max_attempts = count * 100  # many attempts since CV min/max window can be tight
         while len(cards) < count and attempts < max_attempts:
             attempts += 1
             card = self._generate_one()
@@ -96,22 +113,33 @@ class CardGenerator:
                 continue
             cv = card.get("_cv", 0)
             if cv < cv_min:
-                print(f"  [gen] Verworfen: CV={cv:.2f} < min={cv_min:.2f}")
+                too_low += 1
                 continue
             if cv > cv_max:
-                print(f"  [gen] Verworfen: CV={cv:.2f} > max={cv_max:.2f}")
+                too_high += 1
                 continue
             cards.append(card)
+        rejected = too_low + too_high
+        print(f"  [gen] Ergebnis: {len(cards)}/{count} Karten in {attempts} Versuchen "
+              f"(CV Fenster [{cv_min:.1f}, {cv_max:.1f}])")
+        if rejected:
+            print(f"  [gen] Verworfen: {rejected} ({too_low}x CV zu niedrig, "
+                  f"{too_high}x CV zu hoch)")
         if len(cards) < count:
-            print(f"  [gen] Warnung: nur {len(cards)}/{count} Karten in [{cv_min}, {cv_max}]")
+            print(f"  [gen] WARNUNG: Nur {len(cards)}/{count} erzeugt! "
+                  f"CV-Fenster [{cv_min:.1f}, {cv_max:.1f}] ist zu eng.")
         return cards
 
     # ── Card generation ───────────────────────────────────────────────────────
 
     def _generate_one(self) -> dict:
-        element = self._pick_element()
+        if self.is_recipes:
+            recipe_type = self._pick_recipe_type()
+            element     = recipe_type   # used internally as subcategory key
+        else:
+            recipe_type = None
+            element     = self._pick_element()
         block_types = self._pick_blocks(element)
-        print(f"  [gen_one] Element={element}, Boxen={block_types}")
 
         # Container no_repeat dedup is shared across all boxes on a card.
         # Solo-item dedup is per-box (same effect can appear in different boxes).
@@ -130,20 +158,18 @@ class CardGenerator:
                     break
             if ability is None:
                 ability = ab   # use last attempt regardless
-            n_eff  = len(ability.get("effects", []))
-            n_cost = len(ability.get("costs",   []))
-            print(f"    [gen_one] Sigil={btype}: {n_eff} Effekte, {n_cost} Kosten, "
-                  f"trigger={ability.get('trigger_id')}")
             block = {"type": btype, "abilities": [ability]}
             blocks.append(block)
 
         card = {
-            "name": _make_card_name(element),
-            "card_type": "Spells",
+            "name": _make_card_name(element if not self.is_recipes else "Quinta"),
+            "card_type": self.card_type_output,
             "artwork": "",
-            "element": element,
+            "element": "" if self.is_recipes else element,
             "blocks": blocks,
         }
+        if recipe_type:
+            card["recipe_type"] = recipe_type
 
         # Attach computed metrics
         card["_cv"]         = round(cv_card(card, self.box_config,
@@ -152,7 +178,7 @@ class CardGenerator:
                                                     self.costs), 3)
         return card
 
-    # ── Element ───────────────────────────────────────────────────────────────
+    # ── Element / Recipe type ─────────────────────────────────────────────────
 
     def _pick_element(self) -> str:
         mode = self.cfg.get("element_mode", "equal")
@@ -164,6 +190,27 @@ class CardGenerator:
         if total <= 0:
             return random.choice(ELEMENTS)
         return random.choices(ELEMENTS, weights=weights)[0]
+
+    def _pick_recipe_type(self) -> str:
+        mode = self.cfg.get("recipe_type_mode", "equal")
+        if mode == "equal":
+            return random.choice(RECIPE_TYPES)
+        weights = [float(self.cfg.get("recipe_type_weights", {}).get(rt, 10))
+                   for rt in RECIPE_TYPES]
+        total = sum(weights)
+        if total <= 0:
+            return random.choice(RECIPE_TYPES)
+        return random.choices(RECIPE_TYPES, weights=weights)[0]
+
+    def _item_subcategory_weight(self, item: dict, sub: str) -> float:
+        """Get element or recipe_type weight for an item, depending on profile."""
+        if self.is_recipes:
+            w_map = item.get("recipe_type_weights", {})
+        else:
+            w_map = item.get("element_weights", {})
+        if not w_map:
+            return 10.0
+        return float(w_map.get(sub, 10))
 
     # ── Blocks ────────────────────────────────────────────────────────────────
 
@@ -221,21 +268,27 @@ class CardGenerator:
         # Non-Play sigils get a random trigger with proper vals/opts
         trigger_id, trigger_vals, trigger_opt_vals = None, {}, {}
         if not is_play and self.triggers:
-            tid   = random.choice(list(self.triggers.keys()))
-            titem = self.triggers[tid]
-            trigger_id       = tid
-            trigger_opt_vals = self._pick_options(titem, element)
-            trigger_vals     = self._pick_variable_values(titem, cv_budget=2.0)
+            allowed_triggers = {k: v for k, v in self.triggers.items()
+                                if self._allowed_for_profile(v)}
+            if allowed_triggers:
+                tid   = random.choice(list(allowed_triggers.keys()))
+                titem = allowed_triggers[tid]
+                trigger_id       = tid
+                trigger_opt_vals = self._pick_options(titem, element)
+                trigger_vals     = self._pick_variable_values(titem, cv_budget=2.0)
 
         # Optional condition on any sigil
         condition_id, condition_vals, condition_opt_vals = None, {}, {}
         cond_chance = float(self.cfg.get("condition_chance", 0.15))
         if self.conditions and random.random() < cond_chance:
-            cid   = random.choice(list(self.conditions.keys()))
-            citem = self.conditions[cid]
-            condition_id       = cid
-            condition_opt_vals = self._pick_options(citem, element)
-            condition_vals     = self._pick_variable_values(citem, cv_budget=1.0)
+            allowed_conditions = {k: v for k, v in self.conditions.items()
+                                  if self._allowed_for_profile(v)}
+            if allowed_conditions:
+                cid   = random.choice(list(allowed_conditions.keys()))
+                citem = allowed_conditions[cid]
+                condition_id       = cid
+                condition_opt_vals = self._pick_options(citem, element)
+                condition_vals     = self._pick_variable_values(citem, cv_budget=1.0)
 
         ability = {
             "condition_id":       condition_id,
@@ -288,12 +341,13 @@ class CardGenerator:
 
         # ── CV budget for this box ─────────────────────────────────────────────
         cv_per_box = float(self.cfg.get("cv_per_box_max", 3.0))
-        cost_cv = sum(
-            cv_content_item(self.costs[c["cost_id"]],
-                            c.get("vals", {}), c.get("opt_vals", {}))
-            for c in ability["costs"]
-            if c["cost_id"] in self.costs
-        )
+        cost_cv = 0.0
+        for c in ability["costs"]:
+            if c["cost_id"] == "Mana" and self.generic_mana_cv is not None:
+                cost_cv += self.generic_mana_cv
+            elif c["cost_id"] in self.costs:
+                cost_cv += cv_content_item(self.costs[c["cost_id"]],
+                                           c.get("vals", {}), c.get("opt_vals", {}))
         effect_budget = cv_per_box + cost_cv
 
         # ── Constraint helpers ────────────────────────────────────────────────
@@ -321,35 +375,51 @@ class CardGenerator:
         sigil_rules = self.cfg.get("sigil_rules", {}).get(block_type, [])
 
         if sigil_rules:
-            # ── Per-sigil container rules (overrides global content_rules) ────
+            # ── Per-sigil rules (overrides global content_rules) ──────────────
             for rule in sigil_rules:
                 prob = float(rule.get("probability", 1.0))
                 if random.random() >= prob:
                     continue
-                container_id = rule.get("container", "")
-                if not container_id:
-                    continue
                 r_min   = int(rule.get("min", 0))
                 r_max   = max(int(rule.get("max", 1)), r_min)
                 n_picks = random.randint(r_min, r_max)
+
+                container_id  = rule.get("container", "")
+                effects_pool  = rule.get("effects", [])   # inline effect-ID list
+
                 for _ in range(n_picks):
                     if 0 <= max_effects <= effects_added:
                         break
-                    result = self._pick_from_container(
-                        container_id, element, used_containers,
-                        cv_budget=effect_budget, block_type=block_type,
-                        forbidden_ids=forbidden_ids,
-                        incompat_pairs=incompat_pairs,
-                        current_effects=ability["effects"])
-                    if result:
-                        rtype, rdata = result
-                        self._apply_content_item(ability, rtype, rdata, effect_budget)
-                        if rtype == "effect":
+
+                    if effects_pool:
+                        # Pick one effect from the inline list
+                        eff = self._pick_from_effects_pool(
+                            effects_pool, element, block_type,
+                            effect_budget, forbidden_ids, incompat_pairs,
+                            ability["effects"])
+                        if eff:
+                            ability["effects"].append(eff)
                             effects_added += 1
-                            item = self.effects.get(rdata["effect_id"])
+                            item = self.effects.get(eff["effect_id"])
                             if item:
                                 effect_budget -= cv_content_item(
-                                    item, rdata.get("vals", {}), rdata.get("opt_vals", {}))
+                                    item, eff.get("vals", {}), eff.get("opt_vals", {}))
+                    elif container_id:
+                        result = self._pick_from_container(
+                            container_id, element, used_containers,
+                            cv_budget=effect_budget, block_type=block_type,
+                            forbidden_ids=forbidden_ids,
+                            incompat_pairs=incompat_pairs,
+                            current_effects=ability["effects"])
+                        if result:
+                            rtype, rdata = result
+                            self._apply_content_item(ability, rtype, rdata, effect_budget)
+                            if rtype == "effect":
+                                effects_added += 1
+                                item = self.effects.get(rdata["effect_id"])
+                                if item:
+                                    effect_budget -= cv_content_item(
+                                        item, rdata.get("vals", {}), rdata.get("opt_vals", {}))
         else:
             # ── Global content_rules with random target count ─────────────────
             if max_effects < 0:
@@ -391,6 +461,8 @@ class CardGenerator:
                         allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
                         if allowed_bt and block_type and block_type not in allowed_bt:
                             continue
+                        if not self._allowed_for_profile(item):
+                            continue
                     solo_key = f"__solo__{eid}"
                     if eid in used_solo.get(solo_key, set()):
                         continue
@@ -408,6 +480,8 @@ class CardGenerator:
                     if cost_item:
                         allowed_bt = cost_item.get("conditions", {}).get("allowed_box_types", [])
                         if allowed_bt and block_type and block_type not in allowed_bt:
+                            continue
+                        if not self._allowed_for_profile(cost_item):
                             continue
                     solo_key = f"__solo_cost__{cid}"
                     if cid in used_solo.get(solo_key, set()):
@@ -490,22 +564,23 @@ class CardGenerator:
                 allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
                 if allowed_bt and block_type and block_type not in allowed_bt:
                     continue
+                # Filter by profile
+                if not self._allowed_for_profile(item):
+                    continue
                 candidates.append((type_str, iid, item))
 
         if not candidates:
             return None
 
-        # Weight by rarity × element_weight.
-        # Items with element_weight == 0 for this element are element-exclusive
-        # to other elements → exclude them entirely. Only fall back to unfiltered
-        # set if every single candidate is element-exclusive (shouldn't happen in
-        # practice, but avoids empty-pool crashes).
+        # Weight by rarity × element_weight (or recipe_type_weight for Recipes).
+        # Items with weight == 0 for this subcategory are excluded entirely.
+        # Only fall back to unfiltered set if every single candidate is excluded
+        # (avoids empty-pool crashes).
         weights = []
         for _, iid, item in candidates:
-            rarity   = float(item.get("rarity", 10))
-            el_w_map = item.get("element_weights", {})
-            el_w     = float(el_w_map.get(element, 10)) if el_w_map else 10.0
-            weights.append(math.sqrt(rarity) * (max(el_w, 0) / 10.0))
+            rarity = float(item.get("rarity", 10))
+            sub_w  = self._item_subcategory_weight(item, element)
+            weights.append(math.sqrt(rarity) * (max(sub_w, 0) / 10.0))
 
         # Filter out zero-weight (element-forbidden) items
         pool = [(c, w) for c, w in zip(candidates, weights) if w > 0]
@@ -524,6 +599,63 @@ class CardGenerator:
         elif type_str == "cost":
             return ("cost", self._build_cost(iid, element))
         return None
+
+    def _pick_from_effects_pool(self, effects_pool: list, element: str,
+                                block_type: str, cv_budget: float,
+                                forbidden_ids, incompat_pairs: list,
+                                current_effects: list):
+        """
+        Pick one effect from an inline effects-pool list (sigil rule "effects" key).
+        Applies the same rarity × element_weight weighting and forbidden/incompatible
+        filtering as _pick_from_container.
+        Returns a built effect dict, or None if nothing valid is available.
+        """
+        forbidden_ids  = forbidden_ids or set()
+        incompat_pairs = incompat_pairs or []
+        current_eids   = {e["effect_id"] for e in (current_effects or [])}
+
+        candidates = []  # (eid, item)
+        for eid in effects_pool:
+            item = self.effects.get(eid)
+            if not item:
+                continue
+            if eid in forbidden_ids:
+                continue
+            # Incompatibility check
+            incompatible = any(
+                eid in pair and current_eids & (pair - {eid})
+                for pair in incompat_pairs
+            )
+            if incompatible:
+                continue
+            # Allowed box types
+            allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
+            if allowed_bt and block_type and block_type not in allowed_bt:
+                continue
+            # Filter by profile
+            if not self._allowed_for_profile(item):
+                continue
+            candidates.append((eid, item))
+
+        if not candidates:
+            return None
+
+        # Weight by rarity × subcategory weight (element or recipe_type)
+        weights = []
+        for eid, item in candidates:
+            rarity = float(item.get("rarity", 10))
+            sub_w  = self._item_subcategory_weight(item, element)
+            weights.append(math.sqrt(rarity) * (max(sub_w, 0) / 10.0))
+
+        # Filter out element-forbidden items (weight == 0)
+        pool = [(c, w) for c, w in zip(candidates, weights) if w > 0]
+        if not pool:
+            pool = [(c, 1.0) for c in candidates]  # fallback: all equal
+
+        pool_cands, pool_wts = zip(*pool)
+        chosen_eid, _ = random.choices(list(pool_cands), weights=list(pool_wts))[0]
+
+        return self._build_effect(chosen_eid, element, cv_budget)
 
     def _apply_content_item(self, ability: dict, type_str: str, data, cv_budget: float):
         """Add a picked container item to the ability."""
@@ -569,7 +701,10 @@ class CardGenerator:
             # Then record the chosen type in vals["element"] so the renderer
             # can draw the correct symbol/color for each mana pip.
             opt_vals = {}
-            allowed = {"Generic", "Meta", element}
+            if self.generic_mana_only:
+                allowed = {"Generic"}
+            else:
+                allowed = {"Generic", "Quinta", element}
             for opt_key, opt in item.get("options", {}).items():
                 avail = [c for c in opt.get("choices", []) if c in allowed]
                 if not avail:

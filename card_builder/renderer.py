@@ -202,23 +202,40 @@ class CardRenderer:
         lh    = self.FS + 6
 
         # ── Build header ──────────────────────────────────────────────────────
+        try:
+            from CardContent.template_parser import render_display_text, render_content_text
+            def _render_item(item, var_vals, opt_vals):
+                ct    = item.get("content_text") or item.get("effect_text", "")
+                sigil = item.get("sigil", "")
+                if ct:
+                    return render_display_text(ct, var_vals, opt_vals)
+                elif sigil:
+                    return render_content_text(sigil, var_vals, opt_vals)
+                return ""
+        except ImportError:
+            def _render_item(item, var_vals, opt_vals):
+                t = item.get("content_text") or item.get("effect_text", "")
+                for k, v in var_vals.items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                return t
+
         trigger_text = ""
         if ab.get("trigger_id"):
             trig = CD.get("trigger", ab["trigger_id"])
             if trig:
-                t = trig.get("content_text") or trig.get("effect_text", "")
-                for k, v in ab.get("trigger_vals", {}).items():
-                    t = t.replace(f"{{{k}}}", str(v))
-                trigger_text = t
+                trigger_text = _render_item(
+                    trig,
+                    ab.get("trigger_vals", {}),
+                    ab.get("trigger_opt_vals", {}))
 
         cond_text = ""
         if ab.get("condition_id"):
             cond = CD.get("condition", ab["condition_id"])
             if cond:
-                t = cond.get("content_text") or cond.get("effect_text", "")
-                for k, v in ab.get("condition_vals", {}).items():
-                    t = t.replace(f"{{{k}}}", str(v))
-                cond_text = t
+                cond_text = _render_item(
+                    cond,
+                    ab.get("condition_vals", {}),
+                    ab.get("condition_opt_vals", {}))
 
         if trigger_text and cond_text:
             prefix = f"If {trigger_text} and you have {cond_text}"
@@ -233,10 +250,8 @@ class CardRenderer:
         for ci in ab.get("costs", []):
             co = CD.get("cost", ci["cost_id"])
             if co:
-                t = co.get("content_text") or co.get("effect_text", "")
-                for k, v in ci.get("vals", {}).items():
-                    t = t.replace(f"{{{k}}}", str(v))
-                costs_text.append(t)
+                costs_text.append(_render_item(
+                    co, ci.get("vals", {}), ci.get("opt_vals", {})))
         cost_str = ", ".join(costs_text)
 
         effects    = ab.get("effects", [])
@@ -263,9 +278,7 @@ class CardRenderer:
             eff = CD.get("effect", ei.get("effect_id", ""))
             if not eff:
                 continue
-            ct = eff.get("content_text") or eff.get("effect_text", "")
-            for k, v in ei.get("vals", {}).items():
-                ct = ct.replace(f"{{{k}}}", str(v))
+            ct = _render_item(eff, ei.get("vals", {}), ei.get("opt_vals", {}))
             eff_data.append([eff, ei, ct])
 
         chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))

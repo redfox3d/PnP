@@ -68,6 +68,22 @@ def cv_content_item(item: dict, vals: dict, opt_vals: dict) -> float:
     return total
 
 
+# ── Effect CV grouping ────────────────────────────────────────────────────────
+
+def _effects_cv(effects: list, effects_lookup: dict) -> float:
+    """
+    Compute the total CV of a list of ability effects.
+    primary_types on each effect item are informational (for generation grouping);
+    CV is simply summed across all effects.
+    """
+    total = 0.0
+    for eff in effects:
+        item = effects_lookup.get(eff.get("effect_id", ""))
+        if item:
+            total += cv_content_item(item, eff.get("vals", {}), eff.get("opt_vals", {}))
+    return total
+
+
 # ── Ability / box CV ──────────────────────────────────────────────────────────
 
 def cv_ability(ability: dict,
@@ -76,12 +92,7 @@ def cv_ability(ability: dict,
                condition_mult: float = 1.0,
                trigger_mult: float = 1.0) -> float:
     """CV of a single ability (one box entry)."""
-    cv_eff = 0.0
-    for eff in ability.get("effects", []):
-        item = effects_lookup.get(eff.get("effect_id", ""))
-        if item:
-            cv_eff += cv_content_item(item, eff.get("vals", {}),
-                                      eff.get("opt_vals", {}))
+    cv_eff = _effects_cv(ability.get("effects", []), effects_lookup)
 
     cv_cost = 0.0
     for cost in ability.get("costs", []):

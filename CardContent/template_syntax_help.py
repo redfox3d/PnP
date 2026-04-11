@@ -24,7 +24,7 @@ HELP_TEXT = """
                  → Option 1: (leer)  Option 2: Apfel
 
 [\Elements]      Alle Elemente als Auswahl (automatisch)
-                 Expandiert zu [Fire, Metal, Ice, Nature, Blood, Meta].
+                 Expandiert zu [Fire, Metal, Ice, Nature, Blood, Quinta].
                  Jedes Element bekommt seine eigene Gewichtung.
                  Beispiel:  Deal [\Elements] damage.
 

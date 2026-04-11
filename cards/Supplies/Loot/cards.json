@@ -1,7 +1,7 @@
 {
     "cards": [
         {
-            "name": "New Card",
+            "name": "Gold Coin",
             "card_type": "Loot",
             "artwork": "",
             "element_sources": [
@@ -10,19 +10,38 @@
                 "Blood"
             ],
             "object_type": [],
-            "materials": [],
+            "materials": [
+                "Gold"
+            ],
             "effect_text": "",
-            "value": 0
+            "value": 50,
+            "elements": [
+                "Ice"
+            ],
+            "sacrifice_effects": {
+                "Ice": {
+                    "effect_id": "Kick",
+                    "vals": {
+                        "X": ""
+                    },
+                    "opt_vals": {}
+                }
+            }
         },
         {
-            "name": "New Card",
+            "name": "Bread",
             "card_type": "Loot",
             "artwork": "",
             "element_sources": [],
             "object_type": [],
             "materials": [],
             "effect_text": "",
-            "value": 0
+            "value": 0,
+            "elements": [
+                "Blood",
+                "Fire"
+            ],
+            "sacrifice_effects": {}
         },
         {
             "name": "New Card",

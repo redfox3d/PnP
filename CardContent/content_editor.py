@@ -4,8 +4,31 @@ content_editor.py – ContentEditor window and sub-dialogs.
 
 import json as _json
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
+
+
+def _get_generator_profiles():
+    try:
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from random_builder.models import GENERATOR_PROFILES
+        return GENERATOR_PROFILES
+    except Exception:
+        return ["Spells", "Prowess", "Recipes"]
+
+
+def _get_recipe_types():
+    try:
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from random_builder.models import RECIPE_TYPES
+        return RECIPE_TYPES
+    except Exception:
+        return ["Potions", "Phials", "Tinctures"]
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,10 +43,7 @@ from CardContent.template_syntax_help import SyntaxHelpWindow
 
 from card_builder.constants import BOX_TYPES
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta"]
-
-# Card types for the weight section grouping
-CARD_TYPES = ["Spells", "Prowess", "Loot", "Equipment", "Alchemy"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
 
 DEFAULT_ELEMENT_WEIGHT = 10   # used by auto-generator when field is empty
 
@@ -43,11 +63,6 @@ class ContentEditor(tk.Toplevel):
 
     def __init__(self, parent, item: dict, data: dict, on_save=None):
         super().__init__(parent)
-        # Migrate legacy key on the fly
-        if "content_box" in item and "sigil" not in item:
-            item["sigil"] = item.pop("content_box")
-        elif "content_box" in item:
-            item.pop("content_box")
         self.item         = item
         self.data         = data
         self.on_save      = on_save
@@ -134,7 +149,7 @@ class ContentEditor(tk.Toplevel):
         ct_f.grid(row=self._row, column=1, columnspan=5, sticky="we", padx=8, pady=3)
         tk.Entry(ct_f, textvariable=self._ct_var, width=52).pack(
             side="left", fill="x", expand=True)
-        tk.Button(ct_f, text="↺", command=self._sync_preview,
+        tk.Button(ct_f, text="↺", command=self._scaffold_content_text,
                   font=("Arial", 8), width=2).pack(side="left", padx=2)
         tk.Button(ct_f, text="?", command=lambda: SyntaxHelpWindow(self),
                   font=("Arial", 9, "bold"), width=2,
@@ -188,8 +203,13 @@ class ContentEditor(tk.Toplevel):
         self._build_weights_section()
 
     def _build_weights_section(self):
-        """Collapsible card-type weights + element weights section."""
-        # Load saved open/closed state
+        """Collapsible generator weights section.
+
+        Layout: 3 columns (Spells | Prowess | Recipes)
+        Each column has a checkbox at top (allowed for this generator),
+        and below it the subcategory weights for that generator
+        (elements for Spells, nothing for Prowess, recipe types for Recipes).
+        """
         _state_key = "weights_open"
         is_open = self.item.get(_state_key, False)
 
@@ -198,25 +218,24 @@ class ContentEditor(tk.Toplevel):
                        sticky="ew", padx=8, pady=4)
         self._row += 1
 
-        # Toggle header
         header = tk.Frame(container, bg="#1a1a2a")
         header.pack(fill="x")
 
         self._weights_open = tk.BooleanVar(value=is_open)
-        self._weights_body  = tk.Frame(container)
+        self._weights_body = tk.Frame(container)
 
         def _toggle():
             if self._weights_open.get():
                 self._weights_body.pack(fill="x", padx=8, pady=4)
-                toggle_btn.config(text="▼  Kartentyp & Element Gewichtungen")
+                toggle_btn.config(text="▼  Generator Gewichtungen")
             else:
                 self._weights_body.pack_forget()
-                toggle_btn.config(text="▶  Kartentyp & Element Gewichtungen")
+                toggle_btn.config(text="▶  Generator Gewichtungen")
             self.item[_state_key] = self._weights_open.get()
 
         toggle_btn = tk.Button(
             header,
-            text=("▼" if is_open else "▶") + "  Kartentyp & Element Gewichtungen",
+            text=("▼" if is_open else "▶") + "  Generator Gewichtungen",
             command=lambda: (
                 self._weights_open.set(not self._weights_open.get()),
                 _toggle()
@@ -226,87 +245,134 @@ class ContentEditor(tk.Toplevel):
         )
         toggle_btn.pack(fill="x", padx=4, pady=4)
 
-        # ── Body (card type weights) ───────────────────────────────────────────
         body = self._weights_body
 
-        tk.Label(body, text="Kartentyp Gewichtungen",
-                 font=("Arial", 9, "bold"), fg="#cc8833").pack(anchor="w", pady=(4,2))
-        tk.Label(body, text="Leer = Standard (10)   0 = nie",
-                 fg="#888", font=("Arial", 8)).pack(anchor="w")
+        tk.Label(body, text="☑ = erlaubt für Generator   Leer = Standard (10)   0 = nie",
+                 fg="#888", font=("Arial", 8)).pack(anchor="w", pady=(2, 4))
 
-        ct_weights = self.item.setdefault("card_type_weights", {})
-        self._ct_weight_vars = {}
-        ct_grid = tk.Frame(body)
-        ct_grid.pack(fill="x", pady=4)
+        _profiles = _get_generator_profiles()
+        _recipe_types = _get_recipe_types()
+        allowed_ct = self.item.get("allowed_card_types", [])
+        el_weights = self.item.get("element_weights", {})
+        rt_weights = self.item.get("recipe_type_weights", {})
 
-        for i, ct in enumerate(CARD_TYPES):
-            col = i * 2
-            tk.Label(ct_grid, text=ct, font=("Arial", 8, "bold"),
-                     width=10, anchor="w").grid(row=0, column=col, padx=4)
-            raw = ct_weights.get(ct, "")
-            v   = tk.StringVar(value="" if raw == "" or raw is None else str(raw))
-            self._ct_weight_vars[ct] = v
-            tk.Entry(ct_grid, textvariable=v, width=6).grid(
-                row=0, column=col+1, padx=2)
+        # 3-column grid
+        cols_frame = tk.Frame(body)
+        cols_frame.pack(fill="x")
+        for c in range(3):
+            cols_frame.columnconfigure(c, weight=1)
 
-        ttk.Separator(body, orient="horizontal").pack(fill="x", pady=6)
-
-        # ── Element weights (only for Spells) ──────────────────────────────────
-        tk.Label(body, text="Element Gewichtungen  (nur für Spells)",
-                 font=("Arial", 9, "bold"), fg="#5588cc").pack(anchor="w", pady=(2,2))
-        tk.Label(body, text="☑ = erlaubt   Leer = Standard (10)   0 = nie",
-                 fg="#888", font=("Arial", 8)).pack(anchor="w")
-
-        el_weights  = self.item.setdefault("element_weights", {})
-        allowed_els = self.item.get("allowed_elements", [])
+        self._allowed_ct_vars = {}
         self._el_vars    = {}
         self._el_weights = {}
+        self._rt_weights = {}
 
-        hdr = tk.Frame(body)
-        hdr.pack(fill="x", pady=2)
-        for txt, w in [("Element", 10), ("Erlaubt", 7), ("Gewicht", 8), ("", 10)]:
-            tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
-                     width=w, anchor="w").pack(side="left", padx=2)
+        # ── Column 0: Spells ──────────────────────────────────────────────────
+        spells_col = tk.Frame(cols_frame, relief="ridge", bd=1)
+        spells_col.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        enabled = ("Spells" in allowed_ct) if allowed_ct else True
+        sv = tk.BooleanVar(value=enabled)
+        self._allowed_ct_vars["Spells"] = sv
+        tk.Checkbutton(spells_col, text="Spells", variable=sv,
+                       font=("Arial", 9, "bold"), fg="#5588cc").pack(anchor="w", padx=4)
+
+        ttk.Separator(spells_col, orient="horizontal").pack(fill="x", padx=4, pady=2)
 
         for el in ELEMENTS:
-            row_f = tk.Frame(body)
-            row_f.pack(fill="x", pady=1)
-
-            enabled = (el in allowed_els) if allowed_els else True
-            ev = tk.BooleanVar(value=enabled)
-            self._el_vars[el] = ev
-            tk.Checkbutton(row_f, text=el, variable=ev, width=10,
-                           anchor="w").pack(side="left")
-
+            row_f = tk.Frame(spells_col)
+            row_f.pack(fill="x", padx=4, pady=1)
+            tk.Label(row_f, text=el, width=7, anchor="w",
+                     font=("Arial", 8)).pack(side="left")
             raw_w = el_weights.get(el, "")
             wv = tk.StringVar(value="" if raw_w == "" or raw_w is None
-                              else str(raw_w))
+                              or raw_w == 0 else str(raw_w))
             self._el_weights[el] = wv
-            tk.Entry(row_f, textvariable=wv, width=6).pack(side="left", padx=4)
+            tk.Entry(row_f, textvariable=wv, width=5,
+                     font=("Arial", 8)).pack(side="left", padx=2)
 
-            bar = tk.Label(row_f, text="", bg="#1a6e3c", height=1, width=1)
-            bar.pack(side="left", padx=2)
+        # ── Column 1: Prowess ─────────────────────────────────────────────────
+        prowess_col = tk.Frame(cols_frame, relief="ridge", bd=1)
+        prowess_col.grid(row=0, column=1, sticky="nsew", padx=2, pady=2)
 
-            def _upd(ev=None, b=bar, wvar=wv):
-                raw = wvar.get().strip()
-                try:    val = max(0, min(20, int(float(raw)))) if raw else DEFAULT_ELEMENT_WEIGHT
-                except: val = 0
-                b.config(width=max(1, val))
+        enabled = ("Prowess" in allowed_ct) if allowed_ct else True
+        pv = tk.BooleanVar(value=enabled)
+        self._allowed_ct_vars["Prowess"] = pv
+        tk.Checkbutton(prowess_col, text="Prowess", variable=pv,
+                       font=("Arial", 9, "bold"), fg="#cc6633").pack(anchor="w", padx=4)
 
-            wv.trace_add("write", lambda *_, fn=_upd: fn())
-            _upd()
+        ttk.Separator(prowess_col, orient="horizontal").pack(fill="x", padx=4, pady=2)
+        tk.Label(prowess_col, text="(keine Subtypen)",
+                 fg="#666", font=("Arial", 8, "italic")).pack(anchor="w", padx=8, pady=4)
+
+        # ── Column 2: Recipes ─────────────────────────────────────────────────
+        recipes_col = tk.Frame(cols_frame, relief="ridge", bd=1)
+        recipes_col.grid(row=0, column=2, sticky="nsew", padx=2, pady=2)
+
+        enabled = ("Recipes" in allowed_ct) if allowed_ct else True
+        rv = tk.BooleanVar(value=enabled)
+        self._allowed_ct_vars["Recipes"] = rv
+        tk.Checkbutton(recipes_col, text="Recipes", variable=rv,
+                       font=("Arial", 9, "bold"), fg="#cc8833").pack(anchor="w", padx=4)
+
+        ttk.Separator(recipes_col, orient="horizontal").pack(fill="x", padx=4, pady=2)
+
+        for rt in _recipe_types:
+            row_f = tk.Frame(recipes_col)
+            row_f.pack(fill="x", padx=4, pady=1)
+            tk.Label(row_f, text=rt, width=9, anchor="w",
+                     font=("Arial", 8)).pack(side="left")
+            raw_w = rt_weights.get(rt, "")
+            wv = tk.StringVar(value="" if raw_w == "" or raw_w is None
+                              else str(raw_w))
+            self._rt_weights[rt] = wv
+            tk.Entry(row_f, textvariable=wv, width=5,
+                     font=("Arial", 8)).pack(side="left", padx=2)
 
         # Show/hide body based on initial state
         if is_open:
             self._weights_body.pack(fill="x", padx=8, pady=4)
 
-    def _sync_preview(self):
-        parsed  = parse_template(self._cb_var.get())
-        preview = render_content_text(
-            self._cb_var.get(), {},
-            {str(i): c[0] for i, c in enumerate(parsed["options"]) if c}
-        )
-        self._ct_var.set(preview)
+    def _scaffold_content_text(self):
+        """
+        Generate a conditional content-text scaffold from the content-box template.
+
+        For each {X} variable  →  [if X=1]...[else]{X}[/if]
+        For each [a,b,c] option →  [if OPT0=a]a[elif OPT0=b]b[else]c[/if]
+
+        Called by the ↺ button.  Overwrites whatever is currently in Content Text.
+        """
+        sigil = self._cb_var.get().strip()
+        if not sigil:
+            return
+        parsed = parse_template(sigil)
+        parts: list[str] = []
+
+        # ── Variables ─────────────────────────────────────────────────────────
+        for var in parsed["variables"]:
+            parts.append(f"[if {var}=1]...[else]{{{var}}}[/if]")
+
+        # ── Options ───────────────────────────────────────────────────────────
+        for i, choices in enumerate(parsed["options"]):
+            if not choices:
+                continue
+            opt = f"OPT{i}"
+            if len(choices) == 1:
+                parts.append(choices[0])
+            elif len(choices) == 2:
+                a, b = choices
+                parts.append(f"[if {opt}={a}]{a}[else]{b}[/if]")
+            else:
+                # First choice
+                scaffold = f"[if {opt}={choices[0]}]{choices[0]}"
+                # Middle choices
+                for c in choices[1:-1]:
+                    scaffold += f"[elif {opt}={c}]{c}"
+                # Last choice via [else]
+                scaffold += f"[else]{choices[-1]}[/if]"
+                parts.append(scaffold)
+
+        self._ct_var.set(" ".join(parts) if parts else sigil)
 
     # ── Sections ───────────────────────────────────────────────────────────────
 
@@ -349,26 +415,34 @@ class ContentEditor(tk.Toplevel):
         for i, ms in enumerate(ContentEditor._SC):
             frame.columnconfigure(i, minsize=ms)
 
-    def _stat_header(self, parent):
+    def _stat_header(self, parent, stat_type: str = "variable"):
         hdr = tk.Frame(parent)
         hdr.pack(fill="x", pady=(2, 0))
         self._apply_stat_cols(hdr)
-        # Name spans col 0; ID spans cols 1-2 (prefix+entry); then per-column labels
-        for col, txt in [
-            (0,  "Name"),
-            (4,  "Rarity"),
-            (5,  "Cmplx"),
-            (6,  "×x"),
-            (7,  "×x²"),
-            (8,  "×x³"),
-            (10, "🎲?"),
-            (11, "🎲!"),
-        ]:
-            tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
-                     anchor="w").grid(row=0, column=col, sticky="w", padx=2)
-        # "ID" spans the prefix + entry columns
+        # "ID" always spans the prefix + entry columns
         tk.Label(hdr, text="ID", font=("Arial", 8, "bold"),
                  anchor="w").grid(row=0, column=1, columnspan=2, sticky="w", padx=2)
+        if stat_type == "variable":
+            # Variables: no Rarity (always picked); polynomial CV coefficients
+            label_cols = [
+                (0,  "Name"),
+                (5,  "Cmplx"),
+                (6,  "×x"),
+                (7,  "×x²"),
+                (8,  "×x³"),
+                (10, "🎲?"),
+                (11, "🎲!"),
+            ]
+        else:  # "choice" – options are selected, not evaluated as polynomial
+            label_cols = [
+                (0,  "Name"),
+                (4,  "Rarity"),
+                (5,  "Cmplx"),
+                (6,  "CV"),
+            ]
+        for col, txt in label_cols:
+            tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
+                     anchor="w").grid(row=0, column=col, sticky="w", padx=2)
 
     def _stat_row(self, parent, label: str, label_color: str,
                   stat: dict,
@@ -437,21 +511,34 @@ class ContentEditor(tk.Toplevel):
         id_entry.bind("<FocusOut>", _on_id)
         id_entry.bind("<Return>",   _on_id)
 
-        # Cols 4-8 – numeric stat fields
-        fields = [
-            ("rarity",     tk.StringVar(value=str(stat.get("rarity",     10))),  4),
-            ("complexity", tk.StringVar(value=str(stat.get("complexity", 1.0))), 5),
-            ("cv1",        tk.StringVar(value=str(stat.get("cv1", 1))),           6),
-            ("cv2",        tk.StringVar(value=str(stat.get("cv2", 0))),           7),
-            ("cv3",        tk.StringVar(value=str(stat.get("cv3", 0))),           8),
-        ]
-        casts = {"rarity": int, "complexity": float,
-                 "cv1": float, "cv2": float, "cv3": float}
+        # Cols 4-8 – numeric stat fields (layout depends on stat_type)
+        if stat_type == "variable":
+            # Variables are always used → no Rarity; polynomial CV coefficients
+            fields = [
+                ("complexity", tk.StringVar(value=str(stat.get("complexity", 1.0))), 5),
+                ("cv1",        tk.StringVar(value=str(stat.get("cv1", 1.0))),        6),
+                ("cv2",        tk.StringVar(value=str(stat.get("cv2", 0.0))),        7),
+                ("cv3",        tk.StringVar(value=str(stat.get("cv3", 0.0))),        8),
+            ]
+            casts = {"complexity": float, "cv1": float, "cv2": float, "cv3": float}
+        else:
+            # Choices are selected, not evaluated as a polynomial → single flat CV
+            _cv_init = stat.get("cv", stat.get("cv1", 0.0))
+            fields = [
+                ("rarity",     tk.StringVar(value=str(stat.get("rarity", 10))),   4),
+                ("complexity", tk.StringVar(value=str(stat.get("complexity", 1.0))), 5),
+                ("cv",         tk.StringVar(value=str(_cv_init)),                  6),
+            ]
+            casts = {"rarity": int, "complexity": float, "cv": float}
 
-        def _trace(*_, s=stat, fl=fields, ca=casts):
+        def _trace(*_, s=stat, fl=fields, ca=casts, st=stat_type):
             for key, var, _ in fl:
                 try:    s[key] = ca[key](var.get())
                 except: pass
+            if st != "variable":
+                # Remove legacy polynomial keys from choice stats
+                for _k in ("cv1", "cv2", "cv3"):
+                    s.pop(_k, None)
 
         for key, var, col in fields:
             var.trace_add("write", _trace)
@@ -498,7 +585,7 @@ class ContentEditor(tk.Toplevel):
                      fg="#888").pack(anchor="w", padx=4)
             return
 
-        self._stat_header(self._var_frame)
+        self._stat_header(self._var_frame, "variable")
         for vname, stat in variables.items():
             if not stat.get("id"):
                 stat["id"] = f"{self.item.get('id', 'item')}.{vname}"
@@ -538,7 +625,7 @@ class ContentEditor(tk.Toplevel):
                                 text=f"Option {opt_key}:  [{', '.join(choices)}]",
                                 font=("Arial", 9, "bold"), fg="#cc8833")
             grp.pack(fill="x", pady=3)
-            self._stat_header(grp)
+            self._stat_header(grp, "choice")
 
             for choice in choices:
                 stat = per_choice.setdefault(choice, make_default_stat())
@@ -602,26 +689,8 @@ class ContentEditor(tk.Toplevel):
         for _legacy in ("cv1", "cv2", "cv3"):
             self.item.pop(_legacy, None)
 
-        # Card type weights
-        if hasattr(self, "_ct_weight_vars"):
-            ct_w = {}
-            for ct, v in self._ct_weight_vars.items():
-                raw = v.get().strip()
-                if raw:
-                    try:    ct_w[ct] = float(raw)
-                    except: pass
-            if ct_w:
-                self.item["card_type_weights"] = ct_w
-            else:
-                self.item.pop("card_type_weights", None)
-
-        # Element weights + allowed (from collapsible section)
-        if hasattr(self, "_el_vars"):
-            sel = [el for el, v in self._el_vars.items() if v.get()]
-            if len(sel) < len(ELEMENTS):
-                self.item["allowed_elements"] = sel
-            else:
-                self.item.pop("allowed_elements", None)
+        # Element weights (from collapsible section)
+        if hasattr(self, "_el_weights"):
             ew = {}
             for el in ELEMENTS:
                 raw = self._el_weights[el].get().strip()
@@ -632,6 +701,32 @@ class ContentEditor(tk.Toplevel):
                 self.item["element_weights"] = ew
             else:
                 self.item.pop("element_weights", None)
+
+        # Recipe type weights
+        if hasattr(self, "_rt_weights"):
+            rtw = {}
+            for rt, wv in self._rt_weights.items():
+                raw = wv.get().strip()
+                if raw:
+                    try:    rtw[rt] = float(raw)
+                    except: pass
+            if rtw:
+                self.item["recipe_type_weights"] = rtw
+            else:
+                self.item.pop("recipe_type_weights", None)
+
+        # Generator type restrictions
+        if hasattr(self, "_allowed_ct_vars"):
+            _profiles = _get_generator_profiles()
+            checked = [gp for gp, v in self._allowed_ct_vars.items() if v.get()]
+            if set(checked) >= set(_profiles):
+                # All checked = everywhere allowed = empty list
+                self.item.pop("allowed_card_types", None)
+            elif checked:
+                self.item["allowed_card_types"] = checked
+            else:
+                # Nothing checked = treat as all allowed
+                self.item.pop("allowed_card_types", None)
 
         # ── Write directly to disk (always, regardless of caller) ────────────
         self._flush_to_disk()
@@ -648,8 +743,6 @@ class ContentEditor(tk.Toplevel):
             "Condition": os.path.join(_HERE, "cc_data", "conditions.json"),
             "Cost":      os.path.join(_HERE, "cc_data", "costs.json"),
             "Insert":    os.path.join(_HERE, "cc_data", "inserts.json"),
-            "Enchant":   os.path.join(_HERE, "cc_data", "enchants.json"),
-            "Curse":     os.path.join(_HERE, "cc_data", "curses.json"),
         }
         for type_name, path in _FILES.items():
             items = self.data.get(type_name)
@@ -756,66 +849,66 @@ class ConditionsEditor(tk.Toplevel):
             ttk.Separator(f, orient="horizontal").grid(
                 row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
 
-        # ── Element weights & allowed ─────────────────────────────────────────
-        tk.Label(f, text="Elemente – Erlaubt & Häufigkeit",
-                 font=("Arial", 9, "bold")).grid(
-            row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
-        tk.Label(f,
-                 text="☑ = erlaubt   Gewicht leer = Standard (10)   0 = nie",
-                 fg="#888", font=("Arial", 8)).grid(
-            row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+        # ── Element weights & allowed (variables/choices only) ───────────────
+        # For effects the element weights live at item level (main editor's
+        # "Kartentyp & Element Gewichtungen") which the generator reads directly.
+        # Showing them here too would be a duplicate that the generator ignores.
+        if self.stat_type != "effect":
+            tk.Label(f, text="Elemente – Erlaubt & Häufigkeit",
+                     font=("Arial", 9, "bold")).grid(
+                row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+            tk.Label(f,
+                     text="☑ = erlaubt   Gewicht leer = Standard (10)   0 = nie",
+                     fg="#888", font=("Arial", 8)).grid(
+                row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
 
-        # header
-        hdr = tk.Frame(f)
-        hdr.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
-        for txt, w in [("Element", 10), ("Erlaubt", 6), ("Gewicht", 8), ("", 12)]:
-            tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
-                     width=w, anchor="w").pack(side="left", padx=2)
+            # header
+            hdr = tk.Frame(f)
+            hdr.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
+            for txt, w in [("Element", 10), ("Erlaubt", 6), ("Gewicht", 8), ("", 12)]:
+                tk.Label(hdr, text=txt, font=("Arial", 8, "bold"),
+                         width=w, anchor="w").pack(side="left", padx=2)
 
-        allowed         = self.cond.get("allowed_elements", [])
-        stored_weights  = self.cond.get("element_weights", {})
-        self._el_vars    = {}
-        self._el_weights = {}
+            allowed         = self.cond.get("allowed_elements", [])
+            stored_weights  = self.cond.get("element_weights", {})
+            self._el_vars    = {}
+            self._el_weights = {}
 
-        el_f = tk.Frame(f)
-        el_f.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
+            el_f = tk.Frame(f)
+            el_f.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
 
-        for el in ELEMENTS:  # ELEMENTS now = ["Fire","Metal","Ice","Nature","Blood","Meta"]
-            ef = tk.Frame(el_f)
-            ef.pack(fill="x", pady=1)
+            for el in ELEMENTS:
+                ef = tk.Frame(el_f)
+                ef.pack(fill="x", pady=1)
 
-            # Checkbox – default True when allowed_elements is empty (= all allowed)
-            enabled = (el in allowed) if allowed else True
-            v = tk.BooleanVar(value=enabled)
-            self._el_vars[el] = v
-            tk.Checkbutton(ef, text=el, variable=v, width=10,
-                           anchor="w").pack(side="left")
+                enabled = (el in allowed) if allowed else True
+                v = tk.BooleanVar(value=enabled)
+                self._el_vars[el] = v
+                tk.Checkbutton(ef, text=el, variable=v, width=10,
+                               anchor="w").pack(side="left")
 
-            # Weight – stored value or empty string (empty = default 10)
-            raw_w = stored_weights.get(el, "")
-            wv = tk.StringVar(value="" if raw_w == "" or raw_w is None
-                              else str(raw_w))
-            self._el_weights[el] = wv
+                raw_w = stored_weights.get(el, "")
+                wv = tk.StringVar(value="" if raw_w == "" or raw_w is None
+                                  else str(raw_w))
+                self._el_weights[el] = wv
 
-            entry = tk.Entry(ef, textvariable=wv, width=6)
-            entry.pack(side="left", padx=4)
+                entry = tk.Entry(ef, textvariable=wv, width=6)
+                entry.pack(side="left", padx=4)
 
-            # Visual bar – uses DEFAULT_ELEMENT_WEIGHT when empty
-            bar = tk.Label(ef, text="", bg="#1a6e3c", height=1, width=1)
-            bar.pack(side="left", padx=2)
+                bar = tk.Label(ef, text="", bg="#1a6e3c", height=1, width=1)
+                bar.pack(side="left", padx=2)
 
-            def _upd(ev=None, b=bar, wvar=wv):
-                raw = wvar.get().strip()
-                val = DEFAULT_ELEMENT_WEIGHT if raw == "" else 0
-                try:    val = max(0, min(20, int(float(raw)))) if raw else DEFAULT_ELEMENT_WEIGHT
-                except: val = 0
-                b.config(width=max(1, val))
+                def _upd(ev=None, b=bar, wvar=wv):
+                    raw = wvar.get().strip()
+                    try:    val = max(0, min(20, int(float(raw)))) if raw else DEFAULT_ELEMENT_WEIGHT
+                    except: val = 0
+                    b.config(width=max(1, val))
 
-            wv.trace_add("write", lambda *_, fn=_upd: fn())
-            _upd()
+                wv.trace_add("write", lambda *_, fn=_upd: fn())
+                _upd()
 
-        ttk.Separator(f, orient="horizontal").grid(
-            row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
+            ttk.Separator(f, orient="horizontal").grid(
+                row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
 
         # ── Allowed box types ─────────────────────────────────────────────────
         tk.Label(f, text="Erlaubte Sigil-Typen",
@@ -994,12 +1087,24 @@ class ConditionsEditor(tk.Toplevel):
             if excl: self.cond["excluded_choices"] = excl
             else:    self.cond.pop("excluded_choices", None)
 
-        # Allowed elements – only save if not all checked
-        sel = [el for el, v in self._el_vars.items() if v.get()]
-        if len(sel) < len(ELEMENTS):
-            self.cond["allowed_elements"] = sel
-        else:
-            self.cond.pop("allowed_elements", None)
+        # Allowed elements + element weights (only for variables/choices)
+        if self.stat_type != "effect":
+            sel = [el for el, v in self._el_vars.items() if v.get()]
+            if len(sel) < len(ELEMENTS):
+                self.cond["allowed_elements"] = sel
+            else:
+                self.cond.pop("allowed_elements", None)
+
+            weights = {}
+            for el in ELEMENTS:
+                raw = self._el_weights[el].get().strip()
+                if raw != "":
+                    try:    weights[el] = float(raw)
+                    except: pass
+            if weights:
+                self.cond["element_weights"] = weights
+            else:
+                self.cond.pop("element_weights", None)
 
         # Allowed box types – only save if not all checked
         sel_bt = [bt for bt, v in self._bt_vars.items() if v.get()]
@@ -1007,18 +1112,6 @@ class ConditionsEditor(tk.Toplevel):
             self.cond["allowed_box_types"] = sel_bt
         else:
             self.cond.pop("allowed_box_types", None)
-
-        # Element weights – only save non-empty entries
-        weights = {}
-        for el in ELEMENTS:
-            raw = self._el_weights[el].get().strip()
-            if raw != "":
-                try:    weights[el] = float(raw)
-                except: pass
-        if weights:
-            self.cond["element_weights"] = weights
-        else:
-            self.cond.pop("element_weights", None)
 
         # ID conditions
         if self._id_conditions:

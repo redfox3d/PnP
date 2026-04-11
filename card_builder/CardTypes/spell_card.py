@@ -390,7 +390,12 @@ class SpellCardRenderer:
                 ct = itm.get("id", "")
             eff_data.append([itm, cont, ct])
 
-        # Estimate fit; if tight, swap most complex items to reminder_text
+        # Sort all effects by complexity descending (always, not just when tight)
+        eff_data.sort(key=lambda row: float(row[0].get("complexity_base", 1.0)),
+                      reverse=True)
+
+        # Estimate available lines to decide whether reminder lines can fit
+        import math
         chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))
 
         def _est_lines(text: str) -> int:
@@ -398,31 +403,28 @@ class SpellCardRenderer:
                 return 1
             words = text.split()
             total_chars = sum(len(w) + 1 for w in words)
-            import math
             return max(1, math.ceil(total_chars / chars_per_line))
 
-        avail_lines = max(1, (y_max - 4 - y) // lh)
-        total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+        avail_lines  = max(1, (y_max - 4 - y) // lh)
+        main_lines   = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+        space_tight  = main_lines >= avail_lines
 
-        if total_lines > avail_lines:
-            # Sort by complexity descending (use complexity_base as proxy)
-            sortable = sorted(range(len(eff_data)),
-                              key=lambda i: float(eff_data[i][0].get("complexity_base", 1.0)),
-                              reverse=True)
-            for i in sortable:
-                eff, ei, _ = eff_data[i]
+        FI = (self.FF, self.FS_S, "italic")   # italic font for reminder lines
+
+        for eff, ei, etxt in eff_data:
+            if not etxt or y + lh > y_max:
+                continue
+            # Always render the main content_text bullet
+            y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
+            # Optionally render reminder_text on the next line if space allows
+            if not space_tight:
                 rt = eff.get("reminder_text", "")
                 if rt:
                     for k, v in ei.get("vals", {}).items():
                         rt = rt.replace(f"{{{k}}}", str(v))
-                    eff_data[i][2] = rt
-                total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
-                if total_lines <= avail_lines:
-                    break
-
-        for _, _, etxt in eff_data:
-            if etxt and y + lh <= y_max:
-                y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
+                    if rt and y + (self.FS_S + 5) <= y_max:
+                        y = self._wrap(f"  ({rt})", x + 14, y, max_w - 14,
+                                       FI, "#aaaaaa", y_max)
 
         return y + 4
 

@@ -22,7 +22,7 @@ CARD_FEAT = 8      # features per card slot
 
 EQUIP_SLOTS = ["head", "backpack", "chest", "belt",
                "left_hand", "legs", "right_hand", "shoes"]
-ELEMENTS    = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Generic"]
+ELEMENTS    = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta", "Generic"]
 
 # ---- action space definition ------------------------------------------------
 # 0       REST

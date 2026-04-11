@@ -60,3 +60,25 @@ def merged_materials(loot_cards: list = None) -> list:
     if loot_cards:
         central.update(collect_from_loot_cards(loot_cards))
     return sorted(central)
+
+
+def load_material_effects() -> dict:
+    """Return {material_name: {"effect_id": str, "vals": dict, "opt_vals": dict}}"""
+    if _MATERIALS_FILE and os.path.exists(_MATERIALS_FILE):
+        with open(_MATERIALS_FILE, encoding="utf-8") as f:
+            return json.load(f).get("material_effects", {})
+    return {}
+
+
+def save_material_effects(effects: dict) -> None:
+    """Persist material_effects dict into materials.json (merges with existing data)."""
+    if not _MATERIALS_FILE:
+        return
+    existing = {}
+    if os.path.exists(_MATERIALS_FILE):
+        with open(_MATERIALS_FILE, encoding="utf-8") as f:
+            existing = json.load(f)
+    existing["material_effects"] = effects
+    os.makedirs(os.path.dirname(_MATERIALS_FILE), exist_ok=True)
+    with open(_MATERIALS_FILE, "w", encoding="utf-8") as f:
+        json.dump(existing, f, indent=4, ensure_ascii=False)

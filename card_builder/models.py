@@ -12,8 +12,9 @@ import os
 from .constants import ELEMENTS
 
 CARD_CATEGORIES = {
-    "Items":  ["Equipment", "Supplies"],
-    "Skills": ["Spells", "Alchemy", "Prowess"],
+    "Supplies": ["Equipment", "Loot"],
+    "Skills":   ["Spells", "Alchemy", "Prowess"],
+    "Tränke":   ["Trank"],
 }
 
 ALL_CARD_TYPES = [sub for subs in CARD_CATEGORIES.values() for sub in subs]
@@ -51,23 +52,34 @@ def empty_card(card_type: str = "Spells") -> dict:
         # No artwork for Prowess
         base.pop("artwork", None)
         base.update({"blocks": []})
-    elif card_type in ("Supplies", "Equipment"):
+    elif card_type == "Loot":
+        base.update({
+            "elements":          [],   # up to 3 element strings
+            "sacrifice_effects": {},   # {element: {"effect_id":…, "vals":{}, "opt_vals":{}}}
+            "materials":         [],
+            "value":             0,
+        })
+    elif card_type == "Equipment":
         base.update({
             "element_sources": [],
             "object_type":     [],
             "materials":       [],
             "effect_text":     "",
+            "equip_text":      "",
+            "equip_cost_text": "",
             "value":           0,
         })
-        if card_type == "Equipment":
-            base["equip_text"]      = ""
-            base["equip_cost_text"] = ""
     elif card_type == "Alchemy":
         base.update({
             "ingredients":       [],
             "result_content_id": "",
             "result_text":       "",
             "on_field_effect":   "",
+        })
+    elif card_type == "Trank":
+        base.update({
+            "ingredients": [],
+            "charges":     1,
         })
     return base
 

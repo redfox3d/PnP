@@ -19,6 +19,7 @@ from .models import (
     load_gen_config, save_gen_config,
     load_box_config, save_box_config,
     load_content_probs, save_content_probs,
+    GENERATOR_PROFILES, RECIPE_TYPES,
 )
 from .generator import CardGenerator, ELEMENTS
 from .cv_calc import cv_card, complexity_card
@@ -41,12 +42,6 @@ def _load_content_data() -> dict:
             with open(path, "r", encoding="utf-8") as f:
                 raw = json.load(f)
             items = raw.get(key, raw.get(list(raw.keys())[0], []))
-            # Migrate legacy key content_box → sigil
-            for item in items:
-                if "content_box" in item and "sigil" not in item:
-                    item["sigil"] = item.pop("content_box")
-                elif "content_box" in item:
-                    item.pop("content_box")
             data[key] = items
         except Exception:
             data[key] = []
@@ -83,11 +78,11 @@ def _load_containers() -> dict:
 
 def _render_card_summary(card: dict) -> str:
     """One-line summary for the card list."""
-    el  = card.get("element", "?")
+    el  = card.get("recipe_type") or card.get("element") or "?"
     cv  = card.get("_cv", "?")
     cmx = card.get("_complexity", "?")
     nb  = len(card.get("blocks", []))
-    return f"{el:<8}  CV={cv:<6}  Cmplx={cmx:<5}  Sigils={nb}"
+    return f"{el:<10}  CV={cv:<6}  Cmplx={cmx:<5}  Sigils={nb}"
 
 
 # ── Main panel ────────────────────────────────────────────────────────────────
@@ -103,10 +98,11 @@ class RandomBuilder(tk.Frame):
         self._triggers_lu    = _list_to_lookup(self._content_data.get("Trigger",   []))
         self._conditions_lu  = _list_to_lookup(self._content_data.get("Condition", []))
         self._containers     = _load_containers()
+        self._current_profile = "Spells"
         self._content_probs = load_content_probs()
         self._box_config    = load_box_config()
-        self._gen_config    = load_gen_config()
-        self._cards: list   = load_random_cards()
+        self._gen_config    = load_gen_config(self._current_profile)
+        self._cards: list   = load_random_cards(self._current_profile)
         self._selected_idx  = None
         self._build()
 
@@ -117,6 +113,7 @@ class RandomBuilder(tk.Frame):
         left = tk.Frame(self, bg="#1a1a1a", width=290)
         left.pack(side="left", fill="y")
         left.pack_propagate(False)
+        self._settings_parent = left
 
         ttk.Separator(self, orient="vertical").pack(side="left", fill="y")
 
@@ -140,6 +137,20 @@ class RandomBuilder(tk.Frame):
     # ══════════════════════════════════════════════════════════════════════════
 
     def _build_settings(self, parent):
+        # ── Profile bar ───────────────────────────────────────────────────────
+        prof_bar = tk.Frame(parent, bg="#111")
+        prof_bar.pack(fill="x", side="top")
+        tk.Label(prof_bar, text="Generator:", bg="#111", fg="#666",
+                 font=("Arial", 8)).pack(side="left", padx=4)
+        self._profile_btns = {}
+        for p in GENERATOR_PROFILES:
+            btn = tk.Button(prof_bar, text=p, font=("Arial", 8),
+                            relief="flat", cursor="hand2",
+                            command=lambda name=p: self._switch_profile(name))
+            btn.pack(side="left", padx=2, pady=2)
+            self._profile_btns[p] = btn
+        self._update_profile_btn_styles()
+
         outer = tk.Frame(parent, bg="#1a1a1a")
         outer.pack(fill="both", expand=True)
 
@@ -180,34 +191,69 @@ class RandomBuilder(tk.Frame):
 
         self._sep(f)
 
-        # ── Element ───────────────────────────────────────────────────────────
-        tk.Label(f, text="Element Verteilung:", bg="#1a1a1a", fg="#aaa",
-                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
-        self._el_mode_var = tk.StringVar(
-            value=self._gen_config.get("element_mode", "equal"))
-        self._el_mode_var.trace_add("write", self._schedule_autosave)
-        for val, lbl in [("equal", "Alle gleich"), ("custom", "Eigene Gewichte")]:
-            tk.Radiobutton(f, text=lbl, variable=self._el_mode_var, value=val,
-                           bg="#1a1a1a", fg="#ccc", selectcolor="#2a2a3a",
-                           activebackground="#1a1a2a",
-                           command=self._toggle_el_weights).pack(
-                anchor="w", padx=16)
+        # ── Element / Recipe Type Verteilung ─────────────────────────────────
+        _is_recipes = (self._current_profile == "Recipes")
+        _is_prowess = (self._current_profile == "Prowess")
 
-        self._el_weights_frame = tk.Frame(f, bg="#1a1a1a")
-        self._el_weights_frame.pack(fill="x", **pad)
-        self._el_weight_vars = {}
-        for el in ELEMENTS:
-            row = tk.Frame(self._el_weights_frame, bg="#1a1a1a")
-            row.pack(fill="x", pady=1)
-            tk.Label(row, text=el, bg="#1a1a1a", fg="#888",
-                     width=8, anchor="w", font=("Arial", 8)).pack(side="left")
-            v = tk.StringVar(value=str(
-                self._gen_config.get("custom_element_weights", {}).get(el, 10)))
-            v.trace_add("write", self._schedule_autosave)
-            self._el_weight_vars[el] = v
-            tk.Entry(row, textvariable=v, width=6,
-                     bg="#2a2a2a", fg="white").pack(side="left", padx=2)
-        self._toggle_el_weights()
+        if _is_prowess:
+            # Prowess has no elements or subcategories — skip this section
+            pass
+        elif not _is_recipes:
+            tk.Label(f, text="Element Verteilung:", bg="#1a1a1a", fg="#aaa",
+                     font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+            self._el_mode_var = tk.StringVar(
+                value=self._gen_config.get("element_mode", "equal"))
+            self._el_mode_var.trace_add("write", self._schedule_autosave)
+            for val, lbl in [("equal", "Alle gleich"), ("custom", "Eigene Gewichte")]:
+                tk.Radiobutton(f, text=lbl, variable=self._el_mode_var, value=val,
+                               bg="#1a1a1a", fg="#ccc", selectcolor="#2a2a3a",
+                               activebackground="#1a1a2a",
+                               command=self._toggle_el_weights).pack(
+                    anchor="w", padx=16)
+
+            self._el_weights_frame = tk.Frame(f, bg="#1a1a1a")
+            self._el_weights_frame.pack(fill="x", **pad)
+            self._el_weight_vars = {}
+            for el in ELEMENTS:
+                row = tk.Frame(self._el_weights_frame, bg="#1a1a1a")
+                row.pack(fill="x", pady=1)
+                tk.Label(row, text=el, bg="#1a1a1a", fg="#888",
+                         width=8, anchor="w", font=("Arial", 8)).pack(side="left")
+                v = tk.StringVar(value=str(
+                    self._gen_config.get("custom_element_weights", {}).get(el, 10)))
+                v.trace_add("write", self._schedule_autosave)
+                self._el_weight_vars[el] = v
+                tk.Entry(row, textvariable=v, width=6,
+                         bg="#2a2a2a", fg="white").pack(side="left", padx=2)
+            self._toggle_el_weights()
+        else:
+            tk.Label(f, text="Recipe Type Verteilung:", bg="#1a1a1a", fg="#aaa",
+                     font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+            self._rt_mode_var = tk.StringVar(
+                value=self._gen_config.get("recipe_type_mode", "equal"))
+            self._rt_mode_var.trace_add("write", self._schedule_autosave)
+            for val, lbl in [("equal", "Alle gleich"), ("custom", "Eigene Gewichte")]:
+                tk.Radiobutton(f, text=lbl, variable=self._rt_mode_var, value=val,
+                               bg="#1a1a1a", fg="#ccc", selectcolor="#2a2a3a",
+                               activebackground="#1a1a2a",
+                               command=self._toggle_rt_weights).pack(
+                    anchor="w", padx=16)
+
+            self._rt_weights_frame = tk.Frame(f, bg="#1a1a1a")
+            self._rt_weights_frame.pack(fill="x", **pad)
+            self._rt_weight_vars = {}
+            for rt in RECIPE_TYPES:
+                row = tk.Frame(self._rt_weights_frame, bg="#1a1a1a")
+                row.pack(fill="x", pady=1)
+                tk.Label(row, text=rt, bg="#1a1a1a", fg="#888",
+                         width=10, anchor="w", font=("Arial", 8)).pack(side="left")
+                v = tk.StringVar(value=str(
+                    self._gen_config.get("recipe_type_weights", {}).get(rt, 10)))
+                v.trace_add("write", self._schedule_autosave)
+                self._rt_weight_vars[rt] = v
+                tk.Entry(row, textvariable=v, width=6,
+                         bg="#2a2a2a", fg="white").pack(side="left", padx=2)
+            self._toggle_rt_weights()
 
         self._sep(f)
 
@@ -512,12 +558,54 @@ class RandomBuilder(tk.Frame):
                                 font=("Arial", 8), wraplength=260)
         self._status.pack(padx=8, pady=4)
 
+        # Ensure profile button styles are current after (re)build
+        self._update_profile_btn_styles()
+
     def _sep(self, parent):
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=6)
+
+    # ── Profile management ────────────────────────────────────────────────────
+
+    def _update_profile_btn_styles(self):
+        for p, btn in self._profile_btns.items():
+            if p == self._current_profile:
+                btn.config(bg="#1a6e3c", fg="white")
+            else:
+                btn.config(bg="#2a2a2a", fg="#888")
+
+    def _switch_profile(self, name: str):
+        if name == self._current_profile:
+            return
+        # Save current profile state
+        cfg = self._collect_config()
+        save_gen_config(cfg, self._current_profile)
+        save_random_cards(self._cards, self._current_profile)
+        # Switch to new profile
+        self._current_profile = name
+        self._gen_config = load_gen_config(name)
+        self._cards = load_random_cards(name)
+        self._content_probs = load_content_probs()
+        # Rebuild settings panel
+        for w in self._settings_parent.winfo_children():
+            w.destroy()
+        self._build_settings(self._settings_parent)
+        self._refresh_list()
+        if self._selected_idx is not None:
+            self._selected_idx = None
+            self._clear_detail()
 
     def _toggle_el_weights(self):
         state = "normal" if self._el_mode_var.get() == "custom" else "disabled"
         for w in self._el_weights_frame.winfo_children():
+            for ww in w.winfo_children():
+                try:
+                    ww.config(state=state)
+                except Exception:
+                    pass
+
+    def _toggle_rt_weights(self):
+        state = "normal" if self._rt_mode_var.get() == "custom" else "disabled"
+        for w in self._rt_weights_frame.winfo_children():
             for ww in w.winfo_children():
                 try:
                     ww.config(state=state)
@@ -657,26 +745,82 @@ class RandomBuilder(tk.Frame):
                 anchor="w", padx=6, pady=4)
             return
 
-        # Header
-        hdr = tk.Frame(frame, bg="#1a1a1a")
-        hdr.pack(fill="x", padx=2)
-        tk.Label(hdr, text="Container", bg="#1a1a1a", fg="#888",
-                 width=16, anchor="w", font=("Arial", 7, "italic")).pack(side="left")
-        tk.Label(hdr, text="Prob", bg="#1a1a1a", fg="#888",
-                 width=5, font=("Arial", 7, "italic")).pack(side="left")
-        tk.Label(hdr, text="Min", bg="#1a1a1a", fg="#888",
-                 width=4, font=("Arial", 7, "italic")).pack(side="left")
-        tk.Label(hdr, text="Max", bg="#1a1a1a", fg="#888",
-                 width=4, font=("Arial", 7, "italic")).pack(side="left")
-
         for idx, rule in enumerate(rules):
             row = tk.Frame(frame, bg="#1e1e2a")
             row.pack(fill="x", padx=2, pady=1)
 
-            c_var = tk.StringVar(value=rule.get("container", ""))
-            cb = ttk.Combobox(row, textvariable=c_var,
-                              values=container_choices, width=14)
-            cb.pack(side="left", padx=2)
+            # ── Mode: "container" or "effects" ────────────────────────────────
+            # Determine current mode from rule keys
+            mode = "effects" if "effects" in rule and rule.get("effects") else "container"
+
+            mode_btn_var = tk.StringVar(value=mode)
+
+            # We'll use a holder frame to swap the middle widget when mode changes
+            holder = tk.Frame(row, bg="#1e1e2a")
+
+            def _build_holder(holder=holder, rule=rule, idx=idx,
+                              mode_btn_var=mode_btn_var, mode_btn_ref=[None]):
+                for w in holder.winfo_children():
+                    w.destroy()
+                m = mode_btn_var.get()
+                if m == "container":
+                    c_var = tk.StringVar(value=rule.get("container", ""))
+                    cb = ttk.Combobox(holder, textvariable=c_var,
+                                      values=container_choices, width=13)
+                    cb.pack(side="left")
+                    def _sync_c(*_, r=rule, cv=c_var):
+                        r["container"] = cv.get()
+                        r.pop("effects", None)
+                        self._schedule_autosave()
+                    c_var.trace_add("write", _sync_c)
+                else:  # effects mode
+                    effs = rule.get("effects", [])
+                    lbl_text = f"🎯 {len(effs)} Effekt(e)" if effs else "🎯 Keine"
+                    lbl = tk.Label(holder, text=lbl_text,
+                                   bg="#1e2a1e", fg="#88ff88",
+                                   font=("Arial", 8), cursor="hand2",
+                                   width=13, anchor="w", relief="groove")
+                    lbl.pack(side="left")
+                    lbl.bind("<Button-1>",
+                             lambda e, r=rule: self._open_effects_picker_for_rule(r))
+
+            # Mode toggle button
+            def _toggle_mode(rule=rule, mv=mode_btn_var,
+                             holder=holder, bld=_build_holder,
+                             btn_ref=[None]):
+                current = mv.get()
+                new_mode = "effects" if current == "container" else "container"
+                mv.set(new_mode)
+                # Migrate data
+                if new_mode == "effects":
+                    rule.setdefault("effects", [])
+                    rule.pop("container", None)
+                else:
+                    rule.setdefault("container",
+                                    container_choices[0] if container_choices else "")
+                    rule.pop("effects", None)
+                bld()
+                # Update button label
+                if btn_ref[0]:
+                    btn_ref[0].config(
+                        text="📦" if new_mode == "container" else "🎯",
+                        fg="#88ccff" if new_mode == "container" else "#88ff88",
+                    )
+                self._schedule_autosave()
+
+            mode_btn = tk.Button(
+                row, width=2, font=("Arial", 8), cursor="hand2",
+                text="📦" if mode == "container" else "🎯",
+                fg="#88ccff" if mode == "container" else "#88ff88",
+                bg="#2a2a2a",
+                command=_toggle_mode,
+            )
+            mode_btn.pack(side="left", padx=(2, 0))
+            holder.pack(side="left", padx=2)
+            _build_holder()
+            # Give _toggle_mode access to the button so it can relabel it
+            # (we pass btn_ref via closure default mutation)
+            _toggle_mode.__defaults__[-1][0] = mode_btn  # btn_ref[0]
 
             tk.Label(row, text="P:", bg="#1e1e2a", fg="#888",
                      font=("Arial", 7)).pack(side="left")
@@ -686,7 +830,7 @@ class RandomBuilder(tk.Frame):
 
             tk.Label(row, text="↓", bg="#1e1e2a", fg="#888",
                      font=("Arial", 7)).pack(side="left", padx=(4, 0))
-            min_var = tk.StringVar(value=str(rule.get("min", 0)))
+            min_var = tk.StringVar(value=str(rule.get("min", 1)))
             tk.Spinbox(row, textvariable=min_var, from_=0, to=20, width=3,
                        bg="#2a2a2a", fg="white", font=("Arial", 8),
                        buttonbackground="#2a2a2a").pack(side="left")
@@ -703,10 +847,9 @@ class RandomBuilder(tk.Frame):
                       command=lambda i=idx: self._remove_sigil_rule(i)
                       ).pack(side="right", padx=2)
 
-            # Sync vars → rule dict on change
-            def _sync(*_, r=rule, cv=c_var, pv=p_var, mnv=min_var, mxv=max_var):
+            # Sync prob/min/max vars → rule dict on change
+            def _sync_nums(*_, r=rule, pv=p_var, mnv=min_var, mxv=max_var):
                 try:
-                    r["container"] = cv.get()
                     r["probability"] = float(pv.get())
                     r["min"] = int(mnv.get())
                     r["max"] = int(mxv.get())
@@ -714,18 +857,77 @@ class RandomBuilder(tk.Frame):
                     pass
                 self._schedule_autosave()
 
-            for _v in (c_var, p_var, min_var, max_var):
-                _v.trace_add("write", _sync)
+            for _v in (p_var, min_var, max_var):
+                _v.trace_add("write", _sync_nums)
 
     def _add_sigil_rule(self):
         bt = self._sigil_rules_var.get()
         container_choices = list(self._containers.keys()) if self._containers else []
         default_c = container_choices[0] if container_choices else ""
         self._sigil_rules_data.setdefault(bt, []).append(
-            {"container": default_c, "probability": 1.0, "min": 0, "max": 1}
+            {"container": default_c, "probability": 1.0, "min": 1, "max": 1}
         )
         self._rebuild_sigil_rules_panel()
         self._schedule_autosave()
+
+    def _open_effects_picker_for_rule(self, rule: dict):
+        """
+        Open a multi-select dialog to pick effect IDs for an inline effects pool.
+        Modifies rule["effects"] in place and refreshes the panel.
+        """
+        all_effect_ids = sorted(
+            item["id"] for item in self._content_data.get("Effect", []) if "id" in item
+        )
+        if not all_effect_ids:
+            return
+
+        top = tk.Toplevel(self.winfo_toplevel())
+        top.title("Effekte für Regel auswählen")
+        top.configure(bg="#1a1a1a")
+        top.grab_set()
+        top.resizable(False, False)
+
+        tk.Label(top, text="Effekte wählen (Strg+Klick für Mehrfachauswahl):",
+                 bg="#1a1a1a", fg="#ccc", font=("Arial", 9)).pack(
+            padx=10, pady=(8, 2))
+
+        lb = tk.Listbox(top, selectmode="multiple", bg="#2a2a2a", fg="white",
+                        font=("Consolas", 9), height=min(20, len(all_effect_ids) + 2),
+                        width=36, activestyle="dotbox",
+                        selectbackground="#1a4a1a", selectforeground="#88ff88")
+        lb.pack(padx=10, pady=4)
+
+        current = set(rule.get("effects", []))
+        for eid in all_effect_ids:
+            lb.insert("end", eid)
+            if eid in current:
+                lb.selection_set(lb.size() - 1)
+
+        btn_row = tk.Frame(top, bg="#1a1a1a")
+        btn_row.pack(pady=(2, 8))
+
+        def _ok():
+            sel = [all_effect_ids[i] for i in lb.curselection()]
+            rule["effects"] = sel
+            rule.pop("container", None)
+            self._rebuild_sigil_rules_panel()
+            self._schedule_autosave()
+            top.destroy()
+
+        def _cancel():
+            top.destroy()
+
+        tk.Button(btn_row, text="✓ OK", command=_ok,
+                  bg="#1a4a1a", fg="#88ff88",
+                  font=("Arial", 9, "bold"), cursor="hand2",
+                  width=10).pack(side="left", padx=4)
+        tk.Button(btn_row, text="Abbrechen", command=_cancel,
+                  bg="#2a2a2a", fg="#aaa",
+                  font=("Arial", 9), cursor="hand2",
+                  width=10).pack(side="left", padx=4)
+
+        top.bind("<Return>", lambda e: _ok())
+        top.bind("<Escape>", lambda e: _cancel())
 
     def _remove_sigil_rule(self, idx: int):
         bt = self._sigil_rules_var.get()
@@ -893,7 +1095,7 @@ class RandomBuilder(tk.Frame):
             return
         del self._cards[self._selected_idx]
         self._selected_idx = None
-        save_random_cards(self._cards)
+        save_random_cards(self._cards, self._current_profile)
         self._refresh_list()
         self._clear_detail()
 
@@ -961,7 +1163,7 @@ class RandomBuilder(tk.Frame):
         self._conditions_lu = _list_to_lookup(self._content_data.get("Condition", []))
         for card in self._cards:
             self._recompute_card(card)
-        save_random_cards(self._cards)
+        save_random_cards(self._cards, self._current_profile)
         self._refresh_list()
         # Re-show detail panel if a card is selected
         sel = self._card_lb.curselection()
@@ -1277,7 +1479,7 @@ class RandomBuilder(tk.Frame):
                     return
             data_dict.setdefault("vals", {})[key] = new_val
             self._recompute_card(card)
-            save_random_cards(self._cards)
+            save_random_cards(self._cards, self._current_profile)
             self._refresh_list()
             self._show_detail(card)
 
@@ -1316,7 +1518,7 @@ class RandomBuilder(tk.Frame):
         def _commit(_=None):
             data_dict.setdefault("opt_vals", {})[str(opt_key)] = var.get()
             self._recompute_card(card)
-            save_random_cards(self._cards)
+            save_random_cards(self._cards, self._current_profile)
             self._refresh_list()
             self._show_detail(card)
 
@@ -1333,12 +1535,13 @@ class RandomBuilder(tk.Frame):
     def _do_autosave(self):
         self._autosave_job = None
         cfg = self._collect_config()
-        save_gen_config(cfg)
+        save_gen_config(cfg, self._current_profile)
         self._gen_config = cfg
 
     def _save_config(self):
         cfg = self._collect_config()
-        save_gen_config(cfg)
+        save_gen_config(cfg, self._current_profile)
+        save_random_cards(self._cards, self._current_profile)
         self._gen_config = cfg
         self._set_status("✓ Einstellungen gespeichert", "#1a6e3c")
 
@@ -1349,14 +1552,25 @@ class RandomBuilder(tk.Frame):
             cfg["count"] = int(self._count_var.get())
         except Exception:
             pass
-        cfg["element_mode"] = self._el_mode_var.get()
-        ew = {}
-        for el, v in self._el_weight_vars.items():
-            try:
-                ew[el] = float(v.get())
-            except Exception:
-                ew[el] = 10.0
-        cfg["custom_element_weights"] = ew
+
+        if self._current_profile == "Recipes":
+            cfg["recipe_type_mode"] = self._rt_mode_var.get()
+            rtw = {}
+            for rt, v in self._rt_weight_vars.items():
+                try:
+                    rtw[rt] = float(v.get())
+                except Exception:
+                    rtw[rt] = 10.0
+            cfg["recipe_type_weights"] = rtw
+        elif hasattr(self, "_el_mode_var"):
+            cfg["element_mode"] = self._el_mode_var.get()
+            ew = {}
+            for el, v in self._el_weight_vars.items():
+                try:
+                    ew[el] = float(v.get())
+                except Exception:
+                    ew[el] = 10.0
+            cfg["custom_element_weights"] = ew
 
         block_rules = []
         for bt, v in self._block_rule_vars.items():
@@ -1468,12 +1682,11 @@ class RandomBuilder(tk.Frame):
     def _generate(self):
         cfg = self._collect_config()
         count = cfg.get("count", 10)
-        print(f"[generate] Starte Generierung: {count} Karten, cfg={cfg}")
+        print(f"[generate] Profil={self._current_profile}, Anzahl={count}")
         self._set_status(f"Generiere {count} Karten ...", "#1a3e8e")
         self.update_idletasks()
 
         # Reload live data
-        print("[generate] Lade Content-Daten ...")
         self._content_data  = _load_content_data()
         self._effects_lu    = _list_to_lookup(self._content_data.get("Effect",    []))
         self._costs_lu      = _list_to_lookup(self._content_data.get("Cost",      []))
@@ -1481,17 +1694,13 @@ class RandomBuilder(tk.Frame):
         self._conditions_lu = _list_to_lookup(self._content_data.get("Condition", []))
         self._containers    = _load_containers()
         self._box_config    = load_box_config()
-        print(f"[generate] Effekte: {len(self._effects_lu)}, Kosten: {len(self._costs_lu)}, "
-              f"Container: {len(self._containers)}, BoxConfig: {len(self._box_config)}")
-        print(f"[generate] Triggers: {len(self._content_data.get('Trigger', []))}")
 
         gen = CardGenerator(self._content_data, self._containers,
                             self._box_config, cfg)
-        print("[generate] Generator erstellt, starte generate() ...")
         new_cards = gen.generate(count)
-        print(f"[generate] {len(new_cards)} Karten generiert")
+        print(f"[generate] {len(new_cards)}/{count} Karten generiert")
         self._cards.extend(new_cards)
-        save_random_cards(self._cards)
+        save_random_cards(self._cards, self._current_profile)
 
         self._refresh_list()
         self._set_status(f"✓ {len(new_cards)} Karten generiert. "
@@ -1506,7 +1715,7 @@ class RandomBuilder(tk.Frame):
                 parent=self):
             return
         self._cards = []
-        clear_random_cards()
+        clear_random_cards(self._current_profile)
         self._selected_idx = None
         self._refresh_list()
         self._clear_detail()

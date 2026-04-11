@@ -23,7 +23,7 @@ import re
 from typing import Any
 
 # Game elements – single source of truth for \\Elements expansion
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
 
 
 # ── Special marker expansion ───────────────────────────────────────────────────
@@ -125,48 +125,131 @@ def _eval_condition(cond_str: str, var_values: dict, opt_selections: dict) -> bo
     return False
 
 
+def _find_block(text: str) -> tuple | None:
+    """
+    Find the first outermost [if ...]...[/if] block in text, respecting nesting depth.
+    Returns (block_start, block_end, first_cond, inner) or None.
+      block_start  – index of the opening '[' of [if ...]
+      block_end    – index just AFTER the closing ']' of [/if]
+      first_cond   – condition string from [if <first_cond>]
+      inner        – text between [if ...] and the matching [/if]
+    """
+    m = re.search(r"\[if ([^\]]+)\]", text)
+    if not m:
+        return None
+
+    first_cond  = m.group(1)
+    block_start = m.start()
+    inner_start = m.end()
+
+    # Walk forward counting depth to find the matching [/if]
+    depth = 1
+    pos   = inner_start
+    while pos < len(text) and depth > 0:
+        next_open  = text.find("[if ", pos)
+        next_close = text.find("[/if]", pos)
+
+        if next_close == -1:
+            # No matching close – treat end-of-string as close
+            return (block_start, len(text), first_cond, text[inner_start:])
+
+        if next_open != -1 and next_open < next_close:
+            # Verify it is a real [if tag] (has a closing bracket)
+            end_bracket = text.find("]", next_open + 4)
+            if end_bracket != -1:
+                depth += 1
+                pos = end_bracket + 1
+            else:
+                pos = next_close + 5
+        else:
+            depth -= 1
+            if depth == 0:
+                block_end = next_close + 5   # include the '[/if]'
+                return (block_start, block_end, first_cond, text[inner_start:next_close])
+            pos = next_close + 5
+
+    return (block_start, len(text), first_cond, text[inner_start:])
+
+
+def _split_top_level(inner: str) -> tuple:
+    """
+    Split *inner* text by top-level [elif ...] / [else] tags only
+    (those NOT inside nested [if]...[/if] blocks).
+
+    Returns:
+        body_parts : list[str]       – text segments between the branch tags
+        splitters  : list[str|None]  – condition string per [elif], None per [else]
+    """
+    body_parts: list = []
+    splitters:  list = []
+    current_start = 0
+    pos   = 0
+    depth = 0
+
+    while pos < len(inner):
+        if inner[pos:pos+4] == "[if ":
+            end_b = inner.find("]", pos + 4)
+            if end_b != -1:
+                depth += 1
+                pos = end_b + 1
+            else:
+                pos += 1
+        elif inner[pos:pos+5] == "[/if]":
+            if depth > 0:
+                depth -= 1
+            pos += 5
+        elif depth == 0 and inner[pos:pos+6] == "[elif ":
+            end_b = inner.find("]", pos + 6)
+            if end_b != -1:
+                body_parts.append(inner[current_start:pos])
+                splitters.append(inner[pos+6:end_b])
+                pos = end_b + 1
+                current_start = pos
+            else:
+                pos += 1
+        elif depth == 0 and inner[pos:pos+7] == "[else]":
+            body_parts.append(inner[current_start:pos])
+            splitters.append(None)
+            pos += 7
+            current_start = pos
+        else:
+            pos += 1
+
+    body_parts.append(inner[current_start:])
+    return body_parts, splitters
+
+
 def _render_block(text: str, var_values: dict, opt_selections: dict) -> str:
     """
-    Process a single level of [if/elif/else/endif] tags and substitute {X}.
-    Recursively handles nested blocks.
+    Process [if/elif/else/endif] tags and substitute {X}.
+    Handles arbitrarily nested [if] blocks correctly.
     Unclosed [if ...] blocks (missing [/if]) are auto-closed at end of string.
     """
     result = text
 
-    # Auto-close any unclosed [if ...] blocks so the regex always matches
+    # Auto-close any unclosed [if ...] blocks
     open_count  = len(re.findall(r"\[if [^\]]+\]", result))
     close_count = len(re.findall(r"\[/if\]", result))
     result += "[/if]" * max(0, open_count - close_count)
 
     # Process if-blocks iteratively (outermost first)
     while True:
-        # Find the next [if ...] ... [/if] block (non-greedy, handles nesting naively)
-        m = re.search(r"\[if ([^\]]+)\](.*?)\[/if\]", result, re.DOTALL)
-        if not m:
+        block = _find_block(result)
+        if not block:
             break
 
-        full_match = m.group(0)
-        inner      = m.group(0)[m.group(0).index("]")+1 : -len("[/if]")]
+        block_start, block_end, first_cond, inner = block
 
-        # Split into segments: [if cond]body [elif cond]body [else]body
-        segments = []
-        # prepend the first condition
-        first_cond = m.group(1)
-        # find all [elif ...] and [else] splits
-        parts = re.split(r"\[elif ([^\]]+)\]|\[else\]", inner)
-        # the splitter groups will interleave: cond, None, cond, None ...
-        splitters = re.findall(r"\[elif ([^\]]+)\]|\[else\]", inner)
+        # Split inner text at top-level [elif]/[else] tags only
+        body_parts, splitters = _split_top_level(inner)
 
         # Build (condition|None, body) pairs
-        pairs: list = [(first_cond, parts[0])]
-        for i, body in enumerate(parts[1:]):
-            if i < len(splitters):
-                c = splitters[i] if splitters[i] else None  # None = else
-            else:
-                c = None
-            pairs.append((c, body))
+        pairs: list = [(first_cond, body_parts[0])]
+        for i, cond_str in enumerate(splitters):
+            body = body_parts[i + 1] if (i + 1) < len(body_parts) else ""
+            pairs.append((cond_str, body))
 
-        # Evaluate
+        # Evaluate – first matching branch wins
         replacement = ""
         for cond, body in pairs:
             if cond is None:  # else branch
@@ -176,7 +259,7 @@ def _render_block(text: str, var_values: dict, opt_selections: dict) -> str:
                 replacement = _render_block(body, var_values, opt_selections)
                 break
 
-        result = result[:m.start()] + replacement + result[m.end():]
+        result = result[:block_start] + replacement + result[block_end:]
 
     # Substitute {X} variables
     def _sub(m):

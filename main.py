@@ -77,14 +77,14 @@ class App:
     def show_launcher(self):
         self._clear()
         self.root.title("Emma – Game Tools")
-        self.root.geometry("360x430")
+        self.root.geometry("360x500")
         self.root.resizable(False, False)
 
         # Center on screen
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
-        self.root.geometry(f"360x430+{(sw-360)//2}+{(sh-430)//2}")
+        self.root.geometry(f"360x500+{(sw-360)//2}+{(sh-500)//2}")
 
         f = tk.Frame(self.root, bg="#1a1a1a")
         f.pack(fill="both", expand=True)
@@ -109,6 +109,11 @@ class App:
                   command=self.show_content_manager,
                   **btn_kw).pack(pady=5)
 
+        tk.Button(f, text="🎯  Effekt Primärtypen",
+                  bg="#3a1a5a", fg="#cc88ff",
+                  command=self.open_effect_type_panel,
+                  **btn_kw).pack(pady=5)
+
         tk.Button(f, text="🔮  AOE Designer",
                   bg="#3a1a5e", fg="white",
                   command=self.show_aoe_designer,
@@ -124,15 +129,11 @@ class App:
                   command=self.show_container_manager,
                   **btn_kw).pack(pady=5)
 
-        tk.Button(f, text="✨  Enchant Bubble",
-                  bg="#0d2233", fg="#66ccff",
-                  command=self.open_enchant_bubble,
+        tk.Button(f, text="⚗️  Material-Effekte",
+                  bg="#2a1a3a", fg="#ccaaff",
+                  command=self.open_material_editor,
                   **btn_kw).pack(pady=5)
 
-        tk.Button(f, text="💀  Curse Bubble",
-                  bg="#1a0000", fg="#ff6666",
-                  command=self.open_curse_bubble,
-                  **btn_kw).pack(pady=5)
 
     # ── Card Builder ──────────────────────────────────────────────────────────
 
@@ -153,6 +154,26 @@ class App:
         container = tk.Frame(self.root, bg="#1a1a1a")
         container.pack(fill="both", expand=True)
         self._current_panel = CardBuilder(container_frame=container, root=self.root)
+
+    # ── Material Editor ───────────────────────────────────────────────────────
+
+    def open_material_editor(self):
+        from card_builder.material_editor import MaterialEffectEditor
+        MaterialEffectEditor(self.root)
+
+    # ── Effect Type Panel ─────────────────────────────────────────────────────
+
+    def open_effect_type_panel(self):
+        import json, os as _os
+        content_dir = _os.path.join(BASE_DIR, "CardContent")
+        effects_file = _os.path.join(content_dir, "cc_data", "effects.json")
+        data = {}
+        if _os.path.exists(effects_file):
+            with open(effects_file, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        # data = {"Effect": [...]}
+        from CardContent.effect_type_panel import EffectTypePanel
+        EffectTypePanel(self.root, data)
 
     # ── Content Manager ───────────────────────────────────────────────────────
 
@@ -241,15 +262,6 @@ class App:
         self._current_panel = ContainerManager(container)
         self._current_panel.pack(fill="both", expand=True)
 
-    # ── Context Bubbles ───────────────────────────────────────────────────────
-
-    def open_enchant_bubble(self):
-        from CardContent.context_bubble import ContextBubble
-        ContextBubble(self.root, "Enchant")
-
-    def open_curse_bubble(self):
-        from CardContent.context_bubble import ContextBubble
-        ContextBubble(self.root, "Curse")
 
     # ── Shared switch bar ─────────────────────────────────────────────────────
 
@@ -267,17 +279,6 @@ class App:
                   font=("Arial", 8), relief="flat",
                   cursor="hand2").pack(side="right", padx=4)
 
-        # Context Bubble quick-access buttons (always visible in switch bar)
-        tk.Button(bar, text="💀 Curse",
-                  command=self.open_curse_bubble,
-                  bg="#330000", fg="#ff8888",
-                  font=("Arial", 8), relief="flat",
-                  cursor="hand2").pack(side="left", padx=2)
-        tk.Button(bar, text="✨ Enchant",
-                  command=self.open_enchant_bubble,
-                  bg="#001833", fg="#66ccff",
-                  font=("Arial", 8), relief="flat",
-                  cursor="hand2").pack(side="left", padx=2)
 
         for label, cmd in reversed(others):
             tk.Button(bar, text=f"⇄  {label}",
