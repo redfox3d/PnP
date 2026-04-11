@@ -9,7 +9,7 @@ BOX_TYPES = [
 
 ABILITY_TYPES = ["Trigger", "Play", "Continues", "Activate"]
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Generic"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
 
 # Generic mana symbol (used when no element is specified)
 GENERIC_MANA_ICON  = "◎"
@@ -40,7 +40,7 @@ ELEMENT_COLORS = {
     "Ice":    "#2980b9",
     "Nature": "#27ae60",
     "Blood":  "#8e0000",
-    "Meta":   "#8e44ad",
+    "Quinta": "#8e44ad",
 }
 
 ELEMENT_ICONS = {
@@ -49,7 +49,7 @@ ELEMENT_ICONS = {
     "Ice":    "❄️",
     "Nature": "🌿",
     "Blood":  "🩸",
-    "Meta":   "✨",
+    "Quinta": "✨",
 }
 
 BOX_SYMBOLS = {

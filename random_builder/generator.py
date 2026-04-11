@@ -22,8 +22,7 @@ from .cv_calc import (
     max_x_for_budget,
 )
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
-RECIPE_TYPES = ["Potions", "Phials", "Tinctures"]
+from card_builder.constants import ELEMENTS, RECIPE_TYPES
 
 # ── Card name generation ──────────────────────────────────────────────────────
 _NAME_PREFIXES = {

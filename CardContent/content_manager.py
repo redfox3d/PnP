@@ -29,8 +29,6 @@ FILES = {
     "Insert":    os.path.join(_HERE, "cc_data", "inserts.json"),
 }
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta", "Potion", "Skills"]
-
 
 class ContentManager:
 

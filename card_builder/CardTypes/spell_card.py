@@ -144,10 +144,18 @@ class SpellCardRenderer:
             c.create_text(cx, cy, text=ELEMENT_ICONS.get(elem, "?"),
                           font=("Arial", 16))
 
-        # Both Spells and Prowess: full width, mana strip, no artwork
+        # Layout: mana strip left, blocks center
         content_left  = 6 + MANA_STRIP_W
         content_top   = 40
-        content_right = self.W - 6
+
+        if ct == "Spells":
+            # Symbol strip on the right for Spells
+            self._draw_artwork_strip(card)
+            content_right = self.W - self.AW - 6
+        else:
+            # Prowess: full width, no symbol strip
+            content_right = self.W - 6
+
         self._draw_blocks(card, top=content_top,
                           left=content_left, right=content_right)
 

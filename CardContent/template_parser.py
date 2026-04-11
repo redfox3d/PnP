@@ -22,8 +22,7 @@ Content Text / Reminder Text syntax  (for conditional rendering):
 import re
 from typing import Any
 
-# Game elements – single source of truth for \\Elements expansion
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
+from card_builder.constants import ELEMENTS
 
 
 # ── Special marker expansion ───────────────────────────────────────────────────

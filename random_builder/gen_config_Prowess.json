@@ -85,14 +85,6 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Poision",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Kick",
-      "probability": 1.0
-    },
-    {
       "effect_id": "Scry",
       "probability": 1.0
     },
@@ -110,10 +102,6 @@
     },
     {
       "cost_id": "Mana",
-      "probability": 1.0
-    },
-    {
-      "cost_id": "Change_This_Card_Position_Play",
       "probability": 1.0
     },
     {

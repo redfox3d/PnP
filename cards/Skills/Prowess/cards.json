@@ -6,8 +6,28 @@
             "artwork": "",
             "blocks": [
                 {
-                    "type": "Graveyard",
-                    "abilities": []
+                    "type": "Play",
+                    "abilities": [
+                        {
+                            "condition_id": null,
+                            "condition_vals": {},
+                            "ability_type": "Play",
+                            "costs": [
+                                {
+                                    "cost_id": "Mana",
+                                    "vals": {}
+                                }
+                            ],
+                            "effects": [
+                                {
+                                    "effect_id": "Use_Weapon",
+                                    "vals": {}
+                                }
+                            ],
+                            "choose_n": null,
+                            "choose_repeat": false
+                        }
+                    ]
                 }
             ]
         },

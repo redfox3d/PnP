@@ -41,9 +41,7 @@ from CardContent.template_parser import (
 from CardContent.window_memory import wm
 from CardContent.template_syntax_help import SyntaxHelpWindow
 
-from card_builder.constants import BOX_TYPES
-
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
+from card_builder.constants import BOX_TYPES, ELEMENTS
 
 DEFAULT_ELEMENT_WEIGHT = 10   # used by auto-generator when field is empty
 

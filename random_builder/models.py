@@ -21,8 +21,8 @@ _CONTENT_PROBS_FILE = os.path.join(_HERE, "content_probs.json")
 # All available generator profiles
 GENERATOR_PROFILES = ["Spells", "Prowess", "Recipes"]
 
-# Recipe sub-types (treated as element-parallel subcategories within Recipes profile)
-RECIPE_TYPES = ["Potions", "Phials", "Tinctures"]
+# Re-export from central constants for convenience
+from card_builder.constants import RECIPE_TYPES
 
 
 def _gen_config_file(profile: str) -> str:
