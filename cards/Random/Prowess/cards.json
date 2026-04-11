@@ -1,0 +1,1471 @@
+[
+  {
+    "name": "Ironclad Seal",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Teleport",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Cleanse",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.6,
+    "_complexity": 16.598
+  },
+  {
+    "name": "Hollow Rite",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Quinta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Dash",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Rummage",
+                "vals": {
+                  "X": 0,
+                  "Y": 0
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.6,
+    "_complexity": 13.066
+  },
+  {
+    "name": "Unraveling Grasp",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Quinta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Move",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {
+              "X": 4
+            },
+            "trigger_opt_vals": {
+              "0": "Players",
+              "1": "Discards",
+              "2": "Metal"
+            },
+            "ability_type": "Trigger",
+            "costs": [],
+            "effects": [
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Ranged",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.1,
+    "_complexity": 12.086
+  },
+  {
+    "name": "Shivering Surge",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Ice",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 1.6,
+    "_complexity": 9.066
+  },
+  {
+    "name": "Shivering Lash",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Ice",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {
+              "X": 9
+            },
+            "trigger_opt_vals": {
+              "0": "Players",
+              "1": "Recycles",
+              "2": "any"
+            },
+            "ability_type": "Trigger",
+            "costs": [],
+            "effects": [
+              {
+                "effect_id": "Cleanse",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Rummage",
+                "vals": {
+                  "X": 1,
+                  "Y": 0
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.3,
+    "_complexity": 13.066
+  },
+  {
+    "name": "Crimson Chain",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Blood",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Play_Skill",
+            "trigger_vals": {},
+            "trigger_opt_vals": {
+              "0": "Blood"
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Move_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Discard"
+                }
+              },
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Bottom Deck"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Heal",
+                "vals": {
+                  "X": 4
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Teleport",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 0.295,
+    "_complexity": 21.257
+  },
+  {
+    "name": "Visceral Vow",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Blood",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [
+              {
+                "effect_id": "Discard_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Rummage",
+                "vals": {
+                  "X": 0,
+                  "Y": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Grow",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.85,
+    "_complexity": 8.0
+  },
+  {
+    "name": "Inferno Toll",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Dash",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Rummage",
+                "vals": {
+                  "X": 0,
+                  "Y": 0
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": 1,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.6,
+    "_complexity": 13.066
+  },
+  {
+    "name": "Forged Seal",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Jump",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.75,
+    "_complexity": 12.066
+  },
+  {
+    "name": "Rusted Oath",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Move_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Loose"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Scry",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Hand",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Trig_Card_Changes_Position",
+            "trigger_vals": {
+              "X": 3
+            },
+            "trigger_opt_vals": {
+              "0": "Players",
+              "1": "Plays",
+              "2": "Nature"
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Change_This_Card_Position_Play",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Forget"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Cleanse",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Use_Weapon",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 1.3,
+    "_complexity": 21.257
+  },
+  {
+    "name": "Severed Shard",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Blood",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Loose_This_Card",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Heal",
+                "vals": {
+                  "X": 11
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 0.3,
+    "_complexity": 14.066
+  },
+  {
+    "name": "Ashen Decree",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 0
+            },
+            "trigger_opt_vals": {
+              "0": "You",
+              "1": "any",
+              "2": "one_eff"
+            },
+            "ability_type": "Trigger",
+            "costs": [],
+            "effects": [
+              {
+                "effect_id": "Cleanse",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Rummage",
+                "vals": {
+                  "X": 0,
+                  "Y": 1
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.94,
+    "_complexity": 17.598
+  },
+  {
+    "name": "Fractured Oath",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Quinta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Jump",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.8,
+    "_complexity": 12.598
+  },
+  {
+    "name": "Twisted Toll",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Nature",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Pulverize",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Heal",
+                "vals": {
+                  "X": 3
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.1,
+    "_complexity": 8.533
+  },
+  {
+    "name": "Twisted Sigil",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Nature",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Move_Cards",
+                "vals": {},
+                "opt_vals": {
+                  "0": "Hand"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Teleport",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 0.9,
+    "_complexity": 19.46
+  },
+  {
+    "name": "Severed Vow",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Blood",
+    "blocks": [
+      {
+        "type": "Discard",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Trig_Movement",
+            "trigger_vals": {
+              "X": 2
+            },
+            "trigger_opt_vals": {
+              "0": "You",
+              "1": "any",
+              "2": "one_eff"
+            },
+            "ability_type": "Trigger",
+            "costs": [],
+            "effects": [],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      },
+      {
+        "type": "Lost",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": "Play_Skill",
+            "trigger_vals": {},
+            "trigger_opt_vals": {
+              "0": "Blood"
+            },
+            "ability_type": "Trigger",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Heal",
+                "vals": {
+                  "X": 5
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Dash",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Jump",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 1.31,
+    "_complexity": 9.533
+  },
+  {
+    "name": "Fractured Surge",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Quinta",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Dash",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Kick",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 1.9,
+    "_complexity": 14.598
+  },
+  {
+    "name": "Blazing Curse",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Multicast",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Precise",
+                "vals": {},
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Jump",
+                "vals": {
+                  "X": 1
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 0.6,
+    "_complexity": 16.598
+  },
+  {
+    "name": "Shattered Veil",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Metal",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [],
+            "effects": [
+              {
+                "effect_id": "Kick",
+                "vals": {
+                  "X": 0
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Shuffle",
+                "vals": {},
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 1.0,
+    "_complexity": 3.0
+  },
+  {
+    "name": "Ashen Sigil",
+    "card_type": "Prowess",
+    "artwork": "",
+    "element": "Fire",
+    "blocks": [
+      {
+        "type": "Play",
+        "abilities": [
+          {
+            "condition_id": null,
+            "condition_vals": {},
+            "condition_opt_vals": {},
+            "trigger_id": null,
+            "trigger_vals": {},
+            "trigger_opt_vals": {},
+            "ability_type": "Play",
+            "costs": [
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              },
+              {
+                "cost_id": "Mana",
+                "vals": {
+                  "element": "Generic"
+                },
+                "opt_vals": {
+                  "0": "Generic"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "effect_id": "Jump",
+                "vals": {
+                  "X": 2
+                },
+                "opt_vals": {}
+              },
+              {
+                "effect_id": "Move",
+                "vals": {
+                  "X": 7
+                },
+                "opt_vals": {}
+              }
+            ],
+            "choose_n": null,
+            "choose_repeat": false
+          }
+        ]
+      }
+    ],
+    "_cv": 2.8,
+    "_complexity": 15.598
+  }
+]

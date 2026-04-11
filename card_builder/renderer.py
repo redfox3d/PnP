@@ -10,7 +10,6 @@ Layout per type:
 """
 
 import os
-import re
 import tkinter as tk
 
 try:
@@ -25,7 +24,7 @@ from .constants import (
     ELEMENT_COLORS, ELEMENT_ICONS,
     TYPE_SYMBOLS, COND_SYMBOL, EFFECT_SYMBOL, COST_SYMBOL,
 )
-from .data import get_content_data, fill_placeholders
+from .data import get_content_data
 
 
 class CardRenderer:
@@ -202,40 +201,23 @@ class CardRenderer:
         lh    = self.FS + 6
 
         # ── Build header ──────────────────────────────────────────────────────
-        try:
-            from CardContent.template_parser import render_display_text, render_content_text
-            def _render_item(item, var_vals, opt_vals):
-                ct    = item.get("content_text") or item.get("effect_text", "")
-                sigil = item.get("sigil", "")
-                if ct:
-                    return render_display_text(ct, var_vals, opt_vals)
-                elif sigil:
-                    return render_content_text(sigil, var_vals, opt_vals)
-                return ""
-        except ImportError:
-            def _render_item(item, var_vals, opt_vals):
-                t = item.get("content_text") or item.get("effect_text", "")
-                for k, v in var_vals.items():
-                    t = t.replace(f"{{{k}}}", str(v))
-                return t
-
         trigger_text = ""
         if ab.get("trigger_id"):
             trig = CD.get("trigger", ab["trigger_id"])
             if trig:
-                trigger_text = _render_item(
-                    trig,
-                    ab.get("trigger_vals", {}),
-                    ab.get("trigger_opt_vals", {}))
+                t = trig.get("content_text") or trig.get("effect_text", "")
+                for k, v in ab.get("trigger_vals", {}).items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                trigger_text = t
 
         cond_text = ""
         if ab.get("condition_id"):
             cond = CD.get("condition", ab["condition_id"])
             if cond:
-                cond_text = _render_item(
-                    cond,
-                    ab.get("condition_vals", {}),
-                    ab.get("condition_opt_vals", {}))
+                t = cond.get("content_text") or cond.get("effect_text", "")
+                for k, v in ab.get("condition_vals", {}).items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                cond_text = t
 
         if trigger_text and cond_text:
             prefix = f"If {trigger_text} and you have {cond_text}"
@@ -250,8 +232,10 @@ class CardRenderer:
         for ci in ab.get("costs", []):
             co = CD.get("cost", ci["cost_id"])
             if co:
-                costs_text.append(_render_item(
-                    co, ci.get("vals", {}), ci.get("opt_vals", {})))
+                t = co.get("content_text") or co.get("effect_text", "")
+                for k, v in ci.get("vals", {}).items():
+                    t = t.replace(f"{{{k}}}", str(v))
+                costs_text.append(t)
         cost_str = ", ".join(costs_text)
 
         effects    = ab.get("effects", [])
@@ -278,7 +262,9 @@ class CardRenderer:
             eff = CD.get("effect", ei.get("effect_id", ""))
             if not eff:
                 continue
-            ct = _render_item(eff, ei.get("vals", {}), ei.get("opt_vals", {}))
+            ct = eff.get("content_text") or eff.get("effect_text", "")
+            for k, v in ei.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
             eff_data.append([eff, ei, ct])
 
         chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))
@@ -319,36 +305,8 @@ class CardRenderer:
         self._bg("#2a1a3a")
         self._border()
         self._name(card.get("name", ""))
-        # No artwork strip, blocks fill full width
+        # Full width but with mana strip space
         self._draw_blocks_fullwidth(card)
-
-    def _draw_blocks_fullwidth(self, card: dict) -> None:
-        c      = self.canvas
-        blocks = card.get("blocks", [])
-        if not blocks:
-            c.create_text(self.W//2, self.H//2, text="No blocks",
-                          fill="#555", font=(self.FF, 14))
-            return
-        TOP     = 52
-        BOTTOM  = self.H - 6
-        block_h = (BOTTOM - TOP) // len(blocks)
-        CD      = get_content_data()
-        FN      = (self.FF, self.FS)
-        FB      = (self.FF, self.FS, "bold")
-        for i, blk in enumerate(blocks):
-            y0    = TOP + i * block_h
-            y1    = y0 + block_h
-            btype = blk["type"]
-            col   = BOX_COLORS.get(btype, "#333")
-            c.create_rectangle(6, y0, self.W-8, y1,
-                               fill=col, outline="#888", width=1, stipple="gray50")
-            c.create_text(10, y0+4, text=f"[{btype}]", anchor="nw",
-                          font=(self.FF, 10, "bold"), fill="white")
-            iy = y0 + 24
-            for ab in blk.get("abilities", []):
-                iy = self._draw_ability(ab, iy, y1-4, CD, FN, FB)
-                if iy >= y1:
-                    break
 
     # ── Loot renderer ─────────────────────────────────────────────────────────
 

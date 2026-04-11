@@ -134,11 +134,9 @@ class CardGenerator:
 
     def _generate_one(self) -> dict:
         if self.is_recipes:
-            recipe_type = self._pick_recipe_type()
-            element     = recipe_type   # used internally as subcategory key
-        else:
-            recipe_type = None
-            element     = self._pick_element()
+            return self._generate_recipe()
+
+        element     = self._pick_element()
         block_types = self._pick_blocks(element)
 
         # Container no_repeat dedup is shared across all boxes on a card.
@@ -162,20 +160,92 @@ class CardGenerator:
             blocks.append(block)
 
         card = {
-            "name": _make_card_name(element if not self.is_recipes else "Quinta"),
+            "name": _make_card_name(element),
             "card_type": self.card_type_output,
             "artwork": "",
-            "element": "" if self.is_recipes else element,
+            "element": element,
             "blocks": blocks,
         }
-        if recipe_type:
-            card["recipe_type"] = recipe_type
 
         # Attach computed metrics
         card["_cv"]         = round(cv_card(card, self.box_config,
                                             self.effects, self.costs), 3)
         card["_complexity"] = round(complexity_card(card, self.effects,
                                                     self.costs), 3)
+        return card
+
+    # ── Recipe generation ────────────────────────────────────────────────────
+
+    # Primary types that each recipe sub-type can use
+    _RECIPE_TARGETING = {
+        "Potions":   {"Target Ally", "Target Neutral"},
+        "Phials":    {"Target Enemy"},
+        "Tinctures": set(),  # TBD
+    }
+
+    _RECIPE_NAMES = {
+        "Potions":   ["Healing Brew", "Restoration Draft", "Soothing Elixir",
+                      "Cleansing Tonic", "Fortifying Flask", "Calm Draught"],
+        "Phials":    ["Venom Phial", "Burning Flask", "Corrosion Vial",
+                      "Blight Essence", "Toxic Serum", "Wrath Tincture"],
+        "Tinctures": ["Strange Tincture", "Exotic Blend", "Arcane Mixture"],
+    }
+
+    def _generate_recipe(self) -> dict:
+        recipe_type = self._pick_recipe_type()
+        ingredient_cv = int(self.cfg.get("ingredient_cv", 4))
+
+        # Pick 1-3 materials as ingredients
+        from card_builder.materials import load_central_materials
+        all_mats = load_central_materials()
+        if not all_mats:
+            all_mats = ["Gold", "Silver", "Wood"]
+        n_ings = random.randint(1, min(3, len(all_mats)))
+        chosen_mats = random.sample(all_mats, n_ings)
+
+        ingredients = [{"material": m, "cv": ingredient_cv} for m in chosen_mats]
+
+        # Pick effects matching this recipe type's targeting
+        allowed_targeting = self._RECIPE_TARGETING.get(recipe_type, set())
+        matching_effects = []
+        for eid, item in self.effects.items():
+            ptypes = set(item.get("primary_types", []))
+            if ptypes & allowed_targeting:
+                matching_effects.append(eid)
+
+        # Pick 1-2 effects and build use_text
+        effects = []
+        use_parts = []
+        n_effects = min(len(matching_effects), random.randint(1, 2))
+        if matching_effects and n_effects > 0:
+            picked = random.sample(matching_effects, n_effects)
+            for eid in picked:
+                item = self.effects[eid]
+                cv_budget = sum(i["cv"] for i in ingredients)
+                eff = self._build_effect(eid, recipe_type, cv_budget)
+                if eff:
+                    effects.append(eff)
+                    ct = item.get("content_text", "")
+                    for k, v in eff.get("vals", {}).items():
+                        ct = ct.replace(f"{{{k}}}", str(v))
+                    if ct:
+                        use_parts.append(ct)
+
+        name = random.choice(self._RECIPE_NAMES.get(recipe_type, ["Recipe"]))
+
+        card = {
+            "name": name,
+            "card_type": recipe_type,
+            "recipe_type": recipe_type,
+            "artwork": "",
+            "ingredients": ingredients,
+            "effects": effects,
+            "use_text": "\n".join(use_parts),
+        }
+
+        total_cv = sum(i["cv"] for i in ingredients)
+        card["_cv"] = round(total_cv, 3)
+        card["_complexity"] = round(len(ingredients) + len(effects) * 1.5, 3)
         return card
 
     # ── Element / Recipe type ─────────────────────────────────────────────────

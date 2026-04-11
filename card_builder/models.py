@@ -3,7 +3,8 @@ models.py – card data model, factory functions, and JSON persistence.
 
 Categories:
     Items   → Equipment, Supplies
-    Skills  → Spells, Alchemy, Prowess
+    Skills  → Spells, Prowess
+    Recipes → Potions, Phials, Tinctures
 """
 
 import json
@@ -12,9 +13,9 @@ import os
 from .constants import ELEMENTS
 
 CARD_CATEGORIES = {
-    "Supplies": ["Equipment", "Loot"],
-    "Skills":   ["Spells", "Alchemy", "Prowess"],
-    "Tränke":   ["Trank"],
+    "Items":   ["Equipment", "Supplies"],
+    "Skills":  ["Spells", "Alchemy", "Prowess"],
+    "Recipes": ["Potions", "Phials", "Tinctures"],
 }
 
 ALL_CARD_TYPES = [sub for subs in CARD_CATEGORIES.values() for sub in subs]
@@ -52,23 +53,17 @@ def empty_card(card_type: str = "Spells") -> dict:
         # No artwork for Prowess
         base.pop("artwork", None)
         base.update({"blocks": []})
-    elif card_type == "Loot":
-        base.update({
-            "elements":          [],   # up to 3 element strings
-            "sacrifice_effects": {},   # {element: {"effect_id":…, "vals":{}, "opt_vals":{}}}
-            "materials":         [],
-            "value":             0,
-        })
-    elif card_type == "Equipment":
+    elif card_type in ("Supplies", "Equipment"):
         base.update({
             "element_sources": [],
             "object_type":     [],
             "materials":       [],
             "effect_text":     "",
-            "equip_text":      "",
-            "equip_cost_text": "",
             "value":           0,
         })
+        if card_type == "Equipment":
+            base["equip_text"]      = ""
+            base["equip_cost_text"] = ""
     elif card_type == "Alchemy":
         base.update({
             "ingredients":       [],
@@ -76,10 +71,12 @@ def empty_card(card_type: str = "Spells") -> dict:
             "result_text":       "",
             "on_field_effect":   "",
         })
-    elif card_type == "Trank":
+    elif card_type in ("Potions", "Phials", "Tinctures"):
         base.update({
-            "ingredients": [],
-            "charges":     1,
+            "recipe_type":  card_type,
+            "ingredients":  [],       # list of {"material": str, "cv": 4}
+            "effects":      [],       # list of {"effect_id": str, "vals": {}}
+            "use_text":     "",       # rendered use/effect text
         })
     return base
 

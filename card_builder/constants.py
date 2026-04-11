@@ -4,12 +4,12 @@ constants.py – all static configuration.
 
 BOX_TYPES = [
     "Play", "Excavate", "Hand", "Concentration",
-    "Enchantment", "Equipped", "Exhausted", "Discard", "Forgotten", "Lost",
+    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Lost",
 ]
 
 ABILITY_TYPES = ["Trigger", "Play", "Continues", "Activate"]
 
-ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta", "Generic"]
+ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Meta", "Generic"]
 
 # Generic mana symbol (used when no element is specified)
 GENERIC_MANA_ICON  = "◎"
@@ -18,7 +18,8 @@ GENERIC_MANA_COLOR = "#888888"
 # The special Cost ID that renders as mana symbols instead of text
 MANA_COST_ID = "Mana"
 
-NO_ELEMENT_TYPES  = ["Supplies", "Equipment", "Alchemy", "Prowess"]
+NO_ELEMENT_TYPES  = ["Supplies", "Equipment", "Alchemy", "Prowess",
+                     "Potions", "Phials", "Tinctures"]
 BOX_CARD_TYPES    = ["Spells", "Prowess"]
 
 BOX_COLORS = {
@@ -29,7 +30,7 @@ BOX_COLORS = {
     "Enchantment":   "#6a1a8e",
     "Equipped":      "#3a5a3a",
     "Exhausted":     "#5a3a2a",
-    "Discard":       "#1a5a5a",
+    "Fleeting":      "#1a5a5a",
     "Lost":          "#3a3a3a",
 }
 
@@ -39,7 +40,7 @@ ELEMENT_COLORS = {
     "Ice":    "#2980b9",
     "Nature": "#27ae60",
     "Blood":  "#8e0000",
-    "Quinta": "#8e44ad",
+    "Meta":   "#8e44ad",
 }
 
 ELEMENT_ICONS = {
@@ -48,7 +49,7 @@ ELEMENT_ICONS = {
     "Ice":    "❄️",
     "Nature": "🌿",
     "Blood":  "🩸",
-    "Quinta": "✨",
+    "Meta":   "✨",
 }
 
 BOX_SYMBOLS = {
@@ -59,7 +60,7 @@ BOX_SYMBOLS = {
     "Enchantment":   "✦",
     "Equipped":      "⚔",
     "Exhausted":     "💤",
-    "Discard":       "🗑",
+    "Fleeting":      "💨",
     "Lost":          "☠",
 }
 
@@ -73,6 +74,23 @@ TYPE_SYMBOLS = {
 COND_SYMBOL   = "◈"
 EFFECT_SYMBOL = "◆"
 COST_SYMBOL   = "◉"
+
+RECIPE_TYPES = ["Potions", "Phials", "Tinctures"]
+
+RECIPE_TYPE_COLORS = {
+    "Potions":   "#2980b9",
+    "Phials":    "#c0392b",
+    "Tinctures": "#27ae60",
+}
+
+RECIPE_TYPE_ICONS = {
+    "Potions":   "🧪",
+    "Phials":    "⚗️",
+    "Tinctures": "🫧",
+}
+
+# Default CV per ingredient
+INGREDIENT_CV = 4
 
 CARD_W    = 476
 CARD_H    = 666

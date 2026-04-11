@@ -1,0 +1,196 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           EMMA – GAME TOOLS TODO                           ║
+║                         Protokoll aller Anfragen                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ABGESCHLOSSEN ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[✓] Per-Sigil Container Editor UI
+    - Alte Sigil Beschränkungen (forbidden/required listboxes) entfernt
+    - Neuer "Sigil Regeln" Editor: Sigil-Selector, scrollbare Regelliste
+      mit Container/Probability/Min/Max pro Zeile, Add/Remove Buttons
+
+[✓] sync_item_template auto-run beim Öffnen des Editors
+    - Variablen mit {X} in Content Box wurden bei alten Items nicht
+      erkannt – sync_item_template(self.item) wird nun am Anfang von
+      _build() aufgerufen
+
+[✓] Primär Effekttypen Panel (4 Typen)
+    - Non Targeting, Target Enemy, Target Ally, Target Neutral
+    - Separates Panel mit allen Effekten als Zeilen mit Checkboxen
+    - Launcher-Button "🎯 Effekt Primärtypen" in Hauptmenü + Content Manager
+
+[✓] Enchant und Curse entfernen
+    - Enchant/Curse Content-Typen und Bubble-Panel komplett entfernt
+
+[✓] EffectTypePanel Layout-Fix + ×Mult entfernen
+    - Grid-basierte Spaltenausrichtung mit columnconfigure(minsize)
+    - Multiplizier-Feature komplett entfernt
+
+[✓] Variablen vs. Options Stat-Zeilen
+    - Variablen brauchen keine Rarity (werden immer gewählt)
+    - Options brauchen nur einen flachen CV-Wert (kein Polynom)
+    - Legacy-Migration: cv1 als Fallback, cv1/cv2/cv3 bei Options-Speichern entfernt
+
+[✓] Doppelte Element-Menüs in ConditionsEditor entfernen
+    - ConditionsEditor zeigte redundante Element-Weights für Effekte
+    - Abschnitt nur noch bei stat_type != "effect" angezeigt
+
+[✓] Content Text Scaffold Button
+    - ↺ Button generiert vollständigen Conditional-Scaffold:
+      [if OPT0=a]a[elif OPT0=b]b[else]c[/if] für Options
+      [if X=1]...[else]{X}[/if] für Variablen
+
+[✓] Inline Effects Pool in Sigil Regeln (Generator)
+    - generator.py: _pick_from_effects_pool() implementiert
+    - Filtert nach forbidden IDs, Inkompatibilität, allowed_box_types
+    - Gewichtet mit √rarity × element_weight (gleiche Formel wie Container)
+
+[✓] Sigil Regeln UI – Modus-Toggle (Container vs. Effekte)
+    - Jede Regel hat 📦/🎯 Toggle-Button
+    - Effekte-Modus: klickbares Label öffnet Multi-Select Dialog
+    - _open_effects_picker_for_rule() Dialog mit Strg+Klick Mehrfachauswahl
+
+[✓] [elif] Rendering Bug Fix
+    - re.split() mit Capturing Group fügte captured strings in body-Liste ein
+    - Fix: non-capturing Pattern für split, separates findall für conditions
+
+[✓] Meta → Quinta umbenennen (überall: alle .py, alle .json)
+    - card_builder/constants.py, CardContent/*.py, game_engine/constants.py
+    - Alle cc_data JSONs, gen_config.json, cards JSONs
+
+[✓] Neuer Loot-Karten Editor (kompletter Rework)
+    - Bis zu 3 Elemente, oben links vertikal gestapelt (Kreise)
+    - Pro Element optional: Opfer-Effekt "(Elementsymbol) → Effekt"
+    - Effekt-Picker Dialog mit Checkboxen + Variablen-Eingabe
+    - Felder: Bild, Name, Materialien, Wert (zentral unten)
+    - Materialien separat in materials.json gespeichert
+    - Kein automatisches Generieren
+    - Dateipfad: cards/Supplies/Loot/cards.json
+
+[✓] Material-Effekt Editor
+    - card_builder/material_editor.py: MaterialEffectEditor (Toplevel)
+    - Eine Zeile pro Material: Name | Effekt-Combobox | Variablen-Entries
+    - Speichert "material_effects" in materials.json
+    - materials.py: load_material_effects() + save_material_effects() ergänzt
+
+[✓] Trank-Karten System
+    - Neuer Karten-Typ "Trank" in card_builder/CardTypes/trank_card.py
+    - TrankCardEditor: Zutaten (TagSelector), Chargen (Spinbox),
+      Effekt-Vorschau aus Materialien, "🎲 Zufälliger Trank" Button
+    - TrankCardRenderer: Name, Artwork, Chargen-Kreise, Zutaten-Pills,
+      Effekt-Zeilen pro Zutat, Chargen-Badge unten zentriert
+    - Zufallsgenerator: filtert nach allowed_in="Tränke", 20 deutsche Namen
+    - Daten: cards/Tränke/Trank/cards.json
+    - Registriert in CardTypes/__init__.py + models.py
+
+[✓] Pro-Effekt: Erlaubte Karten-Typen (allowed_in Whitelist)
+    - effect_type_panel.py: neue Spaltengruppe "Erlaubt für"
+      mit Checkboxen für Tränke / Skills / Loot
+    - Leer = überall erlaubt; gespeichert als "allowed_in": ["Tränke", ...]
+    - Fensterbreite auf 760px angepasst
+    - Trank-Generator und Loot-Editor nutzen allowed_in zur Filterung
+
+[✓] Reminder Text Anzeige auf Karten (überall)
+    - spell_card.py: Effekte immer nach Complexity absteigend sortiert,
+      "(reminder text)" kursiv nach jedem Bullet wenn Platz reicht
+    - loot_card.py: Opfer-Effekte ebenfalls nach Complexity sortiert,
+      Reminder kursiv/grau unter jedem Opfer-Effekt-Pfeil wenn Platz
+    - trank_card.py: Effektzeilen nach Complexity sortiert,
+      Reminder kursiv/grau unter jeder Effektzeile wenn Platz reicht
+
+[✓] MaterialEffectEditor zugänglich machen
+    - main.py: "⚗️ Material-Effekte" Button im Launcher (360x500)
+    - open_material_editor() Methode öffnet MaterialEffectEditor als Toplevel
+
+[✓] Template Parser Fix – Verschachtelte [if/elif/else/if]-Blöcke
+    - _render_block() nutzte non-greedy Regex → stoppte beim ersten [/if],
+      [elif]-Zweige außerhalb innerer Blöcke blieben als Rohtext
+    - Neue Hilfsfunktionen _find_block() (Tiefenzählung) und
+      _split_top_level() (splittet nur auf oberster Ebene)
+    - renderer.py: Trigger/Conditions/Costs nutzen jetzt render_display_text
+      statt roher String-Ersetzung
+
+[✓] Trigger content_text Korrekturen (triggers.json)
+    - Play_Skill: separate [if][/if][elif][/if]-Blöcke → korrekte
+      [if][elif]...[/if]-Kette für alle 8 Choices (inkl. Quinta, Recipe)
+    - Trig_Movement: ungültige [/elif]-Tags + falsche Schachtelung behoben →
+      [if OPT0=You][if OPT1=any]...[elif OPT1!=any]...[/if][elif ...][/if]
+    - Trig_Card_Changes_Position: falschen Element-Inhalt ersetzt durch
+      korrekte Vorlage passend zum Sigil (You/Players/Anyone + Aktion + X)
+
+[✓] Mana Complexity Fix (costs.json)
+    - Alle 7 per_choice-Einträge hatten complexity: 1.0 → ~10.8 Gesamt
+    - Neue Werte: Generic=0.0, Fire/Metal/Ice/Nature/Blood=0.2, Quinta=0.8
+
+[✓] Multi-Generator System (Spells / Prowess / Recipes)
+    - 3 Profile: Spells, Prowess, Recipes (statt 5 mit Recipe 1/2/3)
+    - Prowess: nur Generic Mana (generic_mana_only=True, cv=1.1)
+    - Recipes: 3 Untertypen Potions / Phials / Tinctures als Subkategorien
+      (analog zu Elementen bei Spells)
+    - GENERATOR_PROFILES + RECIPE_TYPES in random_builder/models.py
+    - generator.py: _pick_recipe_type(), _item_subcategory_weight()
+      → recipe_type_weights statt element_weights für Recipes
+    - app.py: Profil-Bar mit 3 Buttons; bei Recipes zeigt
+      "Recipe Type Verteilung" statt "Element Verteilung"
+    - content_editor.py: recipe_type_weights Abschnitt (analog zu
+      element_weights), erlaubt_für Checkboxen nutzen GENERATOR_PROFILES
+
+[✓] Content allowed_card_types (Generator-Filterung)
+    - Jedes Effect/Cost/Trigger/Condition-Item hat Checkboxen pro Profil
+    - Leer / alle gecheckt = überall erlaubt
+    - generator.py: _allowed_for_profile() filtert nach allowed_card_types
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  AUSSTEHEND ○
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+(Aktuell keine offenen Punkte – warte auf neue Anfragen)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  NOTIZEN / ARCHITEKTUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dateistruktur (wichtigste):
+  card_builder/
+    constants.py          – ELEMENTS, CARD_W/H, BOX_TYPES, Farben/Icons
+    models.py             – CARD_CATEGORIES, empty_card(), load/save_cards()
+    materials.py          – load/save materials + material_effects
+    material_editor.py    – MaterialEffectEditor (NEU)
+    data.py               – ContentData Singleton (lädt cc_data JSONs)
+    CardTypes/
+      __init__.py         – Factory: get_editor(), get_renderer()
+      spell_card.py       – Spells/Prowess Editor + Renderer
+      loot_card.py        – Loot Editor + Equipment Editor + LootCardRenderer
+      trank_card.py       – Trank Editor + Renderer (NEU)
+      alchemy_card.py     – Alchemy Editor + Renderer
+      base_card.py        – BaseCardEditor, TagSelector, ArtworkPicker
+  CardContent/
+    content_manager.py    – Haupt-Tabellen-UI
+    content_editor.py     – Einzelitem-Editor
+    effect_type_panel.py  – Primärtypen + allowed_in Checkboxen
+    template_parser.py    – render_display_text, render_content_text
+    cc_data/
+      effects.json        – alle Effekte (mit primary_types, allowed_in)
+      costs.json, triggers.json, conditions.json
+  cards/
+    Skills/Spells/cards.json
+    Skills/Alchemy/cards.json
+    Skills/Prowess/cards.json
+    Supplies/Equipment/cards.json
+    Supplies/Loot/cards.json
+    Tränke/Trank/cards.json
+    materials.json        – Materialien + material_effects
+
+Konventionen:
+  - "Quinta" (nicht "Meta") ist das 6. Element
+  - allowed_in: [] = überall erlaubt; ["Tränke"] = nur bei Tränken
+  - Trank-Effekte kommen aus material_effects[zutat], nicht aus der Karte
+  - Loot hat keine Zufallsgenerierung
+  - Tränke haben Zufallsgenerierung (🎲-Button im Editor)
+  - Reminder Text: kursiv in Klammern, nur wenn Platz reicht, nach Complexity sortiert
+  - Generator Profile: Spells / Prowess / Recipes (3 total)
+  - Recipes-Untertypen: Potions, Phials, Tinctures (wie Elemente für Spells)
+  - recipe_type_weights auf Content-Items analog zu element_weights

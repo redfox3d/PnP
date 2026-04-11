@@ -8,29 +8,33 @@ Usage:
     RendererClass = get_renderer(card_type)
 """
 
-from card_builder.CardTypes.spell_card import SpellCardEditor,    SpellCardRenderer
-from card_builder.CardTypes.loot_card  import LootCardEditor,     LootCardRenderer
-from card_builder.CardTypes.loot_card  import EquipmentCardEditor
+from card_builder.CardTypes.spell_card   import SpellCardEditor,   SpellCardRenderer
+from card_builder.CardTypes.loot_card    import SuppliesCardEditor,    LootCardRenderer
+from card_builder.CardTypes.loot_card    import EquipmentCardEditor
 from card_builder.CardTypes.alchemy_card import AlchemyCardEditor, AlchemyCardRenderer
-from card_builder.CardTypes.trank_card import TrankCardEditor, TrankCardRenderer
+from card_builder.CardTypes.recipe_card  import RecipeCardEditor,  RecipeCardRenderer
 
 
 _EDITORS = {
-    "Spells":    SpellCardEditor,
-    "Prowess":   SpellCardEditor,
-    "Loot":      LootCardEditor,
-    "Equipment": EquipmentCardEditor,
-    "Alchemy":   AlchemyCardEditor,
-    "Trank":     TrankCardEditor,
+    "Spells":     SpellCardEditor,
+    "Prowess":    SpellCardEditor,
+    "Supplies":   SuppliesCardEditor,
+    "Equipment":  EquipmentCardEditor,
+    "Alchemy":    AlchemyCardEditor,
+    "Potions":    RecipeCardEditor,
+    "Phials":     RecipeCardEditor,
+    "Tinctures":  RecipeCardEditor,
 }
 
 _RENDERERS = {
-    "Spells":    SpellCardRenderer,
-    "Prowess":   SpellCardRenderer,
-    "Loot":      LootCardRenderer,
-    "Equipment": LootCardRenderer,
-    "Alchemy":   AlchemyCardRenderer,
-    "Trank":     TrankCardRenderer,
+    "Spells":     SpellCardRenderer,
+    "Prowess":    SpellCardRenderer,
+    "Supplies":   LootCardRenderer,
+    "Equipment":  LootCardRenderer,
+    "Alchemy":    AlchemyCardRenderer,
+    "Potions":    RecipeCardRenderer,
+    "Phials":     RecipeCardRenderer,
+    "Tinctures":  RecipeCardRenderer,
 }
 
 

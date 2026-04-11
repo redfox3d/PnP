@@ -81,6 +81,9 @@ def _render_card_summary(card: dict) -> str:
     el  = card.get("recipe_type") or card.get("element") or "?"
     cv  = card.get("_cv", "?")
     cmx = card.get("_complexity", "?")
+    if card.get("ingredients") is not None:
+        ni = len(card.get("ingredients", []))
+        return f"{el:<10}  CV={cv:<6}  Cmplx={cmx:<5}  Zutaten={ni}"
     nb  = len(card.get("blocks", []))
     return f"{el:<10}  CV={cv:<6}  Cmplx={cmx:<5}  Sigils={nb}"
 
@@ -1014,8 +1017,8 @@ class RandomBuilder(tk.Frame):
                  font=("Arial", 8)).pack(side="left")
         self._filter_el_var = tk.StringVar(value="Alle")
         el_cb = ttk.Combobox(filter_f, textvariable=self._filter_el_var,
-                             values=["Alle"] + ELEMENTS,
-                             state="readonly", width=8)
+                             values=["Alle"] + ELEMENTS + RECIPE_TYPES,
+                             state="readonly", width=10)
         el_cb.pack(side="left", padx=2)
         el_cb.bind("<<ComboboxSelected>>", lambda _: self._refresh_list())
 
@@ -1057,7 +1060,9 @@ class RandomBuilder(tk.Frame):
         el_filter = self._filter_el_var.get()
         visible = [
             (i, c) for i, c in enumerate(self._cards)
-            if el_filter == "Alle" or c.get("element") == el_filter
+            if el_filter == "Alle"
+               or c.get("element") == el_filter
+               or c.get("recipe_type") == el_filter
         ]
         self._visible_indices = [i for i, _ in visible]
         for i, card in visible:
@@ -1077,7 +1082,9 @@ class RandomBuilder(tk.Frame):
     def _random_pick(self):
         el_filter = self._filter_el_var.get()
         pool = [i for i, c in enumerate(self._cards)
-                if el_filter == "Alle" or c.get("element") == el_filter]
+                if el_filter == "Alle"
+                   or c.get("element") == el_filter
+                   or c.get("recipe_type") == el_filter]
         if not pool:
             return
         idx = random.choice(pool)
@@ -1172,6 +1179,71 @@ class RandomBuilder(tk.Frame):
             if 0 <= vis_idx < len(self._visible_indices):
                 self._show_detail(self._cards[self._visible_indices[vis_idx]])
 
+    def _show_recipe_detail(self, card: dict):
+        """Render detail view for Recipe cards (ingredients + effects)."""
+        BG = "#1e2a2a"
+        parent = self._detail_inner
+
+        # Ingredients
+        ih = tk.Frame(parent, bg="#2a4a2a")
+        ih.pack(fill="x", padx=8, pady=(8, 0))
+        tk.Label(ih, text="  🧪  Zutaten", bg="#2a4a2a", fg="white",
+                 font=("Arial", 10, "bold")).pack(side="left", padx=6, pady=3)
+
+        for ing in card.get("ingredients", []):
+            row = tk.Frame(parent, bg=BG, relief="groove", bd=1)
+            row.pack(fill="x", padx=12, pady=1)
+            mat = ing.get("material", "?")
+            cv  = ing.get("cv", 4)
+            tk.Label(row, text=f"  • {mat}", bg=BG, fg="#aaffaa",
+                     font=("Arial", 9, "bold"), anchor="w").pack(side="left", padx=4, pady=2)
+            tk.Label(row, text=f"CV {cv}", bg=BG, fg="#888",
+                     font=("Consolas", 8)).pack(side="right", padx=8)
+
+        # Effects
+        effects = card.get("effects", [])
+        if effects:
+            eh = tk.Frame(parent, bg="#2a2a4a")
+            eh.pack(fill="x", padx=8, pady=(8, 0))
+            tk.Label(eh, text="  ◆  Effekte", bg="#2a2a4a", fg="white",
+                     font=("Arial", 10, "bold")).pack(side="left", padx=6, pady=3)
+
+            for eff in effects:
+                eid = eff.get("effect_id", "?")
+                item = self._effects_lu.get(eid, {})
+                vals = eff.get("vals", {})
+                opts = eff.get("opt_vals", {})
+                text = _render_effect(item, vals, opts, fallback_id=eid)
+
+                row = tk.Frame(parent, bg="#1e1e2e", relief="groove", bd=1)
+                row.pack(fill="x", padx=12, pady=1)
+                tk.Button(row, text=f"  Eff: {eid}",
+                          bg="#1e1e2e", fg="#88ff88", relief="flat", cursor="hand2",
+                          font=("Consolas", 8), anchor="w",
+                          command=lambda i=eid: self._open_content_editor(i, "Effect")
+                          ).pack(side="left")
+                tk.Label(row, text=f"→  {text}", bg="#1e1e2e", fg="#cccccc",
+                         font=("Consolas", 8)).pack(side="left", padx=4)
+
+                # Variable values
+                for vname, vval in vals.items():
+                    vr = tk.Frame(parent, bg="#161622")
+                    vr.pack(fill="x", padx=24, pady=0)
+                    tk.Label(vr, text=f"{{{vname}}} = {vval}",
+                             bg="#161622", fg="#888",
+                             font=("Consolas", 8)).pack(side="left", padx=8)
+
+        # Use text
+        use_text = card.get("use_text", "")
+        if use_text:
+            uf = tk.Frame(parent, bg="#1e1e1e", relief="groove", bd=1)
+            uf.pack(fill="x", padx=8, pady=(8, 4))
+            tk.Label(uf, text="Use:", bg="#1e1e1e", fg="#888",
+                     font=("Arial", 8, "bold")).pack(anchor="w", padx=4, pady=2)
+            tk.Label(uf, text=use_text, bg="#1e1e1e", fg="white",
+                     font=("Arial", 9), wraplength=400, justify="left",
+                     anchor="w").pack(fill="x", padx=8, pady=2)
+
     def _open_content_editor(self, item_id: str, type_name: str):
         """Open ContentEditor for an effect, cost, trigger, or condition by ID."""
         lookup = {
@@ -1219,12 +1291,20 @@ class RandomBuilder(tk.Frame):
             w.destroy()
 
     def _show_detail(self, card: dict):
+        rt = card.get("recipe_type", "")
+        label = rt or card.get("element", "?")
         self._detail_header.config(
-            text=f"🃏  {card.get('name', '?')}   [{card.get('element', '?')}]",
+            text=f"🃏  {card.get('name', '?')}   [{label}]",
             fg="#cc8833")
-        self._metrics_label.config(
-            text=f"CV: {card.get('_cv', '?')}   Complexity: {card.get('_complexity', '?')}"
-                 f"   Sigils: {len(card.get('blocks', []))}")
+        if card.get("ingredients") is not None:
+            n_ings = len(card.get("ingredients", []))
+            self._metrics_label.config(
+                text=f"CV: {card.get('_cv', '?')}   Complexity: {card.get('_complexity', '?')}"
+                     f"   Zutaten: {n_ings}")
+        else:
+            self._metrics_label.config(
+                text=f"CV: {card.get('_cv', '?')}   Complexity: {card.get('_complexity', '?')}"
+                     f"   Sigils: {len(card.get('blocks', []))}")
 
         # Render visual card preview
         try:
@@ -1239,6 +1319,11 @@ class RandomBuilder(tk.Frame):
 
         for w in self._detail_inner.winfo_children():
             w.destroy()
+
+        # Recipe cards have ingredients, not blocks
+        if card.get("ingredients") is not None:
+            self._show_recipe_detail(card)
+            return
 
         from card_builder.constants import BOX_COLORS as BLOCK_COLORS, BOX_SYMBOLS as BLOCK_SYMBOLS
         from .cv_calc import cv_content_item, cv_ability, complexity_content_item

@@ -16,7 +16,7 @@ from card_builder.constants import (
     TYPE_SYMBOLS, COND_SYMBOL, EFFECT_SYMBOL, COST_SYMBOL,
     MANA_COST_ID, GENERIC_MANA_ICON, GENERIC_MANA_COLOR,
 )
-from card_builder.models import empty_box, empty_ability
+from card_builder.models import empty_box
 from card_builder.widgets import BoxEditor
 
 try:
@@ -41,17 +41,17 @@ class SpellCardEditor(BaseCardEditor):
         # Block controls – default = Play
         ctrl = tk.Frame(ef, bg=self.BG)
         ctrl.pack(fill="x", padx=8, pady=4)
-        tk.Label(ctrl, text="Sigil hinzufügen:", bg=self.BG, fg="#ccc",
+        tk.Label(ctrl, text="Add Block:", bg=self.BG, fg="#ccc",
                  font=("Arial", 9, "bold")).pack(side="left")
         self._new_block_var = tk.StringVar(value="Play")
         ttk.Combobox(ctrl, textvariable=self._new_block_var,
                      values=BOX_TYPES, width=16, state="readonly").pack(
             side="left", padx=4)
-        tk.Button(ctrl, text="+ Sigil", command=self._add_block,
+        tk.Button(ctrl, text="+ Add Block", command=self._add_block,
                   bg="#1a6e3c", fg="white", font=("Arial", 8)).pack(
             side="left", padx=4)
         count = len(card.get("blocks", []))
-        tk.Label(ctrl, text=f"({count}/4 Sigils)",
+        tk.Label(ctrl, text=f"({count}/4 blocks)",
                  bg=self.BG, fg="#888", font=("Arial", 8)).pack(side="left")
 
         self._blocks_frame = tk.Frame(ef, bg=self.BG)
@@ -119,8 +119,6 @@ class SpellCardRenderer:
         self._img = None
 
     def render(self, card: dict):
-        print(f"[renderer] render() card={card.get('name')} "
-              f"blocks={[b.get('type') for b in card.get('blocks',[])]} ...")
         c  = self.canvas
         c.delete("all")
         ct = card.get("card_type", "Spells")
@@ -145,13 +143,15 @@ class SpellCardRenderer:
                           fill=color, outline="gold", width=2)
             c.create_text(cx, cy, text=ELEMENT_ICONS.get(elem, "?"),
                           font=("Arial", 16))
-            # Element strip on the right — no artwork box for Spells
+            # Artwork strip right side
             self._draw_artwork_strip(card)
+            # Artwork box
+            self._draw_artwork_box(card, 6, 40, self.W-self.AW-8, 200)
             content_left = 6 + MANA_STRIP_W
-            content_top  = 40
+            content_top  = 206
         else:
-            # Prowess: no artwork, no strip
-            content_left = 6
+            # Prowess: no artwork, no strip, but still reserve mana strip
+            content_left = 6 + MANA_STRIP_W
             content_top  = 40
 
         content_right = self.W - (self.AW + 8 if ct == "Spells" else 6)
@@ -215,9 +215,7 @@ class SpellCardRenderer:
         BOTTOM  = self.H - 6
         block_h = (BOTTOM - top) // len(blocks)
         from card_builder.data import get_content_data
-        print(f"[renderer] _draw_blocks: {len(blocks)} Blöcke, lade CD ...")
         CD = get_content_data()
-        print(f"[renderer] CD geladen")
         FN = (self.FF, self.FS)
         FB = (self.FF, self.FS, "bold")
 
@@ -300,16 +298,14 @@ class SpellCardRenderer:
             trig = CD.get("trigger", ab["trigger_id"])
             if trig:
                 trigger_text = _render_content(trig, {
-                    "var_values": ab.get("trigger_vals", {}),
-                    "opt_values": ab.get("trigger_opt_vals", {})})
+                    "var_values": ab.get("trigger_vals", {}), "opt_values": {}})
 
         cond_text = ""
         if ab.get("condition_id"):
             cond = CD.get("condition", ab["condition_id"])
             if cond:
                 cond_text = _render_content(cond, {
-                    "var_values": ab.get("condition_vals", {}),
-                    "opt_values": ab.get("condition_opt_vals", {})})
+                    "var_values": ab.get("condition_vals", {}), "opt_values": {}})
 
         if trigger_text and cond_text:
             prefix = f"If {trigger_text} and you have {cond_text}"
@@ -327,8 +323,7 @@ class SpellCardRenderer:
             co = CD.get("cost", ci["cost_id"])
             if co:
                 non_mana_costs.append(_render_content(co, {
-                    "var_values": ci.get("vals", {}),
-                    "opt_values": ci.get("opt_vals", {})}))
+                    "var_values": ci.get("vals", {}), "opt_values": {}}))
         cost_str = ", ".join(non_mana_costs)
 
         effects    = ab.get("effects", [])
@@ -355,47 +350,21 @@ class SpellCardRenderer:
             eff = CD.get("effect", ei.get("effect_id", ""))
             if not eff:
                 continue
-            # ei["content_text"] is pre-rendered by _to_render_card → use directly
-            # Otherwise render on the fly with proper template functions
-            if ei.get("content_text"):
-                ct = ei["content_text"]
-            else:
-                from CardContent.template_parser import render_content_text, render_display_text
-                raw_ct    = eff.get("content_text", "")
-                raw_sigil = eff.get("sigil", "")
-                vals_ei   = ei.get("vals", {})
-                opts_ei   = ei.get("opt_vals", {})
-                if raw_ct:
-                    ct = render_display_text(raw_ct, vals_ei, opts_ei)
-                elif raw_sigil:
-                    ct = render_content_text(raw_sigil, vals_ei, opts_ei)
-                else:
-                    ct = eff.get("id", "")
+            ct = eff.get("content_text") or eff.get("content_box", "")
+            for k, v in ei.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
             eff_data.append([eff, ei, ct])
 
         for cont in ab.get("continuouses", []):
             itm = CD.get("continuous", cont.get("effect_id", "")) if hasattr(CD, 'get') else None
             if not itm:
                 continue
-            from CardContent.template_parser import render_content_text, render_display_text
-            raw_ct    = itm.get("content_text", "")
-            raw_sigil = itm.get("sigil", "")
-            vals_c    = cont.get("vals", {})
-            opts_c    = cont.get("opt_vals", {})
-            if raw_ct:
-                ct = render_display_text(raw_ct, vals_c, opts_c)
-            elif raw_sigil:
-                ct = render_content_text(raw_sigil, vals_c, opts_c)
-            else:
-                ct = itm.get("id", "")
+            ct = itm.get("content_text") or itm.get("content_box", "")
+            for k, v in cont.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
             eff_data.append([itm, cont, ct])
 
-        # Sort all effects by complexity descending (always, not just when tight)
-        eff_data.sort(key=lambda row: float(row[0].get("complexity_base", 1.0)),
-                      reverse=True)
-
-        # Estimate available lines to decide whether reminder lines can fit
-        import math
+        # Estimate fit; if tight, swap most complex items to reminder_text
         chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))
 
         def _est_lines(text: str) -> int:
@@ -403,28 +372,31 @@ class SpellCardRenderer:
                 return 1
             words = text.split()
             total_chars = sum(len(w) + 1 for w in words)
+            import math
             return max(1, math.ceil(total_chars / chars_per_line))
 
-        avail_lines  = max(1, (y_max - 4 - y) // lh)
-        main_lines   = sum(_est_lines(f"• {row[2]}") for row in eff_data)
-        space_tight  = main_lines >= avail_lines
+        avail_lines = max(1, (y_max - 4 - y) // lh)
+        total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
 
-        FI = (self.FF, self.FS_S, "italic")   # italic font for reminder lines
-
-        for eff, ei, etxt in eff_data:
-            if not etxt or y + lh > y_max:
-                continue
-            # Always render the main content_text bullet
-            y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
-            # Optionally render reminder_text on the next line if space allows
-            if not space_tight:
+        if total_lines > avail_lines:
+            # Sort by complexity descending (use complexity_base as proxy)
+            sortable = sorted(range(len(eff_data)),
+                              key=lambda i: float(eff_data[i][0].get("complexity_base", 1.0)),
+                              reverse=True)
+            for i in sortable:
+                eff, ei, _ = eff_data[i]
                 rt = eff.get("reminder_text", "")
                 if rt:
                     for k, v in ei.get("vals", {}).items():
                         rt = rt.replace(f"{{{k}}}", str(v))
-                    if rt and y + (self.FS_S + 5) <= y_max:
-                        y = self._wrap(f"  ({rt})", x + 14, y, max_w - 14,
-                                       FI, "#aaaaaa", y_max)
+                    eff_data[i][2] = rt
+                total_lines = sum(_est_lines(f"• {row[2]}") for row in eff_data)
+                if total_lines <= avail_lines:
+                    break
+
+        for _, _, etxt in eff_data:
+            if etxt and y + lh <= y_max:
+                y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
 
         return y + 4
 
