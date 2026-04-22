@@ -1,0 +1,58 @@
+{
+    "cards": [
+        {
+            "name": "Wine Bottle",
+            "card_type": "Supplies",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0,
+            "equip_text": "",
+            "equip_cost_text": ""
+        },
+        {
+            "name": "Loaf of Bread",
+            "card_type": "Supplies",
+            "artwork": "",
+            "element_sources": [
+                "Fire"
+            ],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "rgdfg ",
+            "value": 0,
+            "equip_text": "",
+            "equip_cost_text": ""
+        },
+        {
+            "name": "Gold Coin",
+            "card_type": "Supplies",
+            "artwork": "",
+            "element_sources": [],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0,
+            "equip_text": "",
+            "equip_cost_text": "",
+            "anzahl": 1
+        },
+        {
+            "name": "Wismut Crystal",
+            "card_type": "Supplies",
+            "artwork": "",
+            "element_sources": [
+                "Metal"
+            ],
+            "object_type": [],
+            "materials": [],
+            "effect_text": "",
+            "value": 0,
+            "equip_text": "",
+            "equip_cost_text": "",
+            "anzahl": 1
+        }
+    ]
+}

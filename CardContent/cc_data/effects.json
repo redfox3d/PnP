@@ -1,6 +1,48 @@
 {
   "Effect": [
     {
+      "id": "Damage",
+      "content_text": "Damage {X}",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "element_weights": {
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 0.0,
+        "Blood": 0.0,
+        "Quinta": 0.0
+      },
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Damage.X",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 0.28,
+          "cv2": 0.0,
+          "cv3": 0.0,
+          "conditions": {
+            "var_min": 1.0,
+            "var_max": 30.0
+          },
+          "dice_only": true
+        }
+      },
+      "options": {},
+      "sigil": "{X}",
+      "primary_types": [
+        "Target Enemy"
+      ],
+      "weights_open": true,
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "damage"
+      ]
+    },
+    {
       "id": "Draw",
       "content_text": "Draw {X} Cards",
       "reminder_text": "",
@@ -38,7 +80,12 @@
         "Non Targeting",
         "Target Ally"
       ],
-      "weights_open": true
+      "weights_open": true,
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
+      ]
     },
     {
       "id": "Use_Weapon",
@@ -64,7 +111,12 @@
         "Target Enemy"
       ],
       "weights_open": true,
-      "cv": 2.0
+      "cv": 2.0,
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "damage"
+      ]
     },
     {
       "id": "Pulverize",
@@ -115,28 +167,23 @@
       "allowed_elements": [
         "Metal",
         "Quinta"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "resource"
       ]
     },
     {
-      "id": "Grow",
+      "id": "Forage",
       "content_text": "Forage {X}",
       "reminder_text": "Create {X} Herb Tokens of your Choice",
       "rarity": 10,
       "complexity_base": 1.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Quinta": 0.0,
-        "Potion": 0,
-        "Skills": 0
-      },
       "conditions": {},
       "variables": {
         "X": {
-          "id": "Grow.v0",
+          "id": "Forage.v0",
           "rarity": 10,
           "complexity": 1.0,
           "cv1": 1.0,
@@ -156,34 +203,13 @@
       "primary_types": [
         "Non Targeting"
       ],
-      "weights_open": true
-    },
-    {
-      "id": "Multicast",
-      "content_text": "Copy this cards play effect X Times",
-      "reminder_text": "",
-      "rarity": 10,
-      "complexity_base": 3.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Quinta": 0.0,
-        "Potion": 0,
-        "Skills": 0
-      },
-      "conditions": {
-        "allowed_box_types": [
-          "Play"
-        ]
-      },
-      "variables": {},
-      "options": {},
       "weights_open": true,
-      "sigil": "",
-      "card_type_weights": {}
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "resource"
+      ],
+      "element_weights": {}
     },
     {
       "id": "Precise",
@@ -218,6 +244,13 @@
       "cv": 2.0,
       "primary_types": [
         "Target Enemy"
+      ],
+      "role": "modifier",
+      "attaches_to": [
+        "Target Enemy"
+      ],
+      "requires_primary_tags": [
+        "damage"
       ]
     },
     {
@@ -234,7 +267,13 @@
       "primary_types": [
         "Non Targeting"
       ],
-      "weights_open": true
+      "weights_open": true,
+      "element_weights": {},
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
+      ]
     },
     {
       "id": "Loose_This_Card",
@@ -259,6 +298,11 @@
       "cv": -0.5,
       "primary_types": [
         "Non Targeting"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
       ]
     },
     {
@@ -284,6 +328,11 @@
       "cv": -0.2,
       "primary_types": [
         "Non Targeting"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
       ]
     },
     {
@@ -309,6 +358,11 @@
       "cv": -0.1,
       "primary_types": [
         "Non Targeting"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
       ]
     },
     {
@@ -365,6 +419,11 @@
       "sigil": "{X}",
       "primary_types": [
         "Target Enemy"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "damage"
       ]
     },
     {
@@ -399,6 +458,11 @@
       "primary_types": [
         "Non Targeting",
         "Target Ally"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "heal"
       ]
     },
     {
@@ -468,6 +532,11 @@
       "primary_types": [
         "Non Targeting",
         "Target Ally"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "heal"
       ]
     },
     {
@@ -512,6 +581,11 @@
       "primary_types": [
         "Non Targeting",
         "Target Ally"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "movement"
       ]
     },
     {
@@ -540,7 +614,12 @@
       "primary_types": [
         "Non Targeting"
       ],
-      "element_weights": {}
+      "element_weights": {},
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "movement"
+      ]
     },
     {
       "id": "Teleport",
@@ -577,6 +656,11 @@
       ],
       "primary_types": [
         "Target Neutral"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "movement"
       ]
     },
     {
@@ -603,7 +687,9 @@
           "cv1": 1,
           "cv2": 0,
           "cv3": 0,
-          "conditions": {}
+          "conditions": {
+            "var_min": 2.0
+          }
         }
       },
       "options": {},
@@ -611,6 +697,14 @@
       "weights_open": true,
       "primary_types": [
         "Target Neutral"
+      ],
+      "role": "modifier",
+      "attaches_to": [
+        "Target Enemy",
+        "Target Ally"
+      ],
+      "requires_primary_tags": [
+        "damage"
       ]
     },
     {
@@ -642,8 +736,10 @@
           "conditions": {
             "allowed_elements": [
               "Nature"
-            ]
-          }
+            ],
+            "var_min": 1.0
+          },
+          "dice_only": true
         }
       },
       "options": {},
@@ -651,6 +747,11 @@
       "card_type_weights": {},
       "primary_types": [
         "Target Enemy"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "damage"
       ]
     },
     {
@@ -687,6 +788,11 @@
       "cv": 1.0,
       "primary_types": [
         "Target Enemy"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "damage"
       ]
     },
     {
@@ -723,6 +829,11 @@
       "primary_types": [
         "Non Targeting",
         "Target Ally"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
       ]
     },
     {
@@ -749,6 +860,11 @@
       "primary_types": [
         "Non Targeting",
         "Target Ally"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
       ]
     },
     {
@@ -767,7 +883,9 @@
           "cv1": 1,
           "cv2": 0,
           "cv3": 0,
-          "conditions": {}
+          "conditions": {
+            "var_min": 1.0
+          }
         }
       },
       "options": {},
@@ -777,10 +895,15 @@
         "Fire",
         "Quinta"
       ],
-      "element_weights": {},
       "primary_types": [
         "Non Targeting"
-      ]
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "movement"
+      ],
+      "element_weights": {}
     },
     {
       "id": "Rummage",
@@ -798,7 +921,10 @@
           "cv1": 1,
           "cv2": 0,
           "cv3": 0,
-          "conditions": {}
+          "conditions": {
+            "var_min": 1.0,
+            "var_max": 10.0
+          }
         },
         "Y": {
           "id": "Rummage.v1",
@@ -807,15 +933,42 @@
           "cv1": 1,
           "cv2": 0,
           "cv3": 0,
-          "conditions": {}
+          "conditions": {
+            "var_min": 1.0
+          }
         }
       },
       "options": {},
-      "cv": 1.0,
-      "element_weights": {},
+      "cv": 0.0,
       "primary_types": [
         "Non Targeting",
         "Target Ally"
+      ],
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "card_action"
+      ],
+      "element_weights": {}
+    },
+    {
+      "id": "Throw",
+      "sigil": "",
+      "content_text": "Throw",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "cv": 1.0,
+      "role": "primary",
+      "attaches_to": [],
+      "tags": [
+        "damage"
+      ],
+      "primary_types": [
+        "Target Enemy"
       ]
     }
   ]

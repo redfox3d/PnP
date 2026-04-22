@@ -1,6 +1,14 @@
 {
   "count": 100,
   "element_mode": "equal",
+  "element_count_weights": {
+    "1": 55,
+    "2": 25,
+    "3": 12,
+    "4": 5,
+    "5": 2,
+    "6": 1
+  },
   "custom_element_weights": {
     "Fire": 10.0,
     "Metal": 10.0,
@@ -39,7 +47,7 @@
       "probability": 0.01
     },
     {
-      "block_type": "Lost",
+      "block_type": "Discard",
       "probability": 0.15
     }
   ],
@@ -50,6 +58,10 @@
     },
     {
       "container": "Damage",
+      "probability": 39.0
+    },
+    {
+      "container": "Move",
       "probability": 1.0
     },
     {
@@ -61,11 +73,7 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Grow",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Multicast",
+      "effect_id": "Forage",
       "probability": 1.0
     },
     {
@@ -81,18 +89,6 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Move",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Jump",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Teleport",
-      "probability": 1.0
-    },
-    {
       "effect_id": "Ranged",
       "probability": 1.0
     },
@@ -105,11 +101,11 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Dash",
+      "effect_id": "Rummage",
       "probability": 1.0
     },
     {
-      "effect_id": "Rummage",
+      "effect_id": "Throw",
       "probability": 1.0
     },
     {
@@ -135,6 +131,10 @@
     {
       "trigger_id": "Manual_Trigger",
       "probability": 1.0
+    },
+    {
+      "trigger_id": "Manual",
+      "probability": 1.0
     }
   ],
   "cost_rules": [
@@ -155,39 +155,55 @@
   "max_other_costs": 2,
   "max_effects": 3,
   "min_effects": 1,
+  "min_groups": 1,
+  "max_groups": 5,
+  "modifier_chance": 0.3,
+  "max_modifiers_per_group": 2,
+  "target_type_weights": {
+    "Target Enemy": 10,
+    "Target Ally": 8,
+    "Non Targeting": 10,
+    "Target Neutral": 3
+  },
+  "sub_sigil_chance": 0.1,
+  "sub_sigil_max_groups": 1,
+  "sub_sigil_cv_budget_frac": 0.3,
+  "manual_trigger_chance": 0.6,
   "condition_chance": 0.15,
-  "choose_n_chance": 0.1,
+  "choose_n_chance": 0.4,
   "sigil_constraints": {
-    "Lost": {
-      "forbidden": [
-        "Loose_This_Card"
-      ],
-      "required": []
-    },
     "Play": {
       "forbidden": [
         "Discard_This_Card"
-      ],
-      "required": []
+      ]
     },
-    "Hand": {
-      "forbidden": [],
-      "required": [
-        "Loose_This_Card",
-        "Forget_This_Card",
-        "Discard_This_Card",
-        "Recycle_This_Card"
+    "Discard": {
+      "forbidden": [
+        "Loose_This_Card"
       ]
     }
   },
   "incompatible_pairs": [],
   "min_blocks": 1,
   "mana_main_count": 2,
-  "sigil_rules": {},
+  "sigil_rules": {
+    "Hand": [
+      {
+        "container": "Change_Card_Position",
+        "probability": 1.0,
+        "min": 1,
+        "max": 1
+      }
+    ]
+  },
   "profile_name": "Spells",
   "card_type_output": "Spells",
   "generic_mana_only": false,
   "generic_mana_cv": null,
   "recipe_type_mode": "equal",
-  "recipe_type_weights": {}
+  "recipe_type_weights": {},
+  "sub_sigil_group_chance": 0.15,
+  "sub_sigil_global_chance": 0.2,
+  "sub_sigil_target_enemy_manual_chance": 0.8,
+  "sub_sigil_target_ally_chance": 0.1
 }

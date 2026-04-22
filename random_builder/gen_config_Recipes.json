@@ -6,145 +6,44 @@
   "count": 100,
   "element_mode": "equal",
   "custom_element_weights": {},
-  "recipe_type_mode": "equal",
+  "recipe_type_mode": "custom",
   "recipe_type_weights": {
     "Potions": 10.0,
     "Phials": 10.0,
-    "Tinctures": 10.0
+    "Tinctures": 0.0
   },
-  "block_rules": [
-    {
-      "block_type": "Play",
-      "probability": 0.95
-    },
-    {
-      "block_type": "Hand",
-      "probability": 0.1
-    },
-    {
-      "block_type": "Lost",
-      "probability": 0.15
-    }
-  ],
-  "content_rules": [
-    {
-      "container": "Change_Card_Position",
-      "probability": 1.0
-    },
-    {
-      "container": "Damage",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Draw",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Pulverize",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Grow",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Multicast",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Precise",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Cleanse",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Heal",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Move",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Jump",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Teleport",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Ranged",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Poision",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Kick",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Scry",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Shuffle",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Dash",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Rummage",
-      "probability": 1.0
-    },
-    {
-      "cost_id": "Mana",
-      "probability": 1.0
-    },
-    {
-      "cost_id": "Change_This_Card_Position_Play",
-      "probability": 1.0
-    },
-    {
-      "cost_id": "Move_Cards",
-      "probability": 1.0
-    },
-    {
-      "trigger_id": "Trig_Card_Changes_Position",
-      "probability": 1.0
-    },
-    {
-      "trigger_id": "Trig_Movement",
-      "probability": 1.0
-    },
-    {
-      "trigger_id": "Play_Skill",
-      "probability": 1.0
-    },
-    {
-      "trigger_id": "Manual_Trigger",
-      "probability": 1.0
-    }
-  ],
+  "block_rules": [],
+  "content_rules": [],
   "cost_rules": [],
-  "cv_target": 3.0,
-  "cv_per_box_max": 3.0,
-  "mana_chance": 0.95,
-  "mana_main_count": 2,
-  "mana_max_count": 6,
-  "max_other_costs": 1,
-  "max_effects": 3,
+  "cv_target": 2.0,
+  "cv_per_box_max": 999.0,
+  "mana_chance": 0.0,
+  "mana_main_count": 0,
+  "mana_max_count": 0,
+  "max_other_costs": 0,
+  "max_effects": -1,
   "min_effects": 0,
   "min_blocks": 1,
-  "condition_chance": 0.15,
-  "choose_n_chance": 0.1,
+  "condition_chance": 0.0,
+  "choose_n_chance": 0.0,
   "sigil_rules": {},
   "incompatible_pairs": [],
-  "cv_card_min": 0.0
+  "cv_card_min": 1.0,
+  "ingredient_max": 6,
+  "ingredient_avg": 2.4,
+  "ingredient_cv": 3,
+  "min_groups": 1,
+  "max_groups": 3,
+  "modifier_chance": 0.3,
+  "max_modifiers_per_group": 2,
+  "target_type_weights": {
+    "Target Enemy": 10,
+    "Target Ally": 8,
+    "Non Targeting": 10,
+    "Target Neutral": 3
+  },
+  "sub_sigil_chance": 0.1,
+  "sub_sigil_max_groups": 1,
+  "sub_sigil_cv_budget_frac": 0.3,
+  "sigil_constraints": {}
 }

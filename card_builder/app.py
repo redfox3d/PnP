@@ -6,7 +6,7 @@ import copy
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from .constants import CARD_W, CARD_H, BOX_TYPES
+from .constants import CARD_W, CARD_H, BOX_TYPES, ELEMENTS, ELEMENT_ICONS
 from .models import (
     empty_card, empty_box, load_cards, save_cards,
     ALL_CARD_TYPES, CARD_TYPE_PARENT,
@@ -37,6 +37,7 @@ class CardBuilder:
 
         self._current_editor   = None
         self._current_renderer = None
+        self._lb_index_map: list = []
 
         self._build_ui()
         self._refresh_card_list()
@@ -90,15 +91,84 @@ class CardBuilder:
                                    font=("Arial", 7, "italic"))
         self._cat_label.pack()
 
-        tk.Label(left, text="Cards", bg="#111", fg="#aaa",
-                 font=("Arial", 9, "bold")).pack(pady=(4, 2))
+        # Sort controls
+        sort_row = tk.Frame(left, bg="#111")
+        sort_row.pack(fill="x", padx=4, pady=(4, 0))
+        tk.Label(sort_row, text="Sort:", bg="#111", fg="#666",
+                 font=("Arial", 7)).pack(side="left")
+        tk.Button(sort_row, text="⬇ Cmplx",
+                  command=lambda: self._sort_cards("complexity"),
+                  font=("Arial", 7), bg="#222", fg="#aaa",
+                  relief="flat", padx=3).pack(side="left", padx=1)
+        tk.Button(sort_row, text="⬇ CV",
+                  command=lambda: self._sort_cards("cv"),
+                  font=("Arial", 7), bg="#222", fg="#aaa",
+                  relief="flat", padx=3).pack(side="left", padx=1)
+        tk.Button(sort_row, text="🔤 Name",
+                  command=lambda: self._sort_cards("name"),
+                  font=("Arial", 7), bg="#222", fg="#aaa",
+                  relief="flat", padx=3).pack(side="left", padx=1)
+
+        # Element filter
+        flt_row = tk.Frame(left, bg="#111")
+        flt_row.pack(fill="x", padx=4, pady=(2, 0))
+        tk.Label(flt_row, text="Filter:", bg="#111", fg="#666",
+                 font=("Arial", 7)).pack(side="left")
+        self._elem_filter_var = tk.StringVar(value="All")
+        _filter_values = ["All"] + ELEMENTS
+        flt_cb = ttk.Combobox(flt_row, textvariable=self._elem_filter_var,
+                              values=_filter_values, state="readonly",
+                              width=9, font=("Arial", 7))
+        flt_cb.pack(side="left", padx=2)
+        flt_cb.bind("<<ComboboxSelected>>", lambda _: self._refresh_card_list())
+
+        # Effect-ID filter
+        eff_row = tk.Frame(left, bg="#111")
+        eff_row.pack(fill="x", padx=4, pady=(2, 0))
+        tk.Label(eff_row, text="Effect:", bg="#111", fg="#666",
+                 font=("Arial", 7)).pack(side="left")
+        self._effect_filter_var = tk.StringVar(value="")
+        eff_entry = tk.Entry(eff_row, textvariable=self._effect_filter_var,
+                             width=12, font=("Arial", 7), bg="#222", fg="#ccc",
+                             insertbackground="white", relief="flat")
+        eff_entry.pack(side="left", padx=2)
+        eff_entry.bind("<KeyRelease>", lambda _: self._refresh_card_list())
+
+        # Card count label + listbox
+        self._cards_count_label = tk.Label(left, text="Cards: 0", bg="#111",
+                                           fg="#aaa", font=("Arial", 9, "bold"))
+        self._cards_count_label.pack(pady=(4, 2))
         self._card_listbox = tk.Listbox(
             left, bg="#1a1a1a", fg="white",
             selectbackground="#1a6e3c",
-            font=("Arial", 8), activestyle="none",
+            font=("Consolas", 8), activestyle="none",
             relief="flat", bd=0)
         self._card_listbox.pack(fill="both", expand=True, padx=4, pady=4)
         self._card_listbox.bind("<<ListboxSelect>>", self._load_card_from_list)
+        # maps listbox index → cards index (after filter)
+        self._lb_index_map: list = []
+
+        # Count spinbox for Supplies / Equipment (hidden for other types)
+        self._count_row = tk.Frame(left, bg="#111")
+        tk.Label(self._count_row, text="Anzahl:", bg="#111", fg="#aaa",
+                 font=("Arial", 8)).pack(side="left", padx=(4, 2))
+        self._count_var = tk.StringVar(value="1")
+        self._count_spinbox = tk.Spinbox(
+            self._count_row, from_=1, to=99, textvariable=self._count_var,
+            width=4, font=("Arial", 8), bg="#222", fg="white",
+            buttonbackground="#333")
+        self._count_spinbox.pack(side="left")
+        self._count_var.trace_add("write", self._on_count_changed)
+        if self.current_type in ("Supplies", "Equipment"):
+            self._count_row.pack(fill="x", padx=4, pady=(0, 4))
+
+    def _on_count_changed(self, *_) -> None:
+        if self.current_type not in ("Supplies", "Equipment"):
+            return
+        try:
+            self.current_card["_count"] = int(self._count_var.get())
+        except (ValueError, KeyError):
+            pass
 
     def _on_type_changed(self, _=None) -> None:
         self.current_type = self._type_var.get()
@@ -106,6 +176,11 @@ class CardBuilder:
         self.current_idx  = None
         # Create a fresh blank card WITHOUT autosaving it
         self.current_card = empty_card(self.current_type)
+        # Show/hide count row
+        if self.current_type in ("Supplies", "Equipment"):
+            self._count_row.pack(fill="x", padx=4, pady=(0, 4))
+        else:
+            self._count_row.pack_forget()
         self._refresh_card_list()
         self._load_editor()
         # Render preview but do NOT autosave
@@ -183,21 +258,128 @@ class CardBuilder:
         return self.cards_by_type[self.current_type]
 
     def _refresh_card_list(self) -> None:
-        lb = self._card_listbox
+        lb  = self._card_listbox
         lb.delete(0, "end")
-        for c in self.cards:
-            lb.insert("end", c.get("name", "?"))
-        if self.current_idx is not None:
+        self._lb_index_map = []
+
+        flt = getattr(self, "_elem_filter_var", None)
+        elem_filter = flt.get() if flt else "All"
+
+        eff_flt = getattr(self, "_effect_filter_var", None)
+        eff_filter = eff_flt.get().strip().lower() if eff_flt else ""
+
+        for real_idx, c in enumerate(self.cards):
+            # ── Element filter ────────────────────────────────────────────────
+            if elem_filter != "All":
+                card_elems = self._card_elements(c)
+                if elem_filter not in card_elems:
+                    continue
+
+            # ── Effect ID filter ──────────────────────────────────────────────
+            if eff_filter:
+                found = False
+                for blk in c.get("blocks", []):
+                    for ab in blk.get("abilities", []):
+                        for grp in ab.get("effect_groups", []):
+                            for eff in (grp.get("effects") or grp.get("primaries") or []):
+                                if eff_filter in eff.get("effect_id", "").lower():
+                                    found = True
+                            for mod in grp.get("modifiers", []):
+                                if eff_filter in mod.get("effect_id", "").lower():
+                                    found = True
+                if not found:
+                    continue
+
+            # ── Label ────────────────────────────────────────────────────────
+            cmplx = c.get("_complexity")
+            cv    = c.get("_cv")
+
+            if self.current_type in ("Supplies", "Equipment"):
+                # Show name + count for item types
+                name  = c.get("name", "?")
+                count = c.get("_count", 1)
+                label = f"{name}  x{count}"
+            else:
+                # Element icons for skill types
+                icons = "".join(ELEMENT_ICONS.get(e, "") for e in self._card_elements(c))
+                label_parts = []
+                if icons:
+                    label_parts.append(icons)
+                else:
+                    label_parts.append(c.get("name", "?"))
+                if cv is not None:
+                    label_parts.append(f"CV={cv:.2g}")
+                if cmplx is not None:
+                    label_parts.append(f"cx={cmplx:.1f}")
+                label = "  ".join(label_parts)
+
+            lb.insert("end", label)
+            self._lb_index_map.append(real_idx)
+
+        # Update count label
+        total   = len(self.cards)
+        visible = len(self._lb_index_map)
+        if hasattr(self, "_cards_count_label"):
+            txt = f"Cards: {visible}" if visible == total else f"Cards: {visible}/{total}"
+            self._cards_count_label.config(text=txt)
+
+        # Re-select current card if visible
+        if self.current_idx is not None and self.current_idx in self._lb_index_map:
+            lb_pos = self._lb_index_map.index(self.current_idx)
             lb.selection_clear(0, "end")
-            lb.selection_set(self.current_idx)
+            lb.selection_set(lb_pos)
+
+    @staticmethod
+    def _card_elements(card: dict) -> list:
+        """Return the card's elements list (Spells) or element_sources (Loot), else []."""
+        ct = card.get("card_type", "")
+        if ct == "Spells":
+            els = card.get("elements")
+            if els is None:
+                old = card.get("element")
+                return [old] if old else []
+            return list(els)
+        if ct in ("Supplies", "Equipment"):
+            return list(card.get("element_sources", []))
+        return []
+
+    def _sort_cards(self, key: str = "complexity") -> None:
+        """Sort the current card list and persist the new order."""
+        current = self.current_card
+        if key == "complexity":
+            self.cards.sort(key=lambda c: c.get("_complexity", 0), reverse=True)
+        elif key == "cv":
+            self.cards.sort(key=lambda c: c.get("_cv", 0), reverse=True)
+        elif key == "name":
+            self.cards.sort(key=lambda c: c.get("name", "").lower())
+        # Re-find index of the currently displayed card
+        if current is not None:
+            try:
+                self.current_idx = self.cards.index(current)
+            except ValueError:
+                # deepcopy – compare by name fallback
+                name = current.get("name")
+                self.current_idx = next(
+                    (i for i, c in enumerate(self.cards) if c.get("name") == name),
+                    None)
+        self._refresh_card_list()
+        try:
+            save_cards(self.cards, self.current_type)
+        except Exception:
+            pass
 
     def _load_card_from_list(self, _=None) -> None:
         sel = self._card_listbox.curselection()
         if not sel:
             return
-        idx = sel[0]
+        lb_pos = sel[0]
+        # Map listbox position → real cards index (respects filter)
+        idx = self._lb_index_map[lb_pos] if lb_pos < len(self._lb_index_map) else lb_pos
         self.current_idx  = idx
         self.current_card = copy.deepcopy(self.cards[idx])
+        # Sync count spinbox for Supplies/Equipment
+        if self.current_type in ("Supplies", "Equipment") and hasattr(self, "_count_var"):
+            self._count_var.set(str(self.current_card.get("_count", 1)))
         self._load_editor()
         self._render_only()
 

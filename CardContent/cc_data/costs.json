@@ -87,7 +87,8 @@
         }
       },
       "sigil": "[Generic, \\Elements]",
-      "card_type_weights": {}
+      "card_type_weights": {},
+      "element_weights": {}
     },
     {
       "id": "Change_This_Card_Position_Play",

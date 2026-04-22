@@ -411,15 +411,22 @@ class BaseCardEditor(tk.Frame):
                  bg="#2a2a2a", fg="white", insertbackground="white",
                  font=("Arial", 9)).pack(side="left", padx=(2, 12))
 
-        # Element selector for Spells
+        # Element selector for Spells (multi-element)
         if ct == "Spells":
-            tk.Label(row, text="Element:", bg=self.BG, fg="#ccc",
+            tk.Label(row, text="Elements:", bg=self.BG, fg="#ccc",
                      font=("Arial", 9)).pack(side="left")
-            self._elem_var = tk.StringVar(value=self.card.get("element", "Fire"))
-            self._elem_var.trace_add("write", self._elem_changed)
-            ttk.Combobox(row, textvariable=self._elem_var,
-                         values=ELEMENTS, width=10, state="readonly").pack(
-                side="left", padx=2)
+            # Normalise: handle both old "element" string and new "elements" list
+            _init_els = self.card.get("elements")
+            if _init_els is None:
+                _old = self.card.get("element", "Fire")
+                _init_els = [_old] if _old else ["Fire"]
+                self.card["elements"] = _init_els
+            self._el_sel = TagSelector(
+                row, values=ELEMENTS,
+                selected=_init_els,
+                on_change=self._elem_changed,
+                max_items=6, bg=self.BG)
+            self._el_sel.pack(side="left", padx=2)
 
         tk.Label(row, text=f"[{cat} › {ct}]", bg=self.BG, fg="#555",
                  font=("Arial", 8, "italic")).pack(side="left", padx=8)
@@ -442,7 +449,8 @@ class BaseCardEditor(tk.Frame):
         if self.on_change: self.on_change()
 
     def _elem_changed(self, *_):
-        self.card["element"] = self._elem_var.get()
+        if hasattr(self, "_el_sel"):
+            self.card["elements"] = self._el_sel.get()
         if self.on_change: self.on_change()
 
     def _art_changed(self):

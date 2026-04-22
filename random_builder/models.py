@@ -62,13 +62,29 @@ _DEFAULT_GEN_CONFIG = {
     "mana_max_count":  6,    # hard cap on mana-cost entries
     # ── Other costs ────────────────────────────────────────────────────────────
     "max_other_costs": 1,    # max number of non-mana costs per ability
-    # ── Effects ────────────────────────────────────────────────────────────────
-    "max_effects":    -1,    # max effects per ability  (-1 = no limit)
-    "min_effects":     0,    # min effects per ability  (0 = no minimum)
+    # ── Effects / Groups ──────────────────────────────────────────────────────
+    "max_effects":    -1,    # LEGACY: max effects per ability  (-1 = no limit)
+    "min_effects":     0,    # LEGACY: min effects per ability  (0 = no minimum)
+    "min_groups":      1,    # min effect groups per ability
+    "max_groups":      3,    # max effect groups per ability
     "min_blocks":      1,    # min sigils per card      (1 = no minimum extra)
+    # ── Modifiers ──────────────────────────────────────────────────────────────
+    "modifier_chance":          0.3,   # probability a group gains modifiers
+    "max_modifiers_per_group":  2,     # hard cap on modifiers within one group
+    # ── Target type weights ────────────────────────────────────────────────────
+    "target_type_weights": {
+        "Target Enemy":   10,
+        "Target Ally":     8,
+        "Non Targeting":  10,
+        "Target Neutral":  3,
+    },
     # ── Conditions / Choose N ──────────────────────────────────────────────────
     "condition_chance": 0.15,  # probability a sigil gets a condition
     "choose_n_chance":  0.10,  # probability a sigil uses "choose N of effects"
+    # ── Sub-Sigils ─────────────────────────────────────────────────────────────
+    "sub_sigil_chance":          0.10,  # max 10% of cards get a sub-sigil
+    "sub_sigil_max_groups":      1,     # max effect groups in a sub-sigil
+    "sub_sigil_cv_budget_frac":  0.3,   # fraction of remaining CV budget for sub-sigil
     # ── Sigil Constraints ──────────────────────────────────────────────────────
     # sigil_rules: {block_type: [{container, probability, min, max}, ...]}
     "sigil_rules": {},
@@ -135,6 +151,12 @@ def load_gen_config(profile: str = "Spells") -> dict:
         # Fill in any missing keys from profile-specific defaults
         for k, v in base.items():
             cfg.setdefault(k, v)
+        # Backward compat: old min_effects/max_effects → min_groups/max_groups
+        if "min_groups" not in cfg and "min_effects" in cfg:
+            cfg["min_groups"] = cfg["min_effects"]
+        if "max_groups" not in cfg and "max_effects" in cfg:
+            me = cfg["max_effects"]
+            cfg["max_groups"] = me if me > 0 else 3
         return cfg
     except Exception:
         return base

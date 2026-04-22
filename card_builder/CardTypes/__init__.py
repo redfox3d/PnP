@@ -8,19 +8,21 @@ Usage:
     RendererClass = get_renderer(card_type)
 """
 
-from card_builder.CardTypes.spell_card   import SpellCardEditor,   SpellCardRenderer
-from card_builder.CardTypes.loot_card    import SuppliesCardEditor,    LootCardRenderer
-from card_builder.CardTypes.loot_card    import EquipmentCardEditor
-from card_builder.CardTypes.alchemy_card import AlchemyCardEditor, AlchemyCardRenderer
-from card_builder.CardTypes.recipe_card  import RecipeCardEditor,  RecipeCardRenderer
+from card_builder.CardTypes.spell_card       import SpellCardEditor,     SpellCardRenderer
+from card_builder.CardTypes.loot_editor      import LootCardEditor
+from card_builder.CardTypes.equipment_editor import EquipmentCardEditor, SuppliesCardEditor
+from card_builder.CardTypes.loot_renderer    import LootCardRenderer
+# AlchemyCard kept for data migration only (not in card type dropdown)
+from card_builder.CardTypes.alchemy_card     import AlchemyCardEditor,   AlchemyCardRenderer
+from card_builder.CardTypes.recipe_card      import RecipeCardEditor,    RecipeCardRenderer
 
 
 _EDITORS = {
     "Spells":     SpellCardEditor,
     "Prowess":    SpellCardEditor,
+    "Loot":       LootCardEditor,
     "Supplies":   SuppliesCardEditor,
     "Equipment":  EquipmentCardEditor,
-    "Alchemy":    AlchemyCardEditor,
     "Potions":    RecipeCardEditor,
     "Phials":     RecipeCardEditor,
     "Tinctures":  RecipeCardEditor,
@@ -29,9 +31,9 @@ _EDITORS = {
 _RENDERERS = {
     "Spells":     SpellCardRenderer,
     "Prowess":    SpellCardRenderer,
+    "Loot":       LootCardRenderer,
     "Supplies":   LootCardRenderer,
     "Equipment":  LootCardRenderer,
-    "Alchemy":    AlchemyCardRenderer,
     "Potions":    RecipeCardRenderer,
     "Phials":     RecipeCardRenderer,
     "Tinctures":  RecipeCardRenderer,

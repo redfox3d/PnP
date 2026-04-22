@@ -1,7 +1,7 @@
 """
 CardContent/effect_type_panel.py – Panel for assigning primary effect types.
 
-Columns (grid-aligned):  Effekt ID  |  Non Targeting  |  Target Enemy  |  Target Ally  |  Target Neutral  |  (sep)  |  Tränke  |  Skills  |  Loot
+Columns:  Effekt ID  |  Non Targeting  |  Target Enemy  |  Target Ally  |  Target Neutral  |  |  Referencable
 """
 
 import json
@@ -32,12 +32,24 @@ _COLORS = {
 # Column widths in pixels
 _COL_ID    = 160
 _COL_TYPE  = 90
+_COL_SEP   = 10   # thin spacer column
+_COL_REF   = 90
+_COL_MOD   = 90
+
+# Column indices
+_N_TYPE_COLS = len(PRIMARY_TYPES)   # 4
+_COL_SEP_IDX = _N_TYPE_COLS + 1     # 5
+_COL_REF_IDX = _N_TYPE_COLS + 2     # 6
+_COL_MOD_IDX = _N_TYPE_COLS + 3     # 7
 
 
 def _apply_cols(frame: tk.Frame):
     frame.columnconfigure(0, minsize=_COL_ID)
-    for i in range(1, len(PRIMARY_TYPES) + 1):
+    for i in range(1, _N_TYPE_COLS + 1):
         frame.columnconfigure(i, minsize=_COL_TYPE)
+    frame.columnconfigure(_COL_SEP_IDX, minsize=_COL_SEP)
+    frame.columnconfigure(_COL_REF_IDX, minsize=_COL_REF)
+    frame.columnconfigure(_COL_MOD_IDX, minsize=_COL_MOD)
 
 
 class EffectTypePanel(tk.Toplevel):
@@ -48,8 +60,8 @@ class EffectTypePanel(tk.Toplevel):
         self.on_save = on_save
         self.title("Effekt Primärtypen")
         self.configure(bg="#1a1a1a")
-        wm.restore(self, "effect_type_panel", "760x500")
-        self._row_vars: list[tuple[dict, dict, dict]] = []
+        wm.restore(self, "effect_type_panel", "880x500")
+        self._row_vars: list = []   # [(item, type_vars, ref_var, mod_var), ...]
         self._build()
 
     # ── Build ──────────────────────────────────────────────────────────────────
@@ -102,6 +114,25 @@ class EffectTypePanel(tk.Toplevel):
                      justify="center").grid(
                 row=0, column=col, sticky="ew", padx=2, pady=4)
 
+        # Thin separator column (empty label)
+        tk.Label(hdr, text="", bg="#252525", width=1).grid(
+            row=0, column=_COL_SEP_IDX)
+        # Vertical divider line drawn as a thin frame
+        tk.Frame(hdr, bg="#444", width=1).grid(
+            row=0, column=_COL_SEP_IDX, sticky="ns")
+
+        # Referencable header
+        tk.Label(hdr, text="Refer-\nencable", bg="#252525", fg="#cc88ff",
+                 font=("Arial", 8, "bold"), anchor="center",
+                 justify="center").grid(
+            row=0, column=_COL_REF_IDX, sticky="ew", padx=2, pady=4)
+
+        # Modifier header
+        tk.Label(hdr, text="Modifier", bg="#252525", fg="#ffaa44",
+                 font=("Arial", 8, "bold"), anchor="center",
+                 justify="center").grid(
+            row=0, column=_COL_MOD_IDX, sticky="ew", padx=2, pady=4)
+
         ttk.Separator(parent, orient="horizontal").pack(fill="x")
 
         # ── Data rows ─────────────────────────────────────────────────────────
@@ -119,7 +150,7 @@ class EffectTypePanel(tk.Toplevel):
                 row=0, column=0, sticky="w", padx=(8, 4), pady=3)
 
             saved_types = item.get("primary_types", [])
-            type_vars:  dict[str, tk.BooleanVar] = {}
+            type_vars: dict[str, tk.BooleanVar] = {}
 
             for col, pt in enumerate(PRIMARY_TYPES, start=1):
                 v = tk.BooleanVar(value=(pt in saved_types))
@@ -131,17 +162,51 @@ class EffectTypePanel(tk.Toplevel):
                     fg=_COLORS[pt],
                 ).grid(row=0, column=col, sticky="ew", padx=2)
 
-            self._row_vars.append((item, type_vars))
+            # Separator cell
+            tk.Frame(row_f, bg="#333", width=1).grid(
+                row=0, column=_COL_SEP_IDX, sticky="ns", padx=4)
+
+            # Referencable checkbox
+            ref_var = tk.BooleanVar(value=bool(item.get("referencable", False)))
+            tk.Checkbutton(
+                row_f, variable=ref_var,
+                bg=bg, activebackground=bg,
+                selectcolor="#2a2a2a",
+                fg="#cc88ff",
+            ).grid(row=0, column=_COL_REF_IDX, sticky="ew", padx=2)
+
+            # Modifier checkbox
+            mod_var = tk.BooleanVar(value=(item.get("role") == "modifier"))
+            tk.Checkbutton(
+                row_f, variable=mod_var,
+                bg=bg, activebackground=bg,
+                selectcolor="#2a2a2a",
+                fg="#ffaa44",
+            ).grid(row=0, column=_COL_MOD_IDX, sticky="ew", padx=2)
+
+            self._row_vars.append((item, type_vars, ref_var, mod_var))
 
     # ── Save ───────────────────────────────────────────────────────────────────
 
     def _save(self):
-        for item, type_vars in self._row_vars:
+        for item, type_vars, ref_var, mod_var in self._row_vars:
             types = [pt for pt, v in type_vars.items() if v.get()]
             if types:
                 item["primary_types"] = types
             else:
                 item.pop("primary_types", None)
+
+            if ref_var.get():
+                item["referencable"] = True
+            else:
+                item.pop("referencable", None)   # omit when False to keep JSON clean
+
+            if mod_var.get():
+                item["role"] = "modifier"
+            else:
+                if item.get("role") == "modifier":
+                    item.pop("role", None)   # revert to primary (omit key)
+
             item.pop("cv_multiply", None)   # remove legacy field if present
             item.pop("allowed_in", None)    # removed feature
 

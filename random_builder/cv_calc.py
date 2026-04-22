@@ -68,13 +68,11 @@ def cv_content_item(item: dict, vals: dict, opt_vals: dict) -> float:
     return total
 
 
-# ── Effect CV grouping ────────────────────────────────────────────────────────
+# ── Effect CV (legacy flat list) ──────────────────────────────────────────────
 
 def _effects_cv(effects: list, effects_lookup: dict) -> float:
     """
-    Compute the total CV of a list of ability effects.
-    primary_types on each effect item are informational (for generation grouping);
-    CV is simply summed across all effects.
+    Compute the total CV of a flat list of ability effects (legacy format).
     """
     total = 0.0
     for eff in effects:
@@ -84,6 +82,79 @@ def _effects_cv(effects: list, effects_lookup: dict) -> float:
     return total
 
 
+# ── Effect Group CV ──────────────────────────────────────────────────────────
+
+def cv_effect_group(group: dict, effects_lookup: dict) -> float:
+    """
+    CV of one effect group = sum(primaries CVs) + sum(modifier CVs).
+    Backward compat: falls back to 'primary' if 'primaries' not present.
+    Also handles legacy 'effects' key for old data.
+    """
+    total = 0.0
+    # Check 'effects' first (new canonical key), then 'primaries', then old 'primary'
+    effs = group.get("effects")
+    if effs is None:
+        effs = group.get("primaries")
+    if effs is None:
+        p = group.get("primary", {})
+        effs = [p] if p.get("effect_id") else []
+    for primary in effs:
+        item = effects_lookup.get(primary.get("effect_id", ""))
+        if item:
+            total += cv_content_item(item, primary.get("vals", {}),
+                                     primary.get("opt_vals", {}))
+    for mod in group.get("modifiers", []):
+        item = effects_lookup.get(mod.get("effect_id", ""))
+        if item:
+            total += cv_content_item(item, mod.get("vals", {}),
+                                     mod.get("opt_vals", {}))
+    return total
+
+
+def _effect_groups_cv(groups: list, effects_lookup: dict) -> float:
+    """Sum CV across all effect groups."""
+    return sum(cv_effect_group(g, effects_lookup) for g in groups)
+
+
+# ── Choose Y of X CV ─────────────────────────────────────────────────────────
+
+def cv_choose(group_cvs: list, choose_n: int, choose_repeat: bool = False) -> float:
+    """
+    CV when player picks choose_n groups from len(group_cvs) available.
+    Placeholder: best choose_n groups summed.
+    Real formula TBD – will involve expected value / max calculations.
+    """
+    if not group_cvs or not choose_n:
+        return sum(group_cvs)
+    sorted_cvs = sorted(group_cvs, reverse=True)
+    if choose_repeat:
+        # Can pick same group multiple times → best group × choose_n
+        return sorted_cvs[0] * choose_n if sorted_cvs else 0.0
+    return sum(sorted_cvs[:choose_n])
+
+
+# ── Sub-Sigil CV ─────────────────────────────────────────────────────────────
+
+def cv_sub_sigil(sub_sigil: dict, effects_lookup: dict,
+                 costs_lookup: dict) -> float:
+    """
+    CV of a sub-sigil = sum(group CVs) - sum(cost CVs).
+    Sub-sigils are optional (player chooses to pay), so their CV contribution
+    is additive to the parent ability. Exact formula TBD.
+    """
+    if not sub_sigil:
+        return 0.0
+    eff_cv = _effect_groups_cv(sub_sigil.get("effect_groups", []),
+                               effects_lookup)
+    cost_cv = 0.0
+    for cost in sub_sigil.get("costs", []):
+        item = costs_lookup.get(cost.get("cost_id", ""))
+        if item:
+            cost_cv += cv_content_item(item, cost.get("vals", {}),
+                                       cost.get("opt_vals", {}))
+    return max(0.0, eff_cv - cost_cv)
+
+
 # ── Ability / box CV ──────────────────────────────────────────────────────────
 
 def cv_ability(ability: dict,
@@ -91,8 +162,24 @@ def cv_ability(ability: dict,
                costs_lookup: dict,
                condition_mult: float = 1.0,
                trigger_mult: float = 1.0) -> float:
-    """CV of a single ability (one box entry)."""
-    cv_eff = _effects_cv(ability.get("effects", []), effects_lookup)
+    """CV of a single ability (one box entry). Supports both old and new format."""
+    # New format: effect_groups
+    if "effect_groups" in ability and ability["effect_groups"]:
+        groups = ability["effect_groups"]
+        group_cvs = [cv_effect_group(g, effects_lookup) for g in groups]
+
+        choose_n = ability.get("choose_n")
+        if choose_n and len(groups) > 1:
+            cv_eff = cv_choose(group_cvs, choose_n,
+                               ability.get("choose_repeat", False))
+        else:
+            cv_eff = sum(group_cvs)
+
+        cv_eff += cv_sub_sigil(ability.get("sub_sigil"), effects_lookup,
+                               costs_lookup)
+    else:
+        # Legacy flat effects list
+        cv_eff = _effects_cv(ability.get("effects", []), effects_lookup)
 
     cv_cost = 0.0
     for cost in ability.get("costs", []):
@@ -145,19 +232,57 @@ def complexity_content_item(item: dict) -> float:
     return total
 
 
+def _complexity_effects_from_groups(groups: list, effects_lookup: dict) -> float:
+    """Complexity from effect groups (primary + modifiers)."""
+    total = 0.0
+    for g in groups:
+        primary = g.get("primary", {})
+        item = effects_lookup.get(primary.get("effect_id", ""))
+        if item:
+            total += complexity_content_item(item)
+        for mod in g.get("modifiers", []):
+            item = effects_lookup.get(mod.get("effect_id", ""))
+            if item:
+                total += complexity_content_item(item)
+    return total
+
+
 def complexity_card(card: dict, effects_lookup: dict, costs_lookup: dict) -> float:
-    """Total complexity of a card (sum over all effects and costs)."""
+    """Total complexity of a card.
+
+    Multi-element bonus:  raw * (1 + (N_elements - 1) * 0.1)
+    """
     total = 0.0
     for block in card.get("blocks", []):
         for ability in block.get("abilities", []):
-            for eff in ability.get("effects", []):
-                item = effects_lookup.get(eff.get("effect_id", ""))
-                if item:
-                    total += complexity_content_item(item)
+            # New format
+            if "effect_groups" in ability and ability["effect_groups"]:
+                total += _complexity_effects_from_groups(
+                    ability["effect_groups"], effects_lookup)
+                sub = ability.get("sub_sigil")
+                if sub:
+                    total += _complexity_effects_from_groups(
+                        sub.get("effect_groups", []), effects_lookup)
+            else:
+                # Legacy flat effects
+                for eff in ability.get("effects", []):
+                    item = effects_lookup.get(eff.get("effect_id", ""))
+                    if item:
+                        total += complexity_content_item(item)
             for cost in ability.get("costs", []):
                 item = costs_lookup.get(cost.get("cost_id", ""))
                 if item:
                     total += complexity_content_item(item)
+
+    # Multi-element complexity multiplier
+    elements = card.get("elements")
+    if elements is None:
+        old = card.get("element")
+        elements = [old] if old else []
+    n = len(elements)
+    if n > 1:
+        total *= 1 + (n - 1) * 0.1
+
     return total
 
 
@@ -207,6 +332,20 @@ def max_x_for_budget(stat: dict, cv_budget: float) -> float:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _to_float(v) -> float:
+    """Convert a value to float.
+    Handles dice notation:
+      '2D6'  → expected value 7.0   (2 × 3.5)
+      'D6'   → expected value 3.5   (1 × 3.5)
+      '4D4'  → expected value 10.0  (4 × 2.5)
+    """
+    if isinstance(v, str):
+        import re
+        # Optional leading N, then D/d, then sides
+        m = re.fullmatch(r"(\d*)[dD](\d+)", v.strip())
+        if m:
+            n     = int(m.group(1)) if m.group(1) else 1
+            sides = int(m.group(2))
+            return n * (sides + 1) / 2.0
     try:
         return float(v)
     except (TypeError, ValueError):

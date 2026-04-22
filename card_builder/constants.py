@@ -4,7 +4,7 @@ constants.py – all static configuration.
 
 BOX_TYPES = [
     "Play", "Excavate", "Hand", "Concentration",
-    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Lost",
+    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Discard",
 ]
 
 ABILITY_TYPES = ["Trigger", "Play", "Continues", "Activate"]
@@ -31,7 +31,7 @@ BOX_COLORS = {
     "Equipped":      "#3a5a3a",
     "Exhausted":     "#5a3a2a",
     "Fleeting":      "#1a5a5a",
-    "Lost":          "#3a3a3a",
+    "Discard":       "#3a2a1a",
 }
 
 ELEMENT_COLORS = {
@@ -61,7 +61,7 @@ BOX_SYMBOLS = {
     "Equipped":      "⚔",
     "Exhausted":     "💤",
     "Fleeting":      "💨",
-    "Lost":          "☠",
+    "Discard":       "🗑",
 }
 
 TYPE_SYMBOLS = {

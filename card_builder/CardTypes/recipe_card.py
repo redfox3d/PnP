@@ -16,7 +16,9 @@ from card_builder.constants import (
     RECIPE_TYPES, RECIPE_TYPE_COLORS, RECIPE_TYPE_ICONS,
     INGREDIENT_CV,
 )
+from card_builder.data import get_content_data
 from card_builder.materials import merged_materials, save_central_materials, load_central_materials
+from card_builder.widgets import PlaceholderFrame
 
 try:
     from PIL import Image, ImageTk
@@ -55,9 +57,22 @@ class RecipeCardEditor(BaseCardEditor):
 
         self._sep()
 
-        # ── Effects section ───────────────────────────────────────────────────
+        # ── Structured effects ────────────────────────────────────────────────
         self._lbl("Effekte:").pack(anchor="w", padx=8)
-        self._use_text = tk.Text(ef, height=5, bg="#2a2a2a", fg="white",
+        ctrl_eff = tk.Frame(ef, bg=self.BG)
+        ctrl_eff.pack(fill="x", padx=8, pady=2)
+        tk.Button(ctrl_eff, text="+ Effekt", command=self._add_effect,
+                  bg="#1a3a6e", fg="white", font=("Arial", 8)).pack(
+            side="left", padx=4)
+        self._eff_frame = tk.Frame(ef, bg=self.BG)
+        self._eff_frame.pack(fill="x", padx=8, pady=2)
+        self._rebuild_effects()
+
+        self._sep()
+
+        # ── Free-text override ────────────────────────────────────────────────
+        self._lbl("Freitext (Zusatz/Override):").pack(anchor="w", padx=8)
+        self._use_text = tk.Text(ef, height=3, bg="#2a2a2a", fg="white",
                                  insertbackground="white", font=("Arial", 9),
                                  wrap="word")
         self._use_text.insert("1.0", card.get("use_text", ""))
@@ -121,6 +136,60 @@ class RecipeCardEditor(BaseCardEditor):
         self._rebuild_ingredients()
         self._changed()
 
+    # ── Structured effects ────────────────────────────────────────────────────
+
+    def _rebuild_effects(self):
+        for w in self._eff_frame.winfo_children():
+            w.destroy()
+        for idx, eff in enumerate(self.card.get("effects", [])):
+            self._build_effect_row(idx, eff)
+
+    def _build_effect_row(self, idx: int, eff: dict):
+        bg  = "#1e2a3a"
+        row = tk.Frame(self._eff_frame, bg=bg, relief="groove", bd=1)
+        row.pack(fill="x", pady=1)
+
+        tk.Button(row, text="✕", font=("Arial", 8), cursor="hand2",
+                  bg="#3a1a1a", fg="#ff8888", width=2,
+                  command=lambda i=idx: self._del_effect(i)
+                  ).pack(side="left", padx=2, pady=2)
+
+        CD = get_content_data()
+        var = tk.StringVar(value=eff.get("effect_id", ""))
+        cb  = ttk.Combobox(row, textvariable=var, values=CD.effect_ids(),
+                           width=16, font=("Arial", 8))
+        cb.pack(side="left", padx=4)
+
+        def _etxt(eid):
+            item = CD.get("effect", eid)
+            return item.get("content_text", "") if item else ""
+
+        ph = PlaceholderFrame(row, _etxt(eff.get("effect_id", "")),
+                              eff.setdefault("vals", {}),
+                              self._changed, bg=bg)
+        ph.pack(side="left")
+
+        def on_sel(_=None, v=var, e=eff, p=ph):
+            e["effect_id"] = v.get()
+            e["vals"]      = {}
+            p.update_text(_etxt(v.get()))
+            self._changed()
+
+        cb.bind("<<ComboboxSelected>>", on_sel)
+
+    def _add_effect(self):
+        self.card.setdefault("effects", []).append(
+            {"effect_id": "", "vals": {}, "opt_vals": {}})
+        self._rebuild_effects()
+        self._changed()
+
+    def _del_effect(self, idx: int):
+        self.card.get("effects", []).pop(idx)
+        self._rebuild_effects()
+        self._changed()
+
+    # ── Free text / misc ──────────────────────────────────────────────────────
+
     def _on_use_change(self, *_):
         self.card["use_text"] = self._use_text.get("1.0", "end-1c")
         self._changed()
@@ -173,11 +242,15 @@ class RecipeCardRenderer:
                       fill=color, outline="gold", width=2)
         c.create_text(cx, cy, text=icon, font=("Arial", 16))
 
-        # Artwork
+        # Action symbol – potions always cost an action to use
+        if card.get("trigger_id") == "Manual_Trigger":
+            self._draw_action_symbol(cx, cy + 52, 14)
+
+        # Artwork — right margin leaves room for type icon + action symbol
         ART_Y0 = 36
         ART_Y1 = ART_Y0 + 160
         self._artwork_box(card.get("artwork", ""), PAD, ART_Y0,
-                          self.W - 60, ART_Y1)
+                          self.W - 66, ART_Y1)
 
         ingredients = card.get("ingredients", [])
 
@@ -197,15 +270,11 @@ class RecipeCardRenderer:
         y = SIGIL_TOP + 26
         for ing in ingredients:
             mat = ing.get("material", "?")
-            cv  = ing.get("cv", INGREDIENT_CV)
             if y + 18 > SIGIL_MID - 4:
                 break
             c.create_text(PAD + 12, y, text=f"• {mat}",
                           anchor="nw", fill="#ffdd88",
                           font=(self.FF, self.FS_S))
-            c.create_text(self.W - PAD - 8, y, text=f"CV {cv}",
-                          anchor="ne", fill="#aa8833",
-                          font=(self.FF, 9))
             y += 18
 
         # ── Effect Sigil (bottom half) ────────────────────────────────────────
@@ -216,22 +285,44 @@ class RecipeCardRenderer:
         c.create_text(PAD + 4, SIGIL_MID + 6, text="[Recipe Effect]",
                       anchor="nw", font=(self.FF, 10, "bold"), fill="white")
 
-        use = card.get("use_text", "")
-        if use:
-            self._wrap(use, PAD + 12, SIGIL_MID + 28,
-                       self.W - PAD*2 - 16, (self.FF, self.FS_S),
-                       "white", SIGIL_BOT - 4)
+        from card_builder.data import get_content_data
+        CD  = get_content_data()
+        y   = SIGIL_MID + 28
+        y_b = SIGIL_BOT - 4
 
-        # ── CV badge (bottom) ─────────────────────────────────────────────────
-        total_cv = sum(ing.get("cv", INGREDIENT_CV) for ing in ingredients)
-        c.create_rectangle(self.W - 70, self.H - 34, self.W - PAD, self.H - PAD,
-                           fill="#2a2200", outline="gold", width=2)
-        c.create_text(self.W - 38, self.H - 18, text=f"CV {total_cv}",
-                      fill="gold", font=(self.FF, 11, "bold"))
+        for eff_item in card.get("effects", []):
+            eid  = eff_item.get("effect_id", "")
+            item = CD.get("effect", eid) if eid else None
+            if not item:
+                continue
+            ct = item.get("content_text", "")
+            for k, v in eff_item.get("vals", {}).items():
+                ct = ct.replace(f"{{{k}}}", str(v))
+            if ct:
+                y = self._wrap(f"• {ct}", PAD + 12, y,
+                               self.W - PAD*2 - 16, (self.FF, self.FS_S),
+                               "white", y_b)
+
+        use = card.get("use_text", "")
+        if use and y <= y_b:
+            self._wrap(use, PAD + 12, y,
+                       self.W - PAD*2 - 16, (self.FF, self.FS_S),
+                       "#cccccc", y_b)
 
         # Recipe type label bottom-left
         c.create_text(PAD, self.H - 18, text=rtype,
                       anchor="w", font=(self.FF, 9, "italic"), fill="#aaa")
+
+    def _draw_action_symbol(self, cx: int, cy: int, r: int):
+        """Circle with inverted triangle = 'costs one Action' marker."""
+        c = self.canvas
+        c.create_oval(cx - r, cy - r, cx + r, cy + r,
+                      fill="#1a1200", outline="#ffaa00", width=2)
+        tr = int(r * 0.58)
+        pts = [cx - tr, cy - int(tr * 0.65),
+               cx + tr, cy - int(tr * 0.65),
+               cx,      cy + int(tr * 0.80)]
+        c.create_polygon(pts, fill="#ffaa00")
 
     def _artwork_box(self, path, x0, y0, x1, y1):
         c = self.canvas

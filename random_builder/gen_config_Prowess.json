@@ -27,7 +27,7 @@
       "probability": 0.08
     },
     {
-      "block_type": "Lost",
+      "block_type": "Discard",
       "probability": 0.15
     }
   ],
@@ -38,7 +38,7 @@
     },
     {
       "container": "Damage",
-      "probability": 1.0
+      "probability": 39.0
     },
     {
       "effect_id": "Draw",
@@ -49,11 +49,7 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Grow",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Multicast",
+      "effect_id": "Forage",
       "probability": 1.0
     },
     {
@@ -101,6 +97,10 @@
       "probability": 1.0
     },
     {
+      "effect_id": "Throw",
+      "probability": 1.0
+    },
+    {
       "cost_id": "Mana",
       "probability": 1.0
     },
@@ -123,10 +123,14 @@
     {
       "trigger_id": "Manual_Trigger",
       "probability": 1.0
+    },
+    {
+      "trigger_id": "Manual",
+      "probability": 1.0
     }
   ],
   "cost_rules": [],
-  "cv_target": 3.0,
+  "cv_target": 2.0,
   "cv_per_box_max": 3.0,
   "mana_chance": 0.95,
   "mana_main_count": 2,
@@ -134,12 +138,31 @@
   "max_other_costs": 1,
   "max_effects": 4,
   "min_effects": 0,
+  "min_groups": 1,
+  "max_groups": 5,
+  "modifier_chance": 0.3,
+  "max_modifiers_per_group": 2,
+  "target_type_weights": {
+    "Target Enemy": 10,
+    "Target Ally": 8,
+    "Non Targeting": 10,
+    "Target Neutral": 3
+  },
+  "sub_sigil_chance": 0.1,
+  "sub_sigil_max_groups": 1,
+  "sub_sigil_cv_budget_frac": 0.3,
   "min_blocks": 1,
+  "manual_trigger_chance": 0.6,
   "condition_chance": 0.15,
-  "choose_n_chance": 0.1,
+  "choose_n_chance": 0.4,
   "sigil_rules": {},
   "incompatible_pairs": [],
-  "cv_card_min": 0.0,
+  "cv_card_min": 1.0,
   "recipe_type_mode": "equal",
-  "recipe_type_weights": {}
+  "recipe_type_weights": {},
+  "sigil_constraints": {},
+  "sub_sigil_group_chance": 0.15,
+  "sub_sigil_global_chance": 0.2,
+  "sub_sigil_target_enemy_manual_chance": 0.8,
+  "sub_sigil_target_ally_chance": 0.1
 }

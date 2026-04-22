@@ -197,6 +197,24 @@ class ContentEditor(tk.Toplevel):
                   bg="#553300", fg="white").pack(side="left", padx=4)
         self._row += 1
 
+        # ── Primary Types (target types this effect is valid for) ─────────────
+        _PRIMARY_TYPES = ["Target Enemy", "Target Ally", "Non Targeting", "Target Neutral"]
+        tk.Label(self._f, text="Primary Types", font=("Arial", 9, "bold")).grid(
+            row=self._row, column=0, sticky="nw", padx=8, pady=3)
+        pt_frame = tk.Frame(self._f)
+        pt_frame.grid(row=self._row, column=1, columnspan=5, sticky="w", padx=8, pady=3)
+        self._primary_type_vars = {}
+        current_pts = self.item.get("primary_types", [])
+        for pt in _PRIMARY_TYPES:
+            var = tk.BooleanVar(value=(pt in current_pts))
+            self._primary_type_vars[pt] = var
+            color = {"Target Enemy": "#cc4444", "Target Ally": "#44aa44",
+                     "Non Targeting": "#aaaaaa", "Target Neutral": "#aaaa44"}.get(pt, "#888")
+            tk.Checkbutton(pt_frame, text=pt, variable=var,
+                           fg=color, font=("Arial", 9), selectcolor="#222").pack(
+                side="left", padx=6)
+        self._row += 1
+
         # ── Collapsible weights section ────────────────────────────────────────
         self._build_weights_section()
 
@@ -712,6 +730,14 @@ class ContentEditor(tk.Toplevel):
                 self.item["recipe_type_weights"] = rtw
             else:
                 self.item.pop("recipe_type_weights", None)
+
+        # Primary types
+        if hasattr(self, "_primary_type_vars"):
+            selected_pts = [pt for pt, v in self._primary_type_vars.items() if v.get()]
+            if selected_pts:
+                self.item["primary_types"] = selected_pts
+            else:
+                self.item.pop("primary_types", None)
 
         # Generator type restrictions
         if hasattr(self, "_allowed_ct_vars"):

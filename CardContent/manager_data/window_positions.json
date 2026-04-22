@@ -1,8 +1,8 @@
 {
     "main": "1920x1009+1930+-24",
     "create_editor": "985x360+2704+258",
-    "content_editor": "958x1000+1913+0",
+    "content_editor": "958x1000+1913+55",
     "conditions_editor": "525x492+2677+339",
     "weights_editor": "320x380+78+78",
-    "effect_type_panel": "1920x1009+2310+4"
+    "effect_type_panel": "1460x813+2259+182"
 }

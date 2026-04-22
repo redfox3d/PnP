@@ -7,7 +7,6 @@
       "Ranged_Damage",
       "Use_Weapon",
       "Drain",
-      "Poision",
       "Kick"
     ],
     "no_repeat": true
@@ -33,5 +32,16 @@
     "conditions": [],
     "triggers": [],
     "weights": {}
+  },
+  "Move": {
+    "id": "Move",
+    "description": "",
+    "effects": [
+      "Dash",
+      "Teleport",
+      "Jump",
+      "Move"
+    ],
+    "no_repeat": true
   }
 }

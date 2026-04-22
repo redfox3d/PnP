@@ -119,13 +119,27 @@ class App:
         btn_kw = dict(width=24, font=("Segoe UI", 10),
                       relief="flat", cursor="hand2", fg=FG_PRIMARY, pady=4)
 
-        # ── Group 1: KARTEN ───────────────────────────────────────────────────
-        tk.Label(f, text="KARTEN", bg=BG_ROOT, fg=FG_MUTED,
-                 font=("Segoe UI", 7, "bold")).pack(anchor="w", pady=(4, 2))
+        # ── Group 1: KARTEN (Card editing & generation) ──────────────────────
+        tk.Label(f, text="━━━ KARTEN ━━━", bg=BG_ROOT, fg=FG_ACCENT,
+                 font=("Segoe UI", 8, "bold")).pack(anchor="w", pady=(4, 2))
 
         tk.Button(f, text="🃏  Card Builder",
                   bg=BTN_PRIMARY,
                   command=self.show_card_builder,
+                  **btn_kw).pack(pady=3, fill="x")
+
+        tk.Button(f, text="🎲  Random Builder",
+                  bg=BTN_PRIMARY,
+                  command=self.show_random_builder,
+                  **btn_kw).pack(pady=3, fill="x")
+
+        # ── Group 2: TOOLS ────────────────────────────────────────────────────
+        tk.Label(f, text="━━━ TOOLS ━━━", bg=BG_ROOT, fg=FG_ACCENT,
+                 font=("Segoe UI", 8, "bold")).pack(anchor="w", pady=(8, 2))
+
+        tk.Button(f, text="📦  Container Manager",
+                  bg=BTN_NEUTRAL,
+                  command=self.show_container_manager,
                   **btn_kw).pack(pady=3, fill="x")
 
         tk.Button(f, text="🔮  AOE Designer",
@@ -133,36 +147,180 @@ class App:
                   command=self.show_aoe_designer,
                   **btn_kw).pack(pady=3, fill="x")
 
-        tk.Button(f, text="🎲  Random Builder",
-                  bg=BTN_NEUTRAL,
-                  command=self.show_random_builder,
-                  **btn_kw).pack(pady=3, fill="x")
-
-        tk.Button(f, text="📦  Container Manager",
-                  bg=BTN_NEUTRAL,
-                  command=self.show_container_manager,
-                  **btn_kw).pack(pady=3, fill="x")
-
         ttk.Separator(f, orient="horizontal").pack(fill="x", pady=12)
 
-        # ── Group 2: CONTENT ──────────────────────────────────────────────────
-        tk.Label(f, text="CONTENT", bg=BG_ROOT, fg=FG_MUTED,
-                 font=("Segoe UI", 7, "bold")).pack(anchor="w", pady=(0, 2))
+        # ── Group 3: CONTENT ──────────────────────────────────────────────────
+        tk.Label(f, text="━━━ CONTENT ━━━", bg=BG_ROOT, fg=FG_ACCENT,
+                 font=("Segoe UI", 8, "bold")).pack(anchor="w", pady=(0, 2))
 
         tk.Button(f, text="📝  Content Editor",
                   bg=BTN_PRIMARY,
                   command=self.show_content_manager,
                   **btn_kw).pack(pady=3, fill="x")
 
-        tk.Button(f, text="⚗️  Material-Effekte",
+        tk.Button(f, text="⚗️  Ingredient Editor",
                   bg=BTN_NEUTRAL,
-                  command=self._open_material_effects,
+                  command=self._open_ingredient_editor,
                   **btn_kw).pack(pady=3, fill="x")
 
-        tk.Button(f, text="🎯  Effekt Primärtypen",
+        tk.Button(f, text="🎯  Effect Types",
                   bg=BTN_NEUTRAL,
                   command=self._open_effect_types,
                   **btn_kw).pack(pady=3, fill="x")
+
+        tk.Button(f, text="🎲  Dice Settings",
+                  bg=BTN_NEUTRAL,
+                  command=self._open_dice_editor,
+                  **btn_kw).pack(pady=3, fill="x")
+
+    def _open_dice_editor(self):
+        from random_builder.dice_models import load_dice_config, save_dice_config, die_avg
+        import tkinter as tk
+        from tkinter import messagebox
+
+        cfg = load_dice_config()
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Würfel Einstellungen")
+        dlg.geometry("400x480")
+        dlg.resizable(False, True)
+        dlg.configure(bg="#1a1a2a")
+
+        BG  = "#1a1a2a"
+        BG2 = "#252535"
+        FG  = "white"
+
+        tk.Label(dlg, text="🎲  Würfel", bg=BG, fg="#ffdd88",
+                 font=("Segoe UI", 13, "bold")).pack(pady=(12, 2))
+        tk.Label(dlg,
+                 text="ID = Würfelausdruck (z.B. D6, 2D4, D8).  Avg = Erwartungswert.\n"
+                      "Generator wählt N×ID sodass N×Avg ≈ Zielwert → z.B. '4D4'.",
+                 bg=BG, fg="#888", font=("Segoe UI", 8), justify="left").pack(padx=16)
+
+        # ── Dice list ─────────────────────────────────────────────────────────
+        list_frame = tk.Frame(dlg, bg=BG2, relief="groove", bd=1)
+        list_frame.pack(fill="x", padx=16, pady=8)
+
+        # Header
+        hdr = tk.Frame(list_frame, bg=BG2)
+        hdr.pack(fill="x", padx=6, pady=(4, 0))
+        for txt, w in [("ID", 10), ("Avg", 8), ("Vorschau", 14)]:
+            tk.Label(hdr, text=txt, width=w, bg=BG2, fg="#aaaacc",
+                     font=("Segoe UI", 8, "bold"), anchor="w").pack(side="left")
+
+        dice_rows  = []   # list of (id_var, avg_var)
+        rows_frame = tk.Frame(list_frame, bg=BG2)
+        rows_frame.pack(fill="x", padx=6, pady=4)
+
+        def _preview(id_v, avg_v):
+            """Show what the die produces for avg × 3 as a sample."""
+            try:
+                avg = float(avg_v.get())
+                did = id_v.get().strip()
+                n   = max(1, round(avg * 3 / avg))   # always 3 for preview
+                return f"3×{avg:.1f} → {3}{did}" if n != 1 else did
+            except Exception:
+                return "?"
+
+        preview_vars = []
+
+        def _rebuild_rows():
+            for w in rows_frame.winfo_children():
+                w.destroy()
+            preview_vars.clear()
+            for i, (id_v, avg_v) in enumerate(dice_rows):
+                row = tk.Frame(rows_frame, bg=BG2)
+                row.pack(fill="x", pady=2)
+
+                id_entry = tk.Entry(row, textvariable=id_v, width=10,
+                                    bg="#2a2a3a", fg="#aaddff",
+                                    insertbackground=FG, font=("Courier", 9))
+                id_entry.pack(side="left", padx=2)
+
+                avg_entry = tk.Entry(row, textvariable=avg_v, width=7,
+                                     bg="#2a2a3a", fg="#ffdd88",
+                                     insertbackground=FG, font=("Courier", 9))
+                avg_entry.pack(side="left", padx=2)
+
+                pv = tk.StringVar()
+                preview_vars.append(pv)
+                tk.Label(row, textvariable=pv, width=14, bg=BG2, fg="#88cc88",
+                         font=("Courier", 8), anchor="w").pack(side="left", padx=4)
+
+                def _upd_preview(*_, iv=id_v, av=avg_v, pvar=pv):
+                    try:
+                        avg = float(av.get())
+                        did = iv.get().strip()
+                        # show sample N=3 result
+                        n3 = max(1, round(3 * avg / avg)) if avg else 1
+                        pvar.set(f"z.B. 4×avg={4*avg:.1f} → 4{did}")
+                    except Exception:
+                        pvar.set("")
+                id_v.trace_add("write", _upd_preview)
+                avg_v.trace_add("write", _upd_preview)
+                _upd_preview()
+
+                idx = i
+                tk.Button(row, text="✕", font=("Arial", 7), padx=3, pady=0,
+                          bg="#3a1a1a", fg="#ff8888",
+                          command=lambda i=idx: (_remove_row(i))
+                          ).pack(side="left", padx=2)
+
+        def _remove_row(idx):
+            if 0 <= idx < len(dice_rows):
+                dice_rows.pop(idx)
+            _rebuild_rows()
+
+        def _add_row():
+            dice_rows.append((tk.StringVar(value="D6"), tk.StringVar(value="3.5")))
+            _rebuild_rows()
+
+        # Populate from config (migrate old 'value' entries automatically)
+        for d in cfg.get("dice", []):
+            avg_val = die_avg(d)
+            dice_rows.append((tk.StringVar(value=d.get("id", "D6")),
+                               tk.StringVar(value=str(avg_val))))
+        _rebuild_rows()
+
+        tk.Button(list_frame, text="+ Würfel hinzufügen", command=_add_row,
+                  bg="#1a3a6e", fg=FG, font=("Segoe UI", 8),
+                  relief="flat").pack(pady=(2, 8))
+
+        # ── dice_can_chance ───────────────────────────────────────────────────
+        sep_f = tk.Frame(dlg, bg=BG)
+        sep_f.pack(fill="x", padx=16, pady=(0, 4))
+        tk.Label(sep_f, text="Chance (0–1) dass 'dice_allowed'-Variablen Würfel benutzen:",
+                 bg=BG, fg="#aaa", font=("Segoe UI", 8)).pack(anchor="w")
+        chance_var = tk.StringVar(value=str(cfg.get("dice_can_chance", 0.5)))
+        tk.Entry(sep_f, textvariable=chance_var, width=8,
+                 bg="#2a2a3a", fg=FG, insertbackground=FG,
+                 font=("Courier", 10)).pack(anchor="w", pady=(2, 0))
+
+        # ── Save ──────────────────────────────────────────────────────────────
+        def _save():
+            new_dice = []
+            for id_v, avg_v in dice_rows:
+                did = id_v.get().strip()
+                if not did:
+                    continue
+                try:
+                    avg = float(avg_v.get())
+                except ValueError:
+                    messagebox.showwarning("Fehler",
+                        f"Ungültiger Avg-Wert für '{did}'", parent=dlg)
+                    return
+                new_dice.append({"id": did, "avg": avg})
+            new_dice.sort(key=lambda d: d["avg"])
+            try:
+                chance = max(0.0, min(1.0, float(chance_var.get())))
+            except ValueError:
+                messagebox.showwarning("Fehler", "Ungültige Wahrscheinlichkeit", parent=dlg)
+                return
+            save_dice_config({"dice": new_dice, "dice_can_chance": chance})
+            dlg.destroy()
+
+        tk.Button(dlg, text="💾  Speichern", command=_save,
+                  bg="#1a6e3c", fg=FG, font=("Segoe UI", 10, "bold"),
+                  width=24).pack(pady=10)
 
     def _open_effect_types(self):
         import json
@@ -175,9 +333,9 @@ class App:
         from CardContent.effect_type_panel import EffectTypePanel
         EffectTypePanel(self.root, data)
 
-    def _open_material_effects(self):
-        from card_builder.material_editor import MaterialEffectEditor
-        MaterialEffectEditor(self.root)
+    def _open_ingredient_editor(self):
+        from card_builder.ingredient_editor import IngredientEditor
+        IngredientEditor(self.root)
 
     # ── Container Manager ─────────────────────────────────────────────────────
 

@@ -548,6 +548,19 @@
       "options": {},
       "weights_open": true,
       "cv": 3.0
+    },
+    {
+      "id": "Manual",
+      "sigil": "",
+      "content_text": "",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "cv": 1.0,
+      "element_weights": {}
     }
   ]
 }
