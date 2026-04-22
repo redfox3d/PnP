@@ -333,12 +333,21 @@ def generate_stat_id(effect_id: str, counter: int,
 
 def collect_all_ids(data: dict) -> dict:
     """
-    Returns flat dict: { id_str: {"type": "variable"|"choice", "item_id", "name"} }
+    Returns flat dict: { id_str: {"type": "variable"|"choice"|"item", "item_id", "name"} }
+
+    - 'variable' / 'choice' = stat IDs inside variables/options (for conditional text)
+    - 'item'                = the content item's own ID (Effect/Trigger/Cost/Condition name),
+                              so id_conditions can reference other content items for
+                              generator exclusion/requirement rules.
     """
     registry = {}
     for type_name, items in data.items():
         for item in items:
             item_id = item.get("id", "")
+            if item_id:
+                # Item-level IDs are registered too (used by generator id_conditions)
+                registry.setdefault(item_id, {
+                    "type": "item", "item_id": item_id, "name": type_name})
             for vname, stat in item.get("variables", {}).items():
                 sid = stat.get("id", "")
                 if sid:

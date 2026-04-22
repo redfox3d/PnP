@@ -6,16 +6,6 @@
       "reminder_text": "",
       "rarity": 10,
       "complexity_base": 1.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Quinta": 0.0,
-        "Potion": 0,
-        "Skills": 0
-      },
       "conditions": {},
       "variables": {
         "X": {
@@ -39,29 +29,23 @@
             "You": {
               "id": "Trig_Card_Changes_Position_1",
               "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+              "complexity": 0.0,
+              "conditions": {},
+              "cv": 0.0
             },
             "Players": {
               "id": "Trig_Card_Changes_Position_2",
               "rarity": 10,
-              "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+              "complexity": 2.0,
+              "conditions": {},
+              "cv": 0.0
             },
             "Anyone": {
               "id": "Trig_Card_Changes_Position_3",
               "rarity": 10,
               "complexity": 1.0,
-              "cv1": 0,
-              "cv2": 0,
-              "cv3": 0,
-              "conditions": {}
+              "conditions": {},
+              "cv": 0.0
             }
           }
         },
@@ -208,7 +192,19 @@
           }
         }
       },
-      "sigil": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, \\Elements, Prowess]"
+      "sigil": "[You, Players, Anyone] [Discards, Forgets, Recycles, Looses, Plays] {X} [any, \\Elements, Prowess]",
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      },
+      "element_weights": {}
     },
     {
       "id": "Trig_Movement",
@@ -384,7 +380,18 @@
           }
         }
       },
-      "sigil": "[You,Ally,Enemys,Anyone] [any,{X}] [-, one_eff, one_turn]"
+      "sigil": "[You,Ally,Enemys,Anyone] [any,{X}] [-, one_eff, one_turn]",
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      }
     },
     {
       "id": "Play_Skill",
@@ -524,7 +531,18 @@
         }
       },
       "sigil": "[Skill, \\Elements, Recipe]",
-      "cv": 1.0
+      "cv": 1.0,
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      }
     },
     {
       "id": "Manual_Trigger",
@@ -547,20 +565,18 @@
       "variables": {},
       "options": {},
       "weights_open": true,
-      "cv": 3.0
-    },
-    {
-      "id": "Manual",
-      "sigil": "",
-      "content_text": "",
-      "reminder_text": "",
-      "rarity": 10,
-      "complexity_base": 1.0,
-      "conditions": {},
-      "variables": {},
-      "options": {},
-      "cv": 1.0,
-      "element_weights": {}
+      "cv": 3.0,
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      }
     }
   ]
 }

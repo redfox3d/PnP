@@ -88,6 +88,20 @@ class SpellGenerator(BaseGenerator):
                 result.append(bt)
         return result if result else ["Play"]
 
+    def _sub_sigil_group_chance(self, target_type: str,
+                                is_manual_trigger: bool) -> float:
+        """Return the chance for a per-group sub-sigil based on target type
+        and trigger kind. Config keys:
+          - sub_sigil_group_chance (default 0.15): baseline for all groups
+          - sub_sigil_target_enemy_manual_chance (default 0.80): Target Enemy + Manual Trigger
+          - sub_sigil_target_ally_chance (default 0.10): Target Ally groups
+        """
+        if target_type == "Target Enemy" and is_manual_trigger:
+            return float(self.cfg.get("sub_sigil_target_enemy_manual_chance", 0.80))
+        if target_type == "Target Ally":
+            return float(self.cfg.get("sub_sigil_target_ally_chance", 0.10))
+        return float(self.cfg.get("sub_sigil_group_chance", 0.15))
+
     # ── Ability ──────────────────────────────────────────────────────────────
 
     def _build_ability(self, block_type: str, element: str,
@@ -96,31 +110,34 @@ class SpellGenerator(BaseGenerator):
         is_play = (block_type == "Play")
 
         # ── Trigger: ALL abilities must have one ─────────────────────────────
-        # 60 % Manual (action cost symbol, no text), 40 % random trigger.
-        # Sigils can only have one trigger.
-        manual_chance = float(self.cfg.get("manual_trigger_chance", 0.6))
-        trigger_id, trigger_vals, trigger_opt_vals = None, {}, {}
+        # - Play blocks: ALWAYS Manual_Trigger (no trigger text, just action symbol)
+        # - Non-Play blocks: manual_trigger_chance config (default 60%) for Manual,
+        #   otherwise pick a random trigger (respecting profile + block filters).
+        trigger_id, trigger_vals, trigger_opt_vals = "Manual_Trigger", {}, {}
 
-        if random.random() < manual_chance:
-            trigger_id = "Manual_Trigger"
-        else:
-            allowed_triggers = {k: v for k, v in self.triggers.items()
-                                if self.allowed_for_profile(v)
-                                and k != "Manual_Trigger"}
-            if allowed_triggers:
-                tid    = random.choice(list(allowed_triggers.keys()))
-                titem  = allowed_triggers[tid]
-                trigger_id        = tid
-                trigger_opt_vals  = self.pick_options(titem, element)
-                trigger_vals      = self.pick_variable_values(titem, cv_budget=2.0)
-            else:
-                trigger_id = "Manual_Trigger"   # fallback
+        if not is_play:
+            manual_chance = float(self.cfg.get("manual_trigger_chance", 0.6))
+            if random.random() >= manual_chance:
+                allowed_triggers = {
+                    k: v for k, v in self.triggers.items()
+                    if k != "Manual_Trigger"
+                    and self.allowed_for_profile(v)
+                    and self.passes_block_filters(v, block_type)
+                }
+                if allowed_triggers:
+                    tid   = random.choice(list(allowed_triggers.keys()))
+                    titem = allowed_triggers[tid]
+                    trigger_id       = tid
+                    trigger_opt_vals = self.pick_options(titem, element)
+                    trigger_vals     = self.pick_variable_values(titem, cv_budget=2.0)
+                # else: fallback to default Manual_Trigger set above
 
         condition_id, condition_vals, condition_opt_vals = None, {}, {}
         cond_chance = float(self.cfg.get("condition_chance", 0.15))
         if self.conditions and random.random() < cond_chance:
             allowed_conditions = {k: v for k, v in self.conditions.items()
-                                  if self.allowed_for_profile(v)}
+                                  if self.allowed_for_profile(v)
+                                  and self.passes_block_filters(v, block_type)}
             if allowed_conditions:
                 cid = random.choice(list(allowed_conditions.keys()))
                 citem = allowed_conditions[cid]
@@ -149,7 +166,10 @@ class SpellGenerator(BaseGenerator):
             mana_chance = float(self.cfg.get("mana_chance", 0.95))
             mana_main = int(self.cfg.get("mana_main_count", 2))
             mana_max_count = int(self.cfg.get("mana_max_count", 6))
-            if random.random() < mana_chance and "Mana" in self.costs:
+            # Check if Mana cost is allowed in this block type
+            mana_item = self.costs.get("Mana", {})
+            mana_allowed = self.passes_block_filters(mana_item, block_type) if mana_item else False
+            if mana_allowed and random.random() < mana_chance and "Mana" in self.costs:
                 hi = max(mana_max_count, mana_main)
                 counts = list(range(1, hi + 1))
                 wts = [math.exp(-0.7 * (n - mana_main) ** 2) for n in counts]
@@ -166,6 +186,10 @@ class SpellGenerator(BaseGenerator):
                     break
                 cost_id = rule.get("cost_id", "")
                 if not cost_id or cost_id == "Mana":
+                    continue
+                # Check if this cost is allowed in this block type
+                cost_item = self.costs.get(cost_id, {})
+                if cost_item and not self.passes_block_filters(cost_item, block_type):
                     continue
                 prob = float(rule.get("probability", 1.0))
                 if random.random() >= prob:
@@ -432,23 +456,12 @@ class SpellGenerator(BaseGenerator):
 
         # ── Sub-Sigils (Option A: per effect group) ──────────────────────────
         # Attach sub-sigils to individual effect groups (Target Enemy/Ally/Non Targeting)
-        sub_group_chance = float(self.cfg.get("sub_sigil_group_chance", 0.15))
         sub_budget_frac = float(self.cfg.get("sub_sigil_cv_budget_frac", 0.3))
-
-        # Special: 80% chance for Target Enemy groups with Manual Trigger
-        te_manual_chance = float(self.cfg.get("sub_sigil_target_enemy_manual_chance", 0.80))
         is_manual_trigger = trigger_id == "Manual_Trigger"
 
         for group in ability["effect_groups"]:
             target_type = group.get("target_type", "Non Targeting")
-
-            # Determine sub-sigil chance based on target type and trigger
-            if target_type == "Target Enemy" and is_manual_trigger:
-                group_sub_chance = te_manual_chance
-            elif target_type == "Target Ally":
-                group_sub_chance = float(self.cfg.get("sub_sigil_target_ally_chance", 0.10))
-            else:
-                group_sub_chance = sub_group_chance
+            group_sub_chance = self._sub_sigil_group_chance(target_type, is_manual_trigger)
 
             # Build sub-sigil for this group if roll succeeds
             if random.random() < group_sub_chance:

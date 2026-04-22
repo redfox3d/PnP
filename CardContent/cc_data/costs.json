@@ -88,7 +88,18 @@
       },
       "sigil": "[Generic, \\Elements]",
       "card_type_weights": {},
-      "element_weights": {}
+      "element_weights": {},
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      }
     },
     {
       "id": "Change_This_Card_Position_Play",
@@ -157,7 +168,18 @@
         }
       },
       "sigil": "[Forget, Loose, Recycle, Bottom Deck]",
-      "card_type_weights": {}
+      "card_type_weights": {},
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      }
     },
     {
       "id": "Move_Cards",
@@ -236,7 +258,18 @@
         }
       },
       "sigil": "{X} [Hand, Discard, Forget, Loose]",
-      "cv": 1.0
+      "cv": 1.0,
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Enchantment": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      }
     }
   ]
 }

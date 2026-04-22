@@ -100,6 +100,8 @@ class ContentEditor(tk.Toplevel):
         self._sep()
         self._build_opt_section()
         self._sep()
+        self._build_allowed_blocks_section()
+        self._sep()
         tk.Button(self._f, text="💾 Save", command=self._save,
                   bg="#1a6e3c", fg="white", font=("Arial", 10, "bold"),
                   width=20).grid(row=self._row, column=0, columnspan=6, pady=14)
@@ -263,7 +265,9 @@ class ContentEditor(tk.Toplevel):
 
         body = self._weights_body
 
-        tk.Label(body, text="☑ = erlaubt für Generator   Leer = Standard (10)   0 = nie",
+        tk.Label(body,
+                 text="Checkbox an = erlaubt für diesen Generator (aus = kommt dort nie vor).  "
+                      "Gewicht: leer = Standard (10), 0 = nie.",
                  fg="#888", font=("Arial", 8)).pack(anchor="w", pady=(2, 4))
 
         _profiles = _get_generator_profiles()
@@ -283,6 +287,17 @@ class ContentEditor(tk.Toplevel):
         self._el_weights = {}
         self._rt_weights = {}
 
+        def _make_gen_header(parent, label: str, var: tk.BooleanVar,
+                             fg: str, hdr_bg: str):
+            """Render the clickable enable-header for a generator column."""
+            hdr = tk.Frame(parent, bg=hdr_bg)
+            hdr.pack(fill="x")
+            tk.Checkbutton(hdr, text=label, variable=var,
+                           font=("Arial", 10, "bold"), fg=fg,
+                           bg=hdr_bg, activebackground=hdr_bg,
+                           selectcolor="#ffffff", cursor="hand2",
+                           padx=6, pady=4).pack(anchor="w")
+
         # ── Column 0: Spells ──────────────────────────────────────────────────
         spells_col = tk.Frame(cols_frame, relief="ridge", bd=1)
         spells_col.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
@@ -290,8 +305,7 @@ class ContentEditor(tk.Toplevel):
         enabled = ("Spells" in allowed_ct) if allowed_ct else True
         sv = tk.BooleanVar(value=enabled)
         self._allowed_ct_vars["Spells"] = sv
-        tk.Checkbutton(spells_col, text="Spells", variable=sv,
-                       font=("Arial", 9, "bold"), fg="#5588cc").pack(anchor="w", padx=4)
+        _make_gen_header(spells_col, "Spells", sv, "#5588cc", "#e8eef8")
 
         ttk.Separator(spells_col, orient="horizontal").pack(fill="x", padx=4, pady=2)
 
@@ -314,8 +328,7 @@ class ContentEditor(tk.Toplevel):
         enabled = ("Prowess" in allowed_ct) if allowed_ct else True
         pv = tk.BooleanVar(value=enabled)
         self._allowed_ct_vars["Prowess"] = pv
-        tk.Checkbutton(prowess_col, text="Prowess", variable=pv,
-                       font=("Arial", 9, "bold"), fg="#cc6633").pack(anchor="w", padx=4)
+        _make_gen_header(prowess_col, "Prowess", pv, "#cc6633", "#f8ece4")
 
         ttk.Separator(prowess_col, orient="horizontal").pack(fill="x", padx=4, pady=2)
         tk.Label(prowess_col, text="(keine Subtypen)",
@@ -328,8 +341,7 @@ class ContentEditor(tk.Toplevel):
         enabled = ("Recipes" in allowed_ct) if allowed_ct else True
         rv = tk.BooleanVar(value=enabled)
         self._allowed_ct_vars["Recipes"] = rv
-        tk.Checkbutton(recipes_col, text="Recipes", variable=rv,
-                       font=("Arial", 9, "bold"), fg="#cc8833").pack(anchor="w", padx=4)
+        _make_gen_header(recipes_col, "Recipes", rv, "#cc8833", "#f8efe0")
 
         ttk.Separator(recipes_col, orient="horizontal").pack(fill="x", padx=4, pady=2)
 
@@ -419,6 +431,65 @@ class ContentEditor(tk.Toplevel):
         sync_item_template(self.item)
         self._rebuild_vars()
         self._rebuild_opts()
+
+    def _build_allowed_blocks_section(self):
+        """Build checkbox section for allowed_in_blocks."""
+        # Use centrally-defined BOX_TYPES (imported at top of file)
+        block_types = list(BOX_TYPES)
+
+        # Initialize missing fields with default True (all enabled)
+        allowed_blocks = self.item.setdefault("allowed_in_blocks", {})
+        for bt in block_types:
+            allowed_blocks.setdefault(bt, True)
+
+        # Header with toggle-all buttons
+        hdr_frame = tk.Frame(self._f, bg=self._f.cget("bg"))
+        hdr_frame.grid(row=self._row, column=0, columnspan=6,
+                       sticky="ew", padx=8, pady=(4, 2))
+        tk.Label(hdr_frame, text="Allowed in Block Types",
+                 font=("Arial", 10, "bold"), fg="#88ccff").pack(side="left")
+        tk.Button(hdr_frame, text="All", font=("Arial", 8),
+                  command=lambda: self._toggle_all_blocks(True),
+                  padx=6).pack(side="right", padx=2)
+        tk.Button(hdr_frame, text="None", font=("Arial", 8),
+                  command=lambda: self._toggle_all_blocks(False),
+                  padx=6).pack(side="right", padx=2)
+        self._row += 1
+
+        # Create a frame with checkboxes in a grid (3 columns)
+        cb_frame = tk.Frame(self._f, bg=self._f.cget("bg"))
+        cb_frame.grid(row=self._row, column=0, columnspan=6,
+                      sticky="ew", padx=8, pady=4)
+
+        self._allowed_block_vars = {}
+        for idx, block_type in enumerate(block_types):
+            # Create checkbox variable
+            var = tk.BooleanVar(value=allowed_blocks.get(block_type, True))
+            self._allowed_block_vars[block_type] = var
+
+            # Create checkbox with callback
+            def make_callback(bt):
+                def callback():
+                    self.item["allowed_in_blocks"][bt] = self._allowed_block_vars[bt].get()
+                return callback
+
+            cb = tk.Checkbutton(cb_frame, text=block_type, variable=var,
+                               command=make_callback(block_type),
+                               font=("Arial", 9))
+            # Place in 3-column grid
+            col = idx % 3
+            row_offset = idx // 3
+            cb.grid(row=row_offset, column=col, sticky="w", padx=4, pady=2)
+
+        self._row += (len(block_types) + 2) // 3 + 1
+
+    def _toggle_all_blocks(self, value: bool) -> None:
+        """Set all block type checkboxes to the given value."""
+        if not hasattr(self, "_allowed_block_vars"):
+            return
+        for bt, var in self._allowed_block_vars.items():
+            var.set(value)
+            self.item.setdefault("allowed_in_blocks", {})[bt] = value
 
     # ── Stat header & row ──────────────────────────────────────────────────────
 
@@ -979,16 +1050,57 @@ class ConditionsEditor(tk.Toplevel):
         all_ids    = collect_all_ids(self.data)
         var_ids    = [k for k, v in all_ids.items() if v["type"] == "variable"]
         choice_ids = [k for k, v in all_ids.items() if v["type"] == "choice"]
+        item_ids   = [k for k, v in all_ids.items() if v["type"] == "item"]
 
         self._new_id_var   = tk.StringVar()
         self._new_mode_var = tk.StringVar(value="required")
 
         ttk.Combobox(add_f, textvariable=self._new_id_var,
-                     values=var_ids + choice_ids, width=24).pack(side="left", padx=4)
+                     values=sorted(item_ids) + var_ids + choice_ids,
+                     width=24).pack(side="left", padx=4)
         ttk.Combobox(add_f, textvariable=self._new_mode_var,
                      values=["required", "exclude"],
                      state="readonly", width=10).pack(side="left", padx=4)
         tk.Button(add_f, text="＋ Add", command=self._add_id).pack(side="left")
+
+        ttk.Separator(f, orient="horizontal").grid(
+            row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
+
+        # ── Card-level ID Conditions ─────────────────────────────────────────
+        # Same logic as id_conditions, but applied across ALL sigils of a card
+        # (instead of just within one sigil/ability).
+        tk.Label(f, text="Karten-weite ID Bedingungen",
+                 font=("Arial", 9, "bold")).grid(
+            row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+        tk.Label(f, text="Gilt über alle Sigils einer Karte hinweg "
+                         "(z.B. 'dieser Effekt darf max. einmal pro Karte vorkommen').",
+                 fg="#888", font=("Arial", 8)).grid(
+            row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+
+        self._card_ids_frame = tk.Frame(f)
+        self._card_ids_frame.grid(row=row, column=0, columnspan=3,
+                                  sticky="ew", padx=8); row += 1
+
+        raw_c = self.cond.get("card_id_conditions", [])
+        if raw_c and isinstance(raw_c[0], str):
+            raw_c = [{"id": r, "mode": "required"} for r in raw_c]
+        self._card_id_conditions = [dict(r) for r in raw_c]
+        self._rebuild_card_id_ui()
+
+        add_cf = tk.Frame(f)
+        add_cf.grid(row=row, column=0, columnspan=3, sticky="w", padx=8); row += 1
+
+        self._new_card_id_var   = tk.StringVar()
+        self._new_card_mode_var = tk.StringVar(value="required")
+
+        ttk.Combobox(add_cf, textvariable=self._new_card_id_var,
+                     values=sorted(item_ids) + var_ids + choice_ids,
+                     width=24).pack(side="left", padx=4)
+        ttk.Combobox(add_cf, textvariable=self._new_card_mode_var,
+                     values=["required", "exclude"],
+                     state="readonly", width=10).pack(side="left", padx=4)
+        tk.Button(add_cf, text="＋ Add",
+                  command=self._add_card_id).pack(side="left")
 
         ttk.Separator(f, orient="horizontal").grid(
             row=row, column=0, columnspan=3, sticky="ew", pady=6); row += 1
@@ -1011,6 +1123,7 @@ class ConditionsEditor(tk.Toplevel):
         all_ids    = collect_all_ids(self.data)
         var_ids    = [k for k, v in all_ids.items() if v["type"] == "variable"]
         choice_ids = [k for k, v in all_ids.items() if v["type"] == "choice"]
+        item_ids   = [k for k, v in all_ids.items() if v["type"] == "item"]
 
         for entry in self._id_conditions:
             sid  = entry["id"]
@@ -1038,8 +1151,8 @@ class ConditionsEditor(tk.Toplevel):
             if not exists:
                 rv = tk.StringVar()
                 ttk.Combobox(rf, textvariable=rv,
-                             values=var_ids + choice_ids, width=20).pack(
-                    side="left", padx=2)
+                             values=sorted(item_ids) + var_ids + choice_ids,
+                             width=20).pack(side="left", padx=2)
                 def _reassign(old=sid, rv=rv, e=entry):
                     new = rv.get().strip()
                     if new and new != old:

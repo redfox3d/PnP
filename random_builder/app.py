@@ -717,6 +717,11 @@ class RandomBuilder(tk.Frame):
                                  bg="#181a28", fg="#446688",
                                  font=("Consolas", 7)).pack(side="right", padx=6)
 
+                    # Per-group sub-sigil (Option A)
+                    self._render_sub_sigil_block(ab_frame, grp.get("sub_sigil"),
+                                                 label="Sub-Sigil (group)",
+                                                 indent_px=16)
+
                 # Legacy flat effects
                 for eff in ab.get("effects", []):
                     eid   = eff.get("effect_id", "?")
@@ -767,55 +772,12 @@ class RandomBuilder(tk.Frame):
                                      self._inline_edit_opt(b, card, d, k, eid, "Effect"))
                         btn_o.pack(side="left", padx=2)
 
-                # Sub-sigil
-                sub = ab.get("sub_sigil")
-                if sub:
-                    sh = tk.Frame(ab_frame, bg="#2a1a10")
-                    sh.pack(fill="x", padx=8, pady=(4, 1))
-                    tk.Label(sh, text="  ◆ Sub-Sigil",
-                             bg="#2a1a10", fg="#ffcc66",
-                             font=("Consolas", 8, "bold")).pack(side="left")
-                    for scost in sub.get("costs", []):
-                        scid   = scost.get("cost_id", "?")
-                        scvals = scost.get("vals", {})
-                        scitem = self._costs_lu.get(scid, {})
-                        stext  = render_effect(scitem, scvals, {}, fallback_id=scid)
-                        sc_cv  = cv_content_item(scitem, scvals, {}) if scitem else 0.0
-                        sc_cmx = complexity_content_item(scitem) if scitem else 0.0
-                        scrow  = tk.Frame(ab_frame, bg="#1e1408")
-                        scrow.pack(fill="x", padx=16, pady=0)
-                        tk.Label(scrow, text=f"  Cost: {scid} →  {stext}",
-                                 bg="#1e1408", fg="#ffcc77",
-                                 font=("Consolas", 8)).pack(side="left", padx=4)
-                        tk.Label(scrow, text=f"CV={sc_cv:+.2f}  Cx={sc_cmx:.1f}",
-                                 bg="#1e1408", fg="#886633",
-                                 font=("Consolas", 7)).pack(side="right", padx=6)
-                    for sgrp in sub.get("effect_groups", []):
-                        stt = sgrp.get("target_type", "")
-                        sgh = tk.Frame(ab_frame, bg="#201a08")
-                        sgh.pack(fill="x", padx=16, pady=0)
-                        tk.Label(sgh, text=f"  ▸ {stt}",
-                                 bg="#201a08", fg="#cc9944",
-                                 font=("Consolas", 8, "bold")).pack(side="left")
-                        # Support 'effects' list or old 'primary'
-                        seffs = sgrp.get("effects") or sgrp.get("primaries", [])
-                        if not seffs and "primary" in sgrp:
-                            seffs = [sgrp["primary"]]
-                        for sp in seffs:
-                            seid   = sp.get("effect_id", "?")
-                            sevals = sp.get("vals", {})
-                            seitem = self._effects_lu.get(seid, {})
-                            setext = render_effect(seitem, sevals, {}, fallback_id=seid)
-                            se_cv  = cv_content_item(seitem, sevals, {}) if seitem else 0.0
-                            se_cmx = complexity_content_item(seitem) if seitem else 0.0
-                            serow  = tk.Frame(ab_frame, bg="#181408")
-                            serow.pack(fill="x", padx=24, pady=0)
-                            tk.Label(serow, text=f"  Eff: {seid} →  {setext}",
-                                     bg="#181408", fg="#eedd88",
-                                     font=("Consolas", 8)).pack(side="left", padx=4)
-                            tk.Label(serow, text=f"CV={se_cv:+.2f}  Cx={se_cmx:.1f}",
-                                     bg="#181408", fg="#886633",
-                                     font=("Consolas", 7)).pack(side="right", padx=6)
+                # Legacy per-ability sub-sigil (old cards)
+                self._render_sub_sigil_block(ab_frame, ab.get("sub_sigil"),
+                                             label="Sub-Sigil")
+                # Global sub-sigil (Option B/C)
+                self._render_sub_sigil_block(ab_frame, ab.get("sub_sigil_global"),
+                                             label="Sub-Sigil (Global)")
 
                 tk.Frame(ab_frame, bg=BG, height=3).pack()
 
@@ -857,6 +819,100 @@ class RandomBuilder(tk.Frame):
                     copt = cost.get("opt_vals", {})
                     cost["content_text"] = render_effect(item, cvals, copt, fallback_id=cid)
         return rc
+
+    def _render_sub_sigil_block(self, parent, sub: dict, label: str = "Sub-Sigil",
+                                indent_px: int = 8):
+        """Render a sub-sigil (header + condition + costs + effect groups)
+        into `parent`. Used for per-group, global, and legacy sub-sigils.
+        """
+        if not sub:
+            return
+        # Header
+        sh = tk.Frame(parent, bg="#2a1a10")
+        sh.pack(fill="x", padx=indent_px, pady=(4, 1))
+        tgt = sub.get("target_type", "")
+        header = f"  \u25c6 {label}" + (f"  [{tgt}]" if tgt else "")
+        tk.Label(sh, text=header,
+                 bg="#2a1a10", fg="#ffcc66",
+                 font=("Consolas", 8, "bold")).pack(side="left")
+
+        inner_pad = indent_px + 8
+
+        # Condition (sub-sigils may have one)
+        scid = sub.get("condition_id")
+        if scid:
+            scitem = self._conditions_lu.get(scid, {})
+            sctext = render_effect(scitem,
+                                   sub.get("condition_vals", {}),
+                                   sub.get("condition_opt_vals", {}),
+                                   fallback_id=scid)
+            crow = tk.Frame(parent, bg="#1e1408")
+            crow.pack(fill="x", padx=inner_pad, pady=0)
+            tk.Label(crow, text=f"  \u25c8 Cond: {scid} \u2192  {sctext}",
+                     bg="#1e1408", fg="#ddaaff",
+                     font=("Consolas", 8)).pack(side="left", padx=4)
+
+        # Costs
+        for scost in sub.get("costs", []):
+            cid   = scost.get("cost_id", "?")
+            cvals = scost.get("vals", {})
+            copt  = scost.get("opt_vals", {})
+            citem = self._costs_lu.get(cid, {})
+            ctext = render_effect(citem, cvals, copt, fallback_id=cid)
+            c_cv  = cv_content_item(citem, cvals, copt) if citem else 0.0
+            c_cmx = complexity_content_item(citem) if citem else 0.0
+            # For Mana, fall back to element name if rendered text is empty
+            if cid == "Mana" and not ctext:
+                ctext = cvals.get("element") or copt.get("0", "Mana")
+            crow = tk.Frame(parent, bg="#1e1408")
+            crow.pack(fill="x", padx=inner_pad, pady=0)
+            tk.Label(crow, text=f"  Cost: {cid} \u2192  {ctext}",
+                     bg="#1e1408", fg="#ffcc77",
+                     font=("Consolas", 8)).pack(side="left", padx=4)
+            tk.Label(crow, text=f"CV={c_cv:+.2f}  Cx={c_cmx:.1f}",
+                     bg="#1e1408", fg="#886633",
+                     font=("Consolas", 7)).pack(side="right", padx=6)
+
+        # Effect groups
+        for sgrp in sub.get("effect_groups", []):
+            stt = sgrp.get("target_type", "")
+            sgh = tk.Frame(parent, bg="#201a08")
+            sgh.pack(fill="x", padx=inner_pad, pady=0)
+            tk.Label(sgh, text=f"  \u25b8 {stt}",
+                     bg="#201a08", fg="#cc9944",
+                     font=("Consolas", 8, "bold")).pack(side="left")
+            # Support 'effects' list or old 'primary'
+            seffs = sgrp.get("effects") or sgrp.get("primaries", [])
+            if not seffs and "primary" in sgrp:
+                seffs = [sgrp["primary"]]
+            for sp in seffs:
+                eid   = sp.get("effect_id", "?")
+                evals = sp.get("vals", {})
+                eopt  = sp.get("opt_vals", {})
+                eitem = self._effects_lu.get(eid, {})
+                etext = render_effect(eitem, evals, eopt, fallback_id=eid)
+                e_cv  = cv_content_item(eitem, evals, eopt) if eitem else 0.0
+                e_cmx = complexity_content_item(eitem) if eitem else 0.0
+                erow  = tk.Frame(parent, bg="#181408")
+                erow.pack(fill="x", padx=inner_pad + 8, pady=0)
+                tk.Label(erow, text=f"  Eff: {eid} \u2192  {etext}",
+                         bg="#181408", fg="#eedd88",
+                         font=("Consolas", 8)).pack(side="left", padx=4)
+                tk.Label(erow, text=f"CV={e_cv:+.2f}  Cx={e_cmx:.1f}",
+                         bg="#181408", fg="#886633",
+                         font=("Consolas", 7)).pack(side="right", padx=6)
+            # Modifiers inside sub-sigil group
+            for mod in sgrp.get("modifiers", []):
+                mid   = mod.get("effect_id", "?")
+                mvals = mod.get("vals", {})
+                mopt  = mod.get("opt_vals", {})
+                mitem = self._effects_lu.get(mid, {})
+                mtext = render_effect(mitem, mvals, mopt, fallback_id=mid)
+                mrow  = tk.Frame(parent, bg="#181408")
+                mrow.pack(fill="x", padx=inner_pad + 16, pady=0)
+                tk.Label(mrow, text=f"  + {mid} \u2192  {mtext}",
+                         bg="#181408", fg="#ccaa77",
+                         font=("Consolas", 8)).pack(side="left", padx=4)
 
     def _open_content_editor(self, item_id: str, type_name: str):
         lookup = {

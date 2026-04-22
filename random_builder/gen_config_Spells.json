@@ -65,6 +65,10 @@
       "probability": 1.0
     },
     {
+      "container": "Move_Card",
+      "probability": 1.0
+    },
+    {
       "effect_id": "Draw",
       "probability": 1.0
     },
@@ -90,6 +94,10 @@
     },
     {
       "effect_id": "Ranged",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Poision",
       "probability": 1.0
     },
     {
@@ -130,10 +138,6 @@
     },
     {
       "trigger_id": "Manual_Trigger",
-      "probability": 1.0
-    },
-    {
-      "trigger_id": "Manual",
       "probability": 1.0
     }
   ],

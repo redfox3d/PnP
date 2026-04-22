@@ -465,6 +465,13 @@ class SpellCardRenderer:
             "Non Targeting":  "•",
             "Target Neutral": "→",
         }
+        # Target-type specific indent (Non Targeting stays at base, others indent)
+        TARGET_INDENT = {
+            "Non Targeting":  0,
+            "Target Ally":    10,
+            "Target Enemy":   10,
+            "Target Neutral": 10,
+        }
 
         use_or      = False
         choose_part = ""
@@ -500,6 +507,8 @@ class SpellCardRenderer:
                                    (self.FF, self.FS_S, "italic"), "#aaddff", y_max)
                 ttype = g.get("target_type", "Non Targeting")
                 grp_color = TARGET_COLORS.get(ttype, "white")
+                # Visual indent per target type: Non Targeting at base, others indented
+                t_indent = TARGET_INDENT.get(ttype, 0)
 
                 # Check if group has multiple primaries - format differently
                 primaries = g.get("primaries") or g.get("effects") or []
@@ -525,7 +534,8 @@ class SpellCardRenderer:
 
                     header = ttype + mod_text + ":"
                     if y + lh <= y_max:
-                        y = self._wrap(header, x + 6, y, max_w - 6, FN, grp_color, y_max)
+                        y = self._wrap(header, x + 6 + t_indent, y,
+                                       max_w - 6 - t_indent, FN, grp_color, y_max)
 
                     # Render each primary as a bullet
                     for primary in primaries:
@@ -537,7 +547,8 @@ class SpellCardRenderer:
                             for k, v in primary.get("vals", {}).items():
                                 pt = pt.replace(f"{{{k}}}", str(v))
                             if pt:
-                                y = self._wrap(f"  • {pt}", x + 12, y, max_w - 14, FN, grp_color, y_max)
+                                y = self._wrap(f"  • {pt}", x + 12 + t_indent, y,
+                                               max_w - 14 - t_indent, FN, grp_color, y_max)
                 else:
                     # Single primary: use original formatting
                     gtxt, reminder_txt = self._render_group_text(g, CD)
@@ -545,27 +556,30 @@ class SpellCardRenderer:
                         continue
                     prefix_sym = TARGET_PREFIX.get(ttype, "•")
                     line_text = f"{prefix_sym} {gtxt}"
+                    line_x = x + 6 + t_indent
+                    line_w = max_w - 6 - t_indent
                     # Append reminder in parentheses if it fits
                     if reminder_txt:
                         remaining_chars = chars_per_line - len(line_text)
                         reminder_inline = f" ({reminder_txt})"
                         if remaining_chars >= len(reminder_inline):
                             line_text = line_text + reminder_inline
-                            y = self._wrap(line_text, x + 6, y, max_w - 6, FN, grp_color, y_max)
+                            y = self._wrap(line_text, line_x, y, line_w, FN, grp_color, y_max)
                         else:
-                            y = self._wrap(line_text, x + 6, y, max_w - 6, FN, grp_color, y_max)
+                            y = self._wrap(line_text, line_x, y, line_w, FN, grp_color, y_max)
                             if y + lh <= y_max:
-                                y = self._wrap(f"  ({reminder_txt})", x + 12, y, max_w - 16,
+                                y = self._wrap(f"  ({reminder_txt})", line_x + 6, y,
+                                               line_w - 10,
                                                (self.FF, self.FS_S, "italic"), grp_color, y_max)
                     else:
-                        y = self._wrap(line_text, x + 6, y, max_w - 6, FN, grp_color, y_max)
+                        y = self._wrap(line_text, line_x, y, line_w, FN, grp_color, y_max)
 
                 # ── Sub-Sigil (per effect group - Option A) ──────────────────
                 group_sub = g.get("sub_sigil")
                 if group_sub and y + lh <= y_max:
-                    # Render sub-sigil for this group (indented)
+                    # Render sub-sigil for this group (indented to match group)
                     y = self._render_sub_sigil(group_sub, CD, c, x, y, max_w, y_max,
-                                             indent_x=6, color=grp_color)
+                                             indent_x=6 + t_indent, color=grp_color)
 
             # ── Global Sub-Sigil (Option B/C - rendered at bottom) ─────────────
             global_sub = ab.get("sub_sigil_global")
@@ -727,18 +741,28 @@ class SpellCardRenderer:
         if not sub_sigil or not sub_sigil.get("effect_groups"):
             return y
 
-        # Render costs
+        # Render costs. Mana has empty content_text (it's drawn as a symbol on
+        # the mana strip), so for sub-sigils we fall back to the element name
+        # to avoid producing a blank "Pay :" header.
         sub_costs = []
         for ci in sub_sigil.get("costs", []):
-            co = CD.get("cost", ci.get("cost_id", ""))
-            if co:
-                sub_costs.append(_render_content(co, {
-                    "var_values": ci.get("vals", {}),
-                    "opt_values": ci.get("opt_vals", {})}))
+            cid = ci.get("cost_id", "")
+            if cid == MANA_COST_ID:
+                elem = (ci.get("vals", {}).get("element")
+                        or ci.get("opt_vals", {}).get("0", "")
+                        or "Mana")
+                sub_costs.append(str(elem))
+                continue
+            co = CD.get("cost", cid)
+            if not co:
+                continue
+            txt = _render_content(co, {
+                "var_values": ci.get("vals", {}),
+                "opt_values": ci.get("opt_vals", {})})
+            if txt:
+                sub_costs.append(txt)
 
-        sub_header = "Pay " + ", ".join(sub_costs) if sub_costs else "Bonus"
-        if sub_header:
-            sub_header += ":"
+        sub_header = ("Pay " + ", ".join(sub_costs) + ":") if sub_costs else "Bonus:"
 
         if y + lh <= y_max:
             y = self._wrap(sub_header, x + indent_x + 4, y, max_w - indent_x - 4,

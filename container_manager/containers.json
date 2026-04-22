@@ -43,5 +43,16 @@
       "Move"
     ],
     "no_repeat": true
+  },
+  "Move_Card": {
+    "id": "Move_Card",
+    "description": "",
+    "effects": [
+      "Recycle_This_Card",
+      "Discard_This_Card",
+      "Loose_This_Card",
+      "Forget_This_Card"
+    ],
+    "no_repeat": true
   }
 }

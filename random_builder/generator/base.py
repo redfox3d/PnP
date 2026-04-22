@@ -73,6 +73,32 @@ class BaseGenerator:
         allowed = item.get("allowed_card_types", [])
         return not allowed or self.profile_name in allowed
 
+    def allowed_in_block(self, item: dict, block_type: str) -> bool:
+        """Check if item is allowed in the given block type (Play, Excavate, etc.).
+
+        Empty/missing allowed_in_blocks → defaults to True (backward compat).
+        """
+        allowed_blocks = item.get("allowed_in_blocks", {})
+        if not allowed_blocks:
+            return True
+        return allowed_blocks.get(block_type, True)
+
+    def passes_block_filters(self, item: dict, block_type: str) -> bool:
+        """Unified block-type filter combining legacy allowed_box_types (under
+        'conditions') and the new allowed_in_blocks field.
+
+        Returns True if the item is allowed in `block_type` (or block_type is
+        empty, meaning "no filter applied").
+        """
+        if not block_type:
+            return True
+        # Legacy allowed_box_types check (inside "conditions" dict)
+        allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
+        if allowed_bt and block_type not in allowed_bt:
+            return False
+        # New allowed_in_blocks check
+        return self.allowed_in_block(item, block_type)
+
     def item_subcategory_weight(self, item: dict, sub: str) -> float:
         if self.profile_name == "Recipes":
             w_map = item.get("recipe_type_weights", {})
@@ -308,8 +334,7 @@ class BaseGenerator:
                            for pair in incompat_pairs):
                         continue
                 item = lookup[iid]
-                allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
-                if allowed_bt and block_type and block_type not in allowed_bt:
+                if not self.passes_block_filters(item, block_type):
                     continue
                 if not self.allowed_for_profile(item):
                     continue
@@ -436,8 +461,7 @@ class BaseGenerator:
                 continue
             if not self.allowed_for_profile(item):
                 continue
-            allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
-            if allowed_bt and block_type and block_type not in allowed_bt:
+            if not self.passes_block_filters(item, block_type):
                 continue
             if target_type is not None:
                 ptypes = item.get("primary_types", [])
@@ -467,8 +491,7 @@ class BaseGenerator:
                 continue
             if not self.allowed_for_profile(item):
                 continue
-            allowed_bt = item.get("conditions", {}).get("allowed_box_types", [])
-            if allowed_bt and block_type and block_type not in allowed_bt:
+            if not self.passes_block_filters(item, block_type):
                 continue
             # target_type filter
             attaches = item.get("attaches_to", [])
