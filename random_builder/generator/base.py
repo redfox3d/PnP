@@ -99,6 +99,77 @@ class BaseGenerator:
         # New allowed_in_blocks check
         return self.allowed_in_block(item, block_type)
 
+    # ── ID conditions (item-to-item compatibility) ───────────────────────────
+    #
+    # The generator tracks one or more "id-condition scopes" that filter picks:
+    #
+    #   sigil scope  – resets at every ability, reads `id_conditions`
+    #   card  scope  – spans whole card,        reads `card_id_conditions`
+    #
+    # `_active_id_scopes` is a list of dicts:
+    #   {"used": set, "excluded": set, "key": "id_conditions"|"card_id_conditions"}
+    #
+    # `passes_all_id_conditions()` checks an item against every active scope,
+    # `register_id_used_all()` updates every scope after a successful pick.
+
+    @staticmethod
+    def _iter_id_conditions(item: dict, key: str = "id_conditions"):
+        """Yield (other_id, mode) tuples from an item's id_conditions list
+        under the given key ("id_conditions" or "card_id_conditions")."""
+        for entry in item.get("conditions", {}).get(key, []):
+            if isinstance(entry, dict):
+                other = entry.get("id")
+                if other:
+                    yield other, entry.get("mode", "required")
+            elif isinstance(entry, str) and entry:
+                yield entry, "required"
+
+    def _get_id_scopes(self) -> list:
+        """Lazy-init + return list of active id-condition scopes."""
+        if not hasattr(self, "_active_id_scopes"):
+            self._active_id_scopes = []
+        return self._active_id_scopes
+
+    def push_id_scope(self, key: str = "id_conditions",
+                      used: set = None, excluded: set = None) -> dict:
+        """Start a new id-condition scope. Returns the scope dict so the
+        caller can reuse the same `used`/`excluded` sets across pushes
+        (e.g. card-level scope reused across abilities)."""
+        scope = {
+            "used":     used if used is not None else set(),
+            "excluded": excluded if excluded is not None else set(),
+            "key":      key,
+        }
+        self._get_id_scopes().append(scope)
+        return scope
+
+    def pop_id_scope(self) -> None:
+        scopes = self._get_id_scopes()
+        if scopes:
+            scopes.pop()
+
+    def passes_all_id_conditions(self, item: dict) -> bool:
+        """Check `item` against every active id-condition scope."""
+        iid = item.get("id", "")
+        for scope in self._get_id_scopes():
+            if iid and iid in scope["excluded"]:
+                return False
+            for other_id, mode in self._iter_id_conditions(item, scope["key"]):
+                if mode == "exclude" and other_id in scope["used"]:
+                    return False
+        return True
+
+    def register_id_used_all(self, item: dict) -> None:
+        """Register `item` in every active scope so later picks see its
+        id (as "used") and the ids it excludes (as "excluded")."""
+        iid = item.get("id", "")
+        for scope in self._get_id_scopes():
+            if iid:
+                scope["used"].add(iid)
+            for other_id, mode in self._iter_id_conditions(item, scope["key"]):
+                if mode == "exclude":
+                    scope["excluded"].add(other_id)
+
     def item_subcategory_weight(self, item: dict, sub: str) -> float:
         if self.profile_name == "Recipes":
             w_map = item.get("recipe_type_weights", {})
@@ -338,6 +409,8 @@ class BaseGenerator:
                     continue
                 if not self.allowed_for_profile(item):
                     continue
+                if not self.passes_all_id_conditions(item):
+                    continue
                 candidates.append((type_str, iid, item))
 
         if not candidates:
@@ -446,7 +519,8 @@ class BaseGenerator:
                           block_type: str, forbidden_ids: set,
                           source_eids: list = None) -> list:
         """Return [(eid, item)] for primary effects matching target_type.
-        Pass target_type=None to skip the target_type filter (any type accepted)."""
+        Pass target_type=None to skip the target_type filter (any type accepted).
+        Respects active id_condition scopes via passes_all_id_conditions()."""
         if source_eids is not None:
             base = [(eid, self.effects[eid]) for eid in source_eids
                     if eid in self.effects]
@@ -462,6 +536,8 @@ class BaseGenerator:
             if not self.allowed_for_profile(item):
                 continue
             if not self.passes_block_filters(item, block_type):
+                continue
+            if not self.passes_all_id_conditions(item):
                 continue
             if target_type is not None:
                 ptypes = item.get("primary_types", [])
@@ -493,6 +569,8 @@ class BaseGenerator:
                 continue
             if not self.passes_block_filters(item, block_type):
                 continue
+            if not self.passes_all_id_conditions(item):
+                continue
             # target_type filter
             attaches = item.get("attaches_to", [])
             if attaches and target_type not in attaches:
@@ -511,7 +589,12 @@ class BaseGenerator:
                            cv_budget: float, block_type: str = "",
                            forbidden_ids: set = None,
                            source_eids: list = None) -> dict | None:
-        """Build one effect group: primary + optional modifiers."""
+        """Build one effect group: primary + optional modifiers.
+
+        Honors active id_condition scopes (see push_id_scope); every picked
+        primary/modifier is registered via register_id_used_all() so later
+        picks in the same scope respect its id_conditions.
+        """
         forbidden_ids = forbidden_ids or set()
 
         primaries = self._filter_primaries(
@@ -535,6 +618,8 @@ class BaseGenerator:
         primary = self.build_effect(eid, element, cv_budget)
         if not primary:
             return None
+        # Register picked primary for id_conditions tracking
+        self.register_id_used_all(chosen_item)
 
         # Use the actual primary_type of the chosen effect (important when
         # target_type was relaxed above to accommodate a specific container).
@@ -566,18 +651,20 @@ class BaseGenerator:
 
             for _ in range(max_mods):
                 avail = [(e, i) for e, i in mod_candidates
-                         if e not in used_mod_ids]
+                         if e not in used_mod_ids
+                         and self.passes_all_id_conditions(i)]
                 if not avail:
                     break
                 chosen_mod = self._pick_weighted(avail, element)
                 if not chosen_mod:
                     break
-                mod_eid, _ = chosen_mod
+                mod_eid, mod_item = chosen_mod
                 eff = self.build_effect(mod_eid, element, remaining)
                 if eff:
                     modifiers.append(eff)
                     used_mod_ids.add(mod_eid)
-                    mod_item = self.effects.get(mod_eid)
+                    # Register modifier for id_conditions tracking
+                    self.register_id_used_all(mod_item)
                     if mod_item:
                         remaining -= cv_content_item(
                             mod_item, eff.get("vals", {}),

@@ -539,7 +539,8 @@ class RandomBuilder(tk.Frame):
                 ab_cv = 0
                 try:
                     from .cv_calc import cv_ability as _cv_ability
-                    ab_cv = _cv_ability(ab, self._effects_lu, self._costs_lu)
+                    ab_cv = _cv_ability(ab, self._effects_lu, self._costs_lu,
+                                        triggers_lookup=self._triggers_lu)
                 except Exception:
                     pass
                 # Complexity over all effects (groups + legacy)
@@ -848,7 +849,12 @@ class RandomBuilder(tk.Frame):
                                    fallback_id=scid)
             crow = tk.Frame(parent, bg="#1e1408")
             crow.pack(fill="x", padx=inner_pad, pady=0)
-            tk.Label(crow, text=f"  \u25c8 Cond: {scid} \u2192  {sctext}",
+            tk.Button(crow, text=f"  \u25c8 Cond: {scid}",
+                      bg="#1e1408", fg="#ddaaff", relief="flat", cursor="hand2",
+                      font=("Consolas", 8), anchor="w",
+                      command=lambda i=scid: self._open_content_editor(i, "Condition")
+                      ).pack(side="left")
+            tk.Label(crow, text=f"\u2192  {sctext}",
                      bg="#1e1408", fg="#ddaaff",
                      font=("Consolas", 8)).pack(side="left", padx=4)
 
@@ -866,7 +872,12 @@ class RandomBuilder(tk.Frame):
                 ctext = cvals.get("element") or copt.get("0", "Mana")
             crow = tk.Frame(parent, bg="#1e1408")
             crow.pack(fill="x", padx=inner_pad, pady=0)
-            tk.Label(crow, text=f"  Cost: {cid} \u2192  {ctext}",
+            tk.Button(crow, text=f"  Cost: {cid}",
+                      bg="#1e1408", fg="#ffaa44", relief="flat", cursor="hand2",
+                      font=("Consolas", 8), anchor="w",
+                      command=lambda i=cid: self._open_content_editor(i, "Cost")
+                      ).pack(side="left")
+            tk.Label(crow, text=f"\u2192  {ctext}",
                      bg="#1e1408", fg="#ffcc77",
                      font=("Consolas", 8)).pack(side="left", padx=4)
             tk.Label(crow, text=f"CV={c_cv:+.2f}  Cx={c_cmx:.1f}",
@@ -895,7 +906,12 @@ class RandomBuilder(tk.Frame):
                 e_cmx = complexity_content_item(eitem) if eitem else 0.0
                 erow  = tk.Frame(parent, bg="#181408")
                 erow.pack(fill="x", padx=inner_pad + 8, pady=0)
-                tk.Label(erow, text=f"  Eff: {eid} \u2192  {etext}",
+                tk.Button(erow, text=f"  Eff: {eid}",
+                          bg="#181408", fg="#eedd88", relief="flat", cursor="hand2",
+                          font=("Consolas", 8), anchor="w",
+                          command=lambda i=eid: self._open_content_editor(i, "Effect")
+                          ).pack(side="left")
+                tk.Label(erow, text=f"\u2192  {etext}",
                          bg="#181408", fg="#eedd88",
                          font=("Consolas", 8)).pack(side="left", padx=4)
                 tk.Label(erow, text=f"CV={e_cv:+.2f}  Cx={e_cmx:.1f}",
@@ -910,7 +926,12 @@ class RandomBuilder(tk.Frame):
                 mtext = render_effect(mitem, mvals, mopt, fallback_id=mid)
                 mrow  = tk.Frame(parent, bg="#181408")
                 mrow.pack(fill="x", padx=inner_pad + 16, pady=0)
-                tk.Label(mrow, text=f"  + {mid} \u2192  {mtext}",
+                tk.Button(mrow, text=f"  + {mid}",
+                          bg="#181408", fg="#ccaa77", relief="flat", cursor="hand2",
+                          font=("Consolas", 8), anchor="w",
+                          command=lambda i=mid: self._open_content_editor(i, "Effect")
+                          ).pack(side="left")
+                tk.Label(mrow, text=f"\u2192  {mtext}",
                          bg="#181408", fg="#ccaa77",
                          font=("Consolas", 8)).pack(side="left", padx=4)
 
@@ -947,7 +968,8 @@ class RandomBuilder(tk.Frame):
 
     def _recompute_card(self, card: dict):
         card["_cv"] = round(cv_card(card, self._box_config,
-                                    self._effects_lu, self._costs_lu), 3)
+                                    self._effects_lu, self._costs_lu,
+                                    triggers_lookup=self._triggers_lu), 3)
         card["_complexity"] = round(complexity_card(card, self._effects_lu,
                                                     self._costs_lu), 3)
 

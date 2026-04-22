@@ -1200,6 +1200,73 @@ class ConditionsEditor(tk.Toplevel):
         self._id_conditions = [e for e in self._id_conditions if e is not entry]
         self._rebuild_id_ui()
 
+    # ── Card-level ID condition UI ────────────────────────────────────────────
+
+    def _rebuild_card_id_ui(self):
+        for w in self._card_ids_frame.winfo_children():
+            w.destroy()
+        all_ids    = collect_all_ids(self.data)
+        var_ids    = [k for k, v in all_ids.items() if v["type"] == "variable"]
+        choice_ids = [k for k, v in all_ids.items() if v["type"] == "choice"]
+        item_ids   = [k for k, v in all_ids.items() if v["type"] == "item"]
+
+        for entry in self._card_id_conditions:
+            sid  = entry["id"]
+            mode = entry["mode"]
+            rf   = tk.Frame(self._card_ids_frame)
+            rf.pack(fill="x", pady=1)
+
+            exists = sid in all_ids
+            color  = "#88ff88" if (exists and mode == "required") else \
+                     "#ff8888" if (exists and mode == "exclude")  else "#ffaaaa"
+
+            tk.Label(rf, text=sid, fg=color, font=("Arial", 9, "bold"),
+                     width=24, anchor="w").pack(side="left", padx=4)
+
+            def _toggle(e=entry):
+                e["mode"] = "exclude" if e["mode"] == "required" else "required"
+                self._rebuild_card_id_ui()
+
+            tk.Button(rf,
+                      text="✓ Muss" if mode == "required" else "✗ Ausschluss",
+                      bg="#1a6e3c" if mode == "required" else "#8e1a1a",
+                      fg="white", font=("Arial", 8), width=12,
+                      command=_toggle).pack(side="left", padx=4)
+
+            if not exists:
+                rv = tk.StringVar()
+                ttk.Combobox(rf, textvariable=rv,
+                             values=sorted(item_ids) + var_ids + choice_ids,
+                             width=20).pack(side="left", padx=2)
+                def _reassign(old=sid, rv=rv, e=entry):
+                    new = rv.get().strip()
+                    if new and new != old:
+                        e["id"] = new
+                        self._rebuild_card_id_ui()
+                tk.Button(rf, text="Reassign", command=_reassign,
+                          font=("Arial", 8)).pack(side="left", padx=2)
+            else:
+                info = all_ids[sid]
+                tk.Label(rf, text=f"({info['type']}  {info['item_id']})",
+                         fg="#888", font=("Arial", 8)).pack(side="left", padx=4)
+
+            tk.Button(rf, text="✕", fg="red",
+                      command=lambda e=entry: self._remove_card_id(e),
+                      font=("Arial", 8, "bold"), width=2).pack(side="left", padx=2)
+
+    def _add_card_id(self):
+        sid  = self._new_card_id_var.get().strip()
+        mode = self._new_card_mode_var.get()
+        if sid and not any(e["id"] == sid for e in self._card_id_conditions):
+            self._card_id_conditions.append({"id": sid, "mode": mode})
+            self._new_card_id_var.set("")
+            self._rebuild_card_id_ui()
+
+    def _remove_card_id(self, entry: dict):
+        self._card_id_conditions = [
+            e for e in self._card_id_conditions if e is not entry]
+        self._rebuild_card_id_ui()
+
     # ── Save ───────────────────────────────────────────────────────────────────
 
     def _commit(self):
@@ -1250,11 +1317,17 @@ class ConditionsEditor(tk.Toplevel):
         else:
             self.cond.pop("allowed_box_types", None)
 
-        # ID conditions
+        # ID conditions (sigil-level)
         if self._id_conditions:
             self.cond["id_conditions"] = list(self._id_conditions)
         else:
             self.cond.pop("id_conditions", None)
+
+        # Card-level ID conditions
+        if getattr(self, "_card_id_conditions", None):
+            self.cond["card_id_conditions"] = list(self._card_id_conditions)
+        else:
+            self.cond.pop("card_id_conditions", None)
 
         # Notes
         notes = self._notes_var.get()

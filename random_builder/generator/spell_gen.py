@@ -28,18 +28,33 @@ class SpellGenerator(BaseGenerator):
         blocks = []
         min_grp = max(1, int(self.cfg.get("min_groups", 1)))
 
-        for btype in block_types:
-            ability = None
-            for _ in range(3):
-                used_solo: dict = {}
-                ab = self._build_ability(btype, element,
-                                         used_containers, used_solo, elements)
-                if len(ab.get("effect_groups", [])) >= min_grp:
-                    ability = ab
-                    break
-            if ability is None:
-                ability = ab
-            blocks.append({"type": btype, "abilities": [ability]})
+        # Card-wide id-condition scope: shared across every ability/sigil
+        # of this card. Reads 'card_id_conditions' from content items.
+        card_scope = self.push_id_scope(key="card_id_conditions")
+        sigil_min = float(self.cfg.get("cv_per_sigil_min", 0.0))
+        try:
+            for btype in block_types:
+                ability = None
+                best = None
+                best_cv = float("-inf")
+                for _ in range(8):
+                    used_solo: dict = {}
+                    ab = self._build_ability(btype, element,
+                                             used_containers, used_solo, elements)
+                    ok_groups = len(ab.get("effect_groups", [])) >= min_grp
+                    ab_cv = cv_ability(ab, self.effects, self.costs,
+                                       triggers_lookup=self.triggers)
+                    if ok_groups and ab_cv >= sigil_min:
+                        ability = ab
+                        break
+                    # Keep the best candidate we've seen as a fallback
+                    if ok_groups and ab_cv > best_cv:
+                        best, best_cv = ab, ab_cv
+                if ability is None:
+                    ability = best if best is not None else ab
+                blocks.append({"type": btype, "abilities": [ability]})
+        finally:
+            self.pop_id_scope()
 
         card = {
             "name": make_card_name(element or "Prowess"),
@@ -51,7 +66,8 @@ class SpellGenerator(BaseGenerator):
             card["elements"] = elements
 
         card["_cv"] = round(cv_card(card, self.box_config,
-                                    self.effects, self.costs), 3)
+                                    self.effects, self.costs,
+                                    triggers_lookup=self.triggers), 3)
         card["_complexity"] = round(complexity_card(card, self.effects,
                                                     self.costs), 3)
         return card
@@ -109,20 +125,62 @@ class SpellGenerator(BaseGenerator):
                        elements: list = None) -> dict:
         is_play = (block_type == "Play")
 
+        # Sigil-level id-condition scope: resets every ability. Reads the
+        # standard 'id_conditions' field. Card-level scope (pushed in
+        # generate_one) stays active underneath.
+        self.push_id_scope(key="id_conditions")
+        try:
+            return self._build_ability_inner(
+                block_type, element, used_containers, used_solo,
+                elements, is_play)
+        finally:
+            self.pop_id_scope()
+
+    def _build_ability_inner(self, block_type: str, element: str,
+                             used_containers: dict, used_solo: dict,
+                             elements: list, is_play: bool) -> dict:
         # ── Trigger: ALL abilities must have one ─────────────────────────────
-        # - Play blocks: ALWAYS Manual_Trigger (no trigger text, just action symbol)
-        # - Non-Play blocks: manual_trigger_chance config (default 60%) for Manual,
-        #   otherwise pick a random trigger (respecting profile + block filters).
-        trigger_id, trigger_vals, trigger_opt_vals = "Manual_Trigger", {}, {}
+        # Manual triggers (symbol-only, no text): Manual_Trigger / _Half / _Third
+        # - Play blocks: pick ONE of the manual triggers (weighted by config)
+        # - Non-Play blocks: with `manual_trigger_chance` pick a manual one,
+        #   else pick a text trigger (respecting profile + block filters).
+        MANUAL_IDS = ("Manual_Trigger", "Manual_Trigger_Half",
+                      "Manual_Trigger_Third")
+
+        def _pick_manual_trigger() -> str:
+            """Weighted pick among the three manual-trigger variants."""
+            weights = {
+                "Manual_Trigger":        float(self.cfg.get("manual_full_weight",  10.0)),
+                "Manual_Trigger_Half":   float(self.cfg.get("manual_half_weight",   2.0)),
+                "Manual_Trigger_Third":  float(self.cfg.get("manual_third_weight",  1.0)),
+            }
+            # Keep only those present in triggers and allowed in this block
+            pool = []
+            wts  = []
+            for mid in MANUAL_IDS:
+                titem = self.triggers.get(mid)
+                if not titem:
+                    continue
+                if not self.passes_block_filters(titem, block_type):
+                    continue
+                pool.append(mid)
+                wts.append(max(0.0, weights.get(mid, 0.0)))
+            if not pool or sum(wts) <= 0:
+                return "Manual_Trigger"
+            return random.choices(pool, weights=wts, k=1)[0]
+
+        trigger_id = _pick_manual_trigger()
+        trigger_vals, trigger_opt_vals = {}, {}
 
         if not is_play:
             manual_chance = float(self.cfg.get("manual_trigger_chance", 0.6))
             if random.random() >= manual_chance:
                 allowed_triggers = {
                     k: v for k, v in self.triggers.items()
-                    if k != "Manual_Trigger"
+                    if k not in MANUAL_IDS
                     and self.allowed_for_profile(v)
                     and self.passes_block_filters(v, block_type)
+                    and self.passes_all_id_conditions(v)
                 }
                 if allowed_triggers:
                     tid   = random.choice(list(allowed_triggers.keys()))
@@ -130,20 +188,23 @@ class SpellGenerator(BaseGenerator):
                     trigger_id       = tid
                     trigger_opt_vals = self.pick_options(titem, element)
                     trigger_vals     = self.pick_variable_values(titem, cv_budget=2.0)
-                # else: fallback to default Manual_Trigger set above
+                    self.register_id_used_all(titem)
+                # else: fallback to the manual trigger already picked above
 
         condition_id, condition_vals, condition_opt_vals = None, {}, {}
         cond_chance = float(self.cfg.get("condition_chance", 0.15))
         if self.conditions and random.random() < cond_chance:
             allowed_conditions = {k: v for k, v in self.conditions.items()
                                   if self.allowed_for_profile(v)
-                                  and self.passes_block_filters(v, block_type)}
+                                  and self.passes_block_filters(v, block_type)
+                                  and self.passes_all_id_conditions(v)}
             if allowed_conditions:
                 cid = random.choice(list(allowed_conditions.keys()))
                 citem = allowed_conditions[cid]
                 condition_id = cid
                 condition_opt_vals = self.pick_options(citem, element)
                 condition_vals = self.pick_variable_values(citem, cv_budget=1.0)
+                self.register_id_used_all(citem)
 
         ability = {
             "condition_id":       condition_id,
@@ -152,7 +213,7 @@ class SpellGenerator(BaseGenerator):
             "trigger_id":         trigger_id,
             "trigger_vals":       trigger_vals,
             "trigger_opt_vals":   trigger_opt_vals,
-            "ability_type":       "Play" if trigger_id == "Manual_Trigger" else "Trigger",
+            "ability_type":       "Play" if trigger_id in MANUAL_IDS else "Trigger",
             "costs":              [],
             "effect_groups":      [],
             "choose_n":           None,
@@ -457,7 +518,7 @@ class SpellGenerator(BaseGenerator):
         # ── Sub-Sigils (Option A: per effect group) ──────────────────────────
         # Attach sub-sigils to individual effect groups (Target Enemy/Ally/Non Targeting)
         sub_budget_frac = float(self.cfg.get("sub_sigil_cv_budget_frac", 0.3))
-        is_manual_trigger = trigger_id == "Manual_Trigger"
+        is_manual_trigger = trigger_id in MANUAL_IDS
 
         for group in ability["effect_groups"]:
             target_type = group.get("target_type", "Non Targeting")
