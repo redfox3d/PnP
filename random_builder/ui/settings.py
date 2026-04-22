@@ -316,8 +316,9 @@ class SettingsPanel(tk.Frame):
         cv_row.pack(fill="x", padx=12, pady=2)
 
         for label, key, default in [
-            ("Karte ≥", "cv_card_min", -999.0),
-            ("≤",       "cv_target",   3.0),
+            ("Karte ≥",  "cv_card_min",      -999.0),
+            ("≤",        "cv_target",          3.0),
+            ("Sigil ≥",  "cv_per_sigil_min",   0.0),
         ]:
             tk.Label(cv_row, text=label, bg="#1a1a1a", fg="#888",
                      font=("Arial", 8)).pack(side="left")
@@ -667,6 +668,7 @@ class SettingsPanel(tk.Frame):
 
         # Scalar vars
         float_keys = ["cv_target", "cv_per_box_max", "cv_card_min",
+                       "cv_per_sigil_min",
                        "mana_chance", "condition_chance", "choose_n_chance"]
         int_keys = ["mana_main_count", "mana_max_count", "max_other_costs",
                      "max_effects", "min_effects", "min_blocks"]

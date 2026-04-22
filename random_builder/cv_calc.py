@@ -157,12 +157,28 @@ def cv_sub_sigil(sub_sigil: dict, effects_lookup: dict,
 
 # ── Ability / box CV ──────────────────────────────────────────────────────────
 
+def _trigger_multiplier(ability: dict, triggers_lookup: dict | None) -> float:
+    """Look up the trigger's `cv_mult` value (default 1.0)."""
+    tid = ability.get("trigger_id")
+    if not tid or not triggers_lookup:
+        return 1.0
+    titem = triggers_lookup.get(tid)
+    if not titem:
+        return 1.0
+    return float(titem.get("cv_mult", 1.0))
+
+
 def cv_ability(ability: dict,
                effects_lookup: dict,
                costs_lookup: dict,
                condition_mult: float = 1.0,
-               trigger_mult: float = 1.0) -> float:
-    """CV of a single ability (one box entry). Supports both old and new format."""
+               trigger_mult: float | None = None,
+               triggers_lookup: dict | None = None) -> float:
+    """CV of a single ability (one box entry). Supports both old and new format.
+
+    The trigger multiplier is looked up from `triggers_lookup[trigger_id].cv_mult`
+    when `trigger_mult` is not supplied explicitly.
+    """
     # New format: effect_groups
     if "effect_groups" in ability and ability["effect_groups"]:
         groups = ability["effect_groups"]
@@ -188,13 +204,17 @@ def cv_ability(ability: dict,
             cv_cost += cv_content_item(item, cost.get("vals", {}),
                                        cost.get("opt_vals", {}))
 
+    if trigger_mult is None:
+        trigger_mult = _trigger_multiplier(ability, triggers_lookup)
+
     return condition_mult * trigger_mult * (cv_eff - cv_cost)
 
 
 # ── Card CV ───────────────────────────────────────────────────────────────────
 
 def cv_card(card: dict, box_config: dict,
-            effects_lookup: dict, costs_lookup: dict) -> float:
+            effects_lookup: dict, costs_lookup: dict,
+            triggers_lookup: dict | None = None) -> float:
     """
     Total CV of a card.
     Base value = -1.0; each block adds CV_ability * cv_modifier.
@@ -203,7 +223,8 @@ def cv_card(card: dict, box_config: dict,
     for block in card.get("blocks", []):
         modifier = float(box_config.get(block["type"], {}).get("cv_modifier", 1.0))
         for ability in block.get("abilities", []):
-            total += cv_ability(ability, effects_lookup, costs_lookup) * modifier
+            total += cv_ability(ability, effects_lookup, costs_lookup,
+                                triggers_lookup=triggers_lookup) * modifier
     return total
 
 

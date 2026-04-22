@@ -30,7 +30,11 @@ MANA_STRIP_W   = 28
 # Width reserved for the action (Manual trigger) symbol, placed right of mana
 ACTION_STRIP_W = 26
 
-MANUAL_TRIGGER_ID = "Manual_Trigger"
+MANUAL_TRIGGER_ID       = "Manual_Trigger"
+MANUAL_TRIGGER_HALF_ID  = "Manual_Trigger_Half"
+MANUAL_TRIGGER_THIRD_ID = "Manual_Trigger_Third"
+MANUAL_TRIGGER_IDS = (MANUAL_TRIGGER_ID, MANUAL_TRIGGER_HALF_ID,
+                      MANUAL_TRIGGER_THIRD_ID)
 
 
 # ── Editor ────────────────────────────────────────────────────────────────────
@@ -373,12 +377,51 @@ class SpellCardRenderer:
                               font=("Arial", 9), anchor="center")
                 y += r*2 + 3
 
-    def _draw_action_symbol(self, cx: int, cy: int, r: int):
-        """Circle with inverted triangle = 'costs one Action' marker."""
-        c = self.canvas
+    def _draw_action_symbol(self, cx: int, cy: int, r: int,
+                            variant: str = "full"):
+        """Action-cost marker. Three variants:
+        - 'full' (Manual_Trigger): circle + regular downward triangle, yellow
+        - 'half' (Manual_Trigger_Half): grey circle + INVERTED yellow triangle
+        - 'third' (Manual_Trigger_Third): bronze circle + bronze triangle +
+          inverted triangle below it (shifted up), all bronze/brown
+        """
+        c  = self.canvas
+        tr = int(r * 0.58)
+
+        if variant == "half":
+            # Grey disc, inverted yellow triangle (pointing up)
+            c.create_oval(cx - r, cy - r, cx + r, cy + r,
+                          fill="#3a3a3a", outline="#888888", width=2)
+            pts = [cx - tr, cy + int(tr * 0.65),
+                   cx + tr, cy + int(tr * 0.65),
+                   cx,      cy - int(tr * 0.80)]
+            c.create_polygon(pts, fill="#ffaa00")
+            return
+
+        if variant == "third":
+            # Bronze/brown disc with TWO triangles:
+            #  - main triangle pointing down (upper half)
+            #  - inverted triangle (pointing up) below, shifted upward so they overlap
+            c.create_oval(cx - r, cy - r, cx + r, cy + r,
+                          fill="#2a1808", outline="#b87333", width=2)
+            tr2 = int(r * 0.48)
+            off_main = -int(r * 0.22)  # main triangle nudged up
+            # Main triangle (points down)
+            pts_main = [cx - tr2, cy + off_main - int(tr2 * 0.65),
+                        cx + tr2, cy + off_main - int(tr2 * 0.65),
+                        cx,       cy + off_main + int(tr2 * 0.80)]
+            c.create_polygon(pts_main, fill="#b87333")
+            # Inverted triangle (points up), placed below but shifted up to overlap
+            off_inv = int(r * 0.42)
+            pts_inv = [cx - tr2, cy + off_inv + int(tr2 * 0.15),
+                       cx + tr2, cy + off_inv + int(tr2 * 0.15),
+                       cx,       cy + off_inv - int(tr2 * 0.80) + int(tr2 * 0.15)]
+            c.create_polygon(pts_inv, fill="#8b5a2b")
+            return
+
+        # Default / "full": standard Manual_Trigger look
         c.create_oval(cx - r, cy - r, cx + r, cy + r,
                       fill="#1a1200", outline="#ffaa00", width=2)
-        tr = int(r * 0.58)
         pts = [cx - tr, cy - int(tr * 0.65),
                cx + tr, cy - int(tr * 0.65),
                cx,      cy + int(tr * 0.80)]
@@ -391,15 +434,21 @@ class SpellCardRenderer:
         lh    = self.FS + 6
 
         # ── Action symbol (Manual trigger = costs one Action) ─────────────────
-        if ab.get("trigger_id") == MANUAL_TRIGGER_ID:
+        tid = ab.get("trigger_id")
+        if tid in MANUAL_TRIGGER_IDS:
             ax = left - ACTION_STRIP_W // 2
             ay = y + lh
-            self._draw_action_symbol(ax, ay, 11)
+            variant = {
+                MANUAL_TRIGGER_ID:       "full",
+                MANUAL_TRIGGER_HALF_ID:  "half",
+                MANUAL_TRIGGER_THIRD_ID: "third",
+            }.get(tid, "full")
+            self._draw_action_symbol(ax, ay, 11, variant=variant)
 
         # ── Header ───────────────────────────────────────────────────────────
-        # Manual trigger is symbol-only — skip it in text
+        # Manual triggers are symbol-only — skip them in text
         trigger_text = ""
-        if ab.get("trigger_id") and ab["trigger_id"] != MANUAL_TRIGGER_ID:
+        if ab.get("trigger_id") and ab["trigger_id"] not in MANUAL_TRIGGER_IDS:
             trig = CD.get("trigger", ab["trigger_id"])
             if trig:
                 trigger_text = _render_content(trig, {
