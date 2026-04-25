@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
-from .constants import ABILITY_TYPES, BOX_COLORS, BOX_SYMBOLS
+from .constants import ABILITY_TYPES, BOX_COLORS, BOX_SYMBOLS, sigil_label
 from .data import get_content_data, parse_placeholders
 from .models import empty_ability, empty_effect_group, empty_sub_sigil, _migrate_group
 
@@ -964,7 +964,7 @@ class BoxEditor(tk.LabelFrame):
         color = BOX_COLORS.get(btype, "#333")
         super().__init__(
             parent,
-            text=f" {BOX_SYMBOLS.get(btype, '?')} {btype} ",
+            text=f" {BOX_SYMBOLS.get(btype, '?')} {sigil_label(btype)} ",
             fg=color, font=("Arial", 9, "bold"),
             relief="groove", bd=2, **kw,
         )

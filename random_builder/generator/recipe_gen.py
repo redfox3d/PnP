@@ -93,26 +93,55 @@ class RecipeGenerator(BaseGenerator):
         # Distribute effect budget proportional to ingredient count
         for mat, cnt, eid, item, me in mat_effect_items:
             cv_mult = float(me.get("cv_multiplier", 1.0))
+
+            # ── C3/C4: damage-type selection from ranking table ────────────
+            # If this effect is flagged as damage AND the ingredient declares
+            # a damage_element, sample a damage type from the per-element
+            # ranking table and apply its rank-based CV multiplier.
+            damage_type = None
+            damage_cv_mod = 1.0
+            tags = item.get("tags", []) or []
+            if "damage" in tags:
+                dmg_el = (me.get("damage_element") or "").strip()
+                if dmg_el:
+                    try:
+                        from CardContent import damage_registry as _dreg
+                        damage_type, damage_cv_mod = _dreg.pick_damage_type(dmg_el)
+                    except Exception:
+                        damage_type, damage_cv_mod = None, 1.0
+
+            total_cv_mult = cv_mult * float(damage_cv_mod or 1.0)
+
             share = cnt / n_total          # fraction of total ingredients
             per_effect_target = target_effects_cv * share
 
             # Solve for raw CV, then multiply:
-            #   actual_cv = raw_cv * cv_mult  →  raw_cv = target / cv_mult
-            raw_target = per_effect_target / cv_mult if cv_mult else per_effect_target
+            #   actual_cv = raw_cv * total_cv_mult  →  raw_cv = target / mult
+            raw_target = (per_effect_target / total_cv_mult
+                          if total_cv_mult else per_effect_target)
             opt_vals = self.pick_options(item, recipe_type)
 
-            vals = self._solve_vals_for_target(item, raw_target, opt_vals)
+            # E3: strict 1:1 dice-ingredient mapping. Forced ingredient count
+            # is propagated to the dice picker so N == cnt.
+            vals = self._solve_vals_for_target(item, raw_target, opt_vals,
+                                                forced_dice_n=cnt)
 
             eff = {"effect_id": eid, "vals": vals, "opt_vals": opt_vals}
+            if damage_type:
+                eff["damage_type"]    = damage_type
+                eff["damage_element"] = me.get("damage_element", "")
+                eff["damage_cv_mod"]  = round(float(damage_cv_mod), 4)
             effects.append(eff)
 
             raw_cv = cv_content_item(item, vals, opt_vals)
-            effects_total_cv += raw_cv * cv_mult
+            effects_total_cv += raw_cv * total_cv_mult
 
             # Build use-text
             ct = item.get("content_text", "")
             for k, v in vals.items():
                 ct = ct.replace(f"{{{k}}}", str(v))
+            if ct and damage_type:
+                ct = f"{ct} ({damage_type})"
             if ct:
                 use_parts.append(ct)
 
@@ -160,8 +189,14 @@ class RecipeGenerator(BaseGenerator):
         return random.choices(counts, weights=weights)[0]
 
     def _solve_vals_for_target(self, item: dict, target_cv: float,
-                               opt_vals: dict) -> dict:
-        """Pick variable values so the effect's total CV ~ target_cv."""
+                               opt_vals: dict,
+                               forced_dice_n: int | None = None) -> dict:
+        """Pick variable values so the effect's total CV ~ target_cv.
+
+        E3 — when *forced_dice_n* is provided, dice variables are constrained
+        to exactly N dice (matching the ingredient count). The picker then
+        chooses the die *size* so that N × avg ≈ per_var.
+        """
         base_cv = float(item.get("cv", item.get("cv1", 0.0)))
 
         opt_cv = 0.0
@@ -190,7 +225,12 @@ class RecipeGenerator(BaseGenerator):
             dice_allowed = stat.get("dice_allowed", False)
             use_dice     = dice_only or (dice_allowed and random.random() < can_chance)
             if use_dice and dice_list:
-                vals[var_name] = self._pick_dice_for_cv(stat, per_var, dice_list)
+                if forced_dice_n is not None:
+                    vals[var_name] = self._pick_dice_with_n(
+                        stat, per_var, dice_list, n=forced_dice_n)
+                else:
+                    vals[var_name] = self._pick_dice_for_cv(
+                        stat, per_var, dice_list)
             else:
                 cond = stat.get("conditions", {})
                 vmin = max(1, int(float(cond.get("var_min", 1))))
@@ -198,6 +238,38 @@ class RecipeGenerator(BaseGenerator):
                 x = self._find_x_for_cv(stat, per_var, vmin, vmax)
                 vals[var_name] = max(1, x)
         return vals
+
+    # ── E3: pick dice with FORCED count (1:1 with ingredient count) ──────────
+    @staticmethod
+    def _pick_dice_with_n(stat: dict, target_cv: float,
+                           dice_list: list, n: int) -> str:
+        """Return a dice string 'NDx' with N == n; choose die size so that
+        N × avg ≈ target_cv / cv1.
+        """
+        from random_builder.dice_models import die_avg as _die_avg
+        n = max(1, int(n))
+        c1 = float(stat.get("cv1", 1.0)) or 1.0
+        target_expected = max(1.0, target_cv / c1)
+        per_die_target  = target_expected / n
+
+        best_die  = None
+        best_diff = float("inf")
+        for die in dice_list:
+            avg = _die_avg(die)
+            if avg <= 0:
+                continue
+            diff = abs(avg - per_die_target)
+            if diff < best_diff:
+                best_diff = diff
+                best_die  = die
+        if best_die is None:
+            return f"{n}D6"
+        die_id = best_die.get("id", "D6")
+        # If id starts with a digit (e.g. "2D4"), prepend additional N
+        # multiplier; otherwise prepend N when n>1.
+        if n == 1:
+            return die_id
+        return f"{n}{die_id}"
 
     @staticmethod
     def _find_x_for_cv(stat: dict, target_var_cv: float,

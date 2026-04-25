@@ -41,6 +41,14 @@
       "probability": 39.0
     },
     {
+      "container": "Move",
+      "probability": 1.0
+    },
+    {
+      "container": "Move_Card",
+      "probability": 1.0
+    },
+    {
       "effect_id": "Draw",
       "probability": 1.0
     },
@@ -65,19 +73,11 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Move",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Jump",
-      "probability": 1.0
-    },
-    {
-      "effect_id": "Teleport",
-      "probability": 1.0
-    },
-    {
       "effect_id": "Ranged",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Poision",
       "probability": 1.0
     },
     {
@@ -89,15 +89,39 @@
       "probability": 1.0
     },
     {
-      "effect_id": "Dash",
-      "probability": 1.0
-    },
-    {
       "effect_id": "Rummage",
       "probability": 1.0
     },
     {
       "effect_id": "Throw",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Echo",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Verse",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Rhythm",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Search_Backpack",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Fasten",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "TimeStep",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Mill_Search",
       "probability": 1.0
     },
     {
@@ -125,7 +149,15 @@
       "probability": 1.0
     },
     {
-      "trigger_id": "Manual",
+      "trigger_id": "Manual_Trigger_Half",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Manual_Trigger_Third",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Activate_A_Source",
       "probability": 1.0
     }
   ],
@@ -164,5 +196,11 @@
   "sub_sigil_group_chance": 0.15,
   "sub_sigil_global_chance": 0.2,
   "sub_sigil_target_enemy_manual_chance": 0.8,
-  "sub_sigil_target_ally_chance": 0.1
+  "sub_sigil_target_ally_chance": 0.1,
+  "cv_per_sigil_min": 0.0,
+  "chance_choose": 0.4,
+  "chance_enhance": 0.2,
+  "chance_doublecast": 0.1,
+  "chance_multicast": 0.05,
+  "chance_no_subsigil": 0.6
 }

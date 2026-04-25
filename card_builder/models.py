@@ -176,13 +176,25 @@ def migrate_ability(ability: dict, effects_lookup: dict = None) -> dict:
     return ability
 
 
+def _apply_box_aliases(cards: list) -> None:
+    """B4: Rewrite Enchantment → Concentration on load (in-place)."""
+    from .constants import canonical_box_type
+    for card in cards:
+        for blk in card.get("blocks", []):
+            t = blk.get("type")
+            if t:
+                blk["type"] = canonical_box_type(t)
+
+
 def load_cards(card_type: str) -> list:
     if not _CARDS_DIR:
         return []
     path = _cards_file(card_type)
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
-            return json.load(f).get("cards", [])
+            cards = json.load(f).get("cards", [])
+        _apply_box_aliases(cards)
+        return cards
     return []
 
 

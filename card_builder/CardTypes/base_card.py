@@ -394,10 +394,14 @@ class BaseCardEditor(tk.Frame):
 
     def _build_header(self):
         from card_builder.models import CARD_TYPE_PARENT
-        from card_builder.constants import ELEMENTS
+        from card_builder.constants import ELEMENTS, card_type_label
 
-        ct  = self.card.get("card_type", "")
-        cat = CARD_TYPE_PARENT.get(ct, "")
+        ct          = self.card.get("card_type", "")
+        cat         = CARD_TYPE_PARENT.get(ct, "")
+        ct_display  = card_type_label(ct)
+        # Show "Skills" parent as "Act" only when the card itself is Prowess.
+        # Otherwise keep the parent name as-is — "Skills" is still the folder.
+        cat_display = cat
 
         # Name + type badge row
         row = tk.Frame(self._f, bg=self.BG)
@@ -428,7 +432,10 @@ class BaseCardEditor(tk.Frame):
                 max_items=6, bg=self.BG)
             self._el_sel.pack(side="left", padx=2)
 
-        tk.Label(row, text=f"[{cat} › {ct}]", bg=self.BG, fg="#555",
+        badge = f"[{cat_display} › {ct_display}]"
+        if ct_display != ct:
+            badge += f"  (intern: {ct})"
+        tk.Label(row, text=badge, bg=self.BG, fg="#555",
                  font=("Arial", 8, "italic")).pack(side="left", padx=8)
 
         # Artwork (not for Spells/Prowess)

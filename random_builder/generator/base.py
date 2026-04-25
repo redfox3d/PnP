@@ -171,11 +171,26 @@ class BaseGenerator:
                     scope["excluded"].add(other_id)
 
     def item_subcategory_weight(self, item: dict, sub: str) -> float:
+        # B1: Per-element / per-recipe-type hard disable. When the content
+        # editor marks a subcategory as off, the item is simply not available
+        # in that subcategory.
+        if not self.item_enabled_for(item, sub):
+            return 0.0
         if self.profile_name == "Recipes":
             w_map = item.get("recipe_type_weights", {})
         else:
             w_map = item.get("element_weights", {})
         return float(w_map.get(sub, 10)) if w_map else 10.0
+
+    def item_enabled_for(self, item: dict, sub: str) -> bool:
+        """B1: Whether `item` is enabled for subcategory `sub` (element or
+        recipe-type). Default on. A missing entry = True."""
+        key = ("recipe_type_enabled" if self.profile_name == "Recipes"
+               else "element_enabled")
+        flags = item.get(key, {})
+        if not isinstance(flags, dict):
+            return True
+        return bool(flags.get(sub, True))
 
     # ── Element / recipe type picking ────────────────────────────────────────
 
@@ -243,9 +258,34 @@ class BaseGenerator:
         for opt_key, sel in opt_vals.items():
             stat = item.get("options", {}).get(opt_key, {}).get("per_choice", {}).get(sel, {})
             base_cv += float(stat.get("cv", stat.get("cv1", 0.0)))
-        remaining = cv_budget - base_cv
+
+        # C4: For damage-tagged effects, sample damage type from the per-element
+        # ranking and capture the cv multiplier so cv_calc / renderer can use it.
+        damage_type = None
+        damage_cv_mod = 1.0
+        if "damage" in (item.get("tags") or []) and element:
+            try:
+                from CardContent import damage_registry as _dreg
+                damage_type, damage_cv_mod = _dreg.pick_damage_type(element)
+            except Exception:
+                damage_type, damage_cv_mod = None, 1.0
+
+        # Adjust the variable budget so X scales for the post-mod target CV.
+        # Working CV = raw_cv * damage_cv_mod
+        # We want raw_cv * damage_cv_mod ≈ cv_budget   →  raw target = budget / mod
+        try:
+            mod = float(damage_cv_mod) if damage_cv_mod else 1.0
+        except (TypeError, ValueError):
+            mod = 1.0
+        remaining = (cv_budget - base_cv) / mod if mod else (cv_budget - base_cv)
         vals = self.pick_variable_values(item, remaining)
-        return {"effect_id": effect_id, "vals": vals, "opt_vals": opt_vals}
+
+        eff: dict = {"effect_id": effect_id, "vals": vals, "opt_vals": opt_vals}
+        if damage_type:
+            eff["damage_type"]    = damage_type
+            eff["damage_element"] = element
+            eff["damage_cv_mod"]  = round(float(damage_cv_mod), 4)
+        return eff
 
     def build_cost(self, cost_id: str, element: str) -> dict | None:
         item = self.costs.get(cost_id)
@@ -322,7 +362,12 @@ class BaseGenerator:
         for var_name, stat in variables.items():
             dice_only    = stat.get("dice_only", False)
             dice_allowed = stat.get("dice_allowed", False)
+            potion_only  = stat.get("potion_only", False)
             use_dice     = dice_only or (dice_allowed and random.random() < can_chance)
+            # E1: potion_only variables get dice **only** in recipe context.
+            # In Spell/Prowess generation we fall back to a numeric value.
+            if potion_only:
+                use_dice = False
 
             if use_dice and dice_list:
                 vals[var_name] = self._pick_dice_for_cv(stat, share, dice_list)
@@ -411,6 +456,9 @@ class BaseGenerator:
                     continue
                 if not self.passes_all_id_conditions(item):
                     continue
+                # B1: hard disable per element / recipe-type
+                if element and not self.item_enabled_for(item, element):
+                    continue
                 candidates.append((type_str, iid, item))
 
         if not candidates:
@@ -461,6 +509,9 @@ class BaseGenerator:
             if allowed_bt and block_type and block_type not in allowed_bt:
                 continue
             if not self.allowed_for_profile(item):
+                continue
+            # B1: hard disable per element / recipe-type
+            if element and not self.item_enabled_for(item, element):
                 continue
             candidates.append((eid, item))
 
@@ -546,6 +597,9 @@ class BaseGenerator:
             allowed_el = item.get("conditions", {}).get("allowed_elements", [])
             if allowed_el and element and element not in allowed_el:
                 continue
+            # B1: hard disable per element / recipe-type
+            if element and not self.item_enabled_for(item, element):
+                continue
             result.append((eid, item))
         return result
 
@@ -581,6 +635,9 @@ class BaseGenerator:
                 continue
             allowed_el = item.get("conditions", {}).get("allowed_elements", [])
             if allowed_el and element and element not in allowed_el:
+                continue
+            # B1: hard disable per element / recipe-type
+            if element and not self.item_enabled_for(item, element):
                 continue
             result.append((eid, item))
         return result
@@ -635,12 +692,51 @@ class BaseGenerator:
         if primary_item:
             primary_cv = cv_content_item(primary_item, primary.get("vals", {}),
                                          primary.get("opt_vals", {}))
+            # C4: include damage-type CV multiplier
+            try:
+                primary_cv *= float(primary.get("damage_cv_mod", 1.0) or 1.0)
+            except (TypeError, ValueError):
+                pass
 
-        # Roll for modifiers
+        # ── D: Range Reform — force-attach Ranged to every Target-Enemy group ─
         modifiers = []
+        ranged_forced = False
+        if resolved_type == "Target Enemy":
+            ranged_item = self.effects.get("Ranged")
+            if ranged_item and "Ranged" not in forbidden_ids and \
+                    self.allowed_for_profile(ranged_item) and \
+                    self.passes_block_filters(ranged_item, block_type) and \
+                    self.passes_all_id_conditions(ranged_item) and \
+                    self.item_enabled_for(ranged_item, element):
+                # Check requires_primary_tags
+                req_tags = ranged_item.get("requires_primary_tags", [])
+                primary_tags = set(primary_item.get("tags", []) or []) if primary_item else set()
+                if not req_tags or primary_tags.intersection(req_tags):
+                    # 40% → range 0 (no render); otherwise pick X normally
+                    range_zero_chance = float(
+                        self.cfg.get("range_zero_chance", 0.40))
+                    if random.random() < range_zero_chance:
+                        eff = {"effect_id": "Ranged", "vals": {"X": 0},
+                               "opt_vals": {}}
+                    else:
+                        eff = self.build_effect("Ranged", element,
+                                                cv_budget - primary_cv)
+                        if eff is None:
+                            eff = {"effect_id": "Ranged", "vals": {"X": 0},
+                                   "opt_vals": {}}
+                        # Ensure X is at least 1 in this branch
+                        if int(eff.get("vals", {}).get("X", 0) or 0) < 1:
+                            eff["vals"]["X"] = 1
+                    modifiers.append(eff)
+                    ranged_forced = True
+                    self.register_id_used_all(ranged_item)
+
+        # Roll for further modifiers
         mod_chance = float(self.cfg.get("modifier_chance", 0.3))
         if random.random() < mod_chance:
             mod_forbidden = forbidden_ids | {primary["effect_id"]}
+            if ranged_forced:
+                mod_forbidden = mod_forbidden | {"Ranged"}
             mod_candidates = self._filter_modifiers(
                 resolved_type, element, block_type, mod_forbidden,
                 primary_item=primary_item)
@@ -666,9 +762,14 @@ class BaseGenerator:
                     # Register modifier for id_conditions tracking
                     self.register_id_used_all(mod_item)
                     if mod_item:
-                        remaining -= cv_content_item(
+                        mod_cv = cv_content_item(
                             mod_item, eff.get("vals", {}),
                             eff.get("opt_vals", {}))
+                        try:
+                            mod_cv *= float(eff.get("damage_cv_mod", 1.0) or 1.0)
+                        except (TypeError, ValueError):
+                            pass
+                        remaining -= mod_cv
 
         return {
             "target_type": resolved_type,
@@ -762,19 +863,22 @@ class BaseGenerator:
     def build_sub_sigil(self, element: str, cv_budget: float,
                         block_type: str = "",
                         target_type: str | None = None,
-                        restrict_to_targets: set | None = None) -> dict | None:
-        """Build a sub-sigil: mandatory costs + optional condition + effect groups.
+                        restrict_to_targets: set | None = None,
+                        sub_type: str = "enhance",
+                        forbid_target_types: set | None = None) -> dict | None:
+        """Build a sub-sigil.
 
-        Args:
-            element: Card element
-            cv_budget: CV available for this sub-sigil
-            block_type: Box type (Play, Hand, etc.)
-            target_type: If set, forces this target_type for effect_groups.
-                        If None, picks randomly.
-            restrict_to_targets: Set of target_types to choose from (e.g., {"Non Targeting"}
-                                for Option C "draw" sub-sigils)
+        sub_type:
+            - "enhance"    : costs + (opt) condition + effect_groups (classic)
+            - "doublecast" : costs + (opt) condition, NO effects
+            - "multicast"  : costs + (opt) condition, NO effects  (×3 payoff)
 
-        Returns: dict with target_type, condition, costs, effect_groups
+        forbid_target_types:
+            Set of target_types the sub-sigil's own effect_group(s) must NOT use
+            (to enforce "one Target Enemy / one Target Ally per sigil incl sub-sigil").
+
+        Returns: dict with sub_sigil_type, target_type, condition, costs,
+                 effect_groups (empty for doublecast/multicast).
         """
         costs = []
         if "Mana" in self.costs:
@@ -795,19 +899,39 @@ class BaseGenerator:
                 condition_opt_vals = self.pick_options(citem, element)
                 condition_vals = self.pick_variable_values(citem, cv_budget=1.0)
 
-        # Pick target type
+        # Doublecast / Multicast: no effects, just cost + condition
+        if sub_type in ("doublecast", "multicast"):
+            return {
+                "sub_sigil_type":     sub_type,
+                "target_type":        "",
+                "condition_id":       condition_id,
+                "condition_vals":     condition_vals,
+                "condition_opt_vals": condition_opt_vals,
+                "costs":              costs,
+                "effect_groups":      [],
+            }
+
+        # Enhance: pick target_type honoring the forbid set
+        forbid = forbid_target_types or set()
         if target_type is None:
             if restrict_to_targets:
-                target_type = random.choice(list(restrict_to_targets))
+                pool = [t for t in restrict_to_targets if t not in forbid]
+                if not pool:
+                    pool = list(restrict_to_targets)
+                target_type = random.choice(pool)
             else:
-                target_type = self.pick_target_type()
+                target_type = self.pick_target_type(exclude=forbid)
+        elif target_type in forbid:
+            # Requested target is forbidden → fall back
+            target_type = self.pick_target_type(exclude=forbid) or target_type
 
         group = self.build_effect_group(target_type, element, cv_budget, block_type)
         if not group:
             return None
 
         return {
-            "target_type":        target_type,  # NEW: include target type
+            "sub_sigil_type":     "enhance",
+            "target_type":        target_type,
             "condition_id":       condition_id,
             "condition_vals":     condition_vals,
             "condition_opt_vals": condition_opt_vals,

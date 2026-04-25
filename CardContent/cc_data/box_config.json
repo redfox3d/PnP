@@ -18,13 +18,7 @@
     "incompatible_with": []
   },
   "Concentration": {
-    "rarity": 4,
-    "cv_modifier": 1.2,
-    "element_weights": {},
-    "incompatible_with": []
-  },
-  "Enchantment": {
-    "rarity": 4,
+    "rarity": 8,
     "cv_modifier": 1.2,
     "element_weights": {},
     "incompatible_with": []

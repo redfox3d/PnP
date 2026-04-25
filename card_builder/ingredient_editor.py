@@ -8,7 +8,10 @@ Per material row:
 import tkinter as tk
 from tkinter import ttk
 
-from card_builder.materials import merged_materials, load_material_effects, save_material_effects
+from card_builder.materials import (
+    merged_materials, load_material_effects, save_material_effects,
+    compute_material_usage, derive_cv_multiplier,
+)
 from card_builder.data import get_content_data
 
 # ── colour constants ──────────────────────────────────────────────────────────
@@ -24,6 +27,10 @@ COL_MAT_W    = 14
 COL_COMBO_W  = 20
 COL_CVMULT_W = 6
 COL_CMPLX_W  = 6
+COL_ELEM_W   = 8
+
+# C3: damage_element list (must mirror card_builder.constants.ELEMENTS)
+ELEMENT_CHOICES = ["", "Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
 
 
 class IngredientEditor(tk.Toplevel):
@@ -59,6 +66,12 @@ class IngredientEditor(tk.Toplevel):
         tk.Button(top, text="Speichern", bg="#2a4a2a", fg=FG,
                   activebackground="#3a6a3a", relief="flat", padx=10,
                   font=("Segoe UI", 9), command=self._on_save).pack(side="right")
+        # J: derive CV multipliers (and rarity) from how often each material
+        # appears across Loot cards.
+        tk.Button(top, text="Auto-CV aus Usage", bg="#2a3a4a", fg=FG,
+                  activebackground="#3a4a6a", relief="flat", padx=10,
+                  font=("Segoe UI", 9),
+                  command=self._auto_cv_from_usage).pack(side="right", padx=4)
 
         ttk.Separator(self, orient="horizontal").pack(fill="x", padx=4, pady=4)
 
@@ -89,6 +102,7 @@ class IngredientEditor(tk.Toplevel):
         hdr.columnconfigure(1, minsize=170)
         hdr.columnconfigure(2, minsize=70)
         hdr.columnconfigure(3, minsize=70)
+        hdr.columnconfigure(4, minsize=90)
 
         hdr_font = ("Segoe UI", 9, "bold")
         tk.Label(hdr, text="Material",   bg="#222", fg="#aaa", font=hdr_font,
@@ -99,6 +113,8 @@ class IngredientEditor(tk.Toplevel):
                  anchor="w").grid(row=0, column=2, sticky="w", padx=4, pady=4)
         tk.Label(hdr, text="Cmplx",      bg="#222", fg="#aaa", font=hdr_font,
                  anchor="w").grid(row=0, column=3, sticky="w", padx=4, pady=4)
+        tk.Label(hdr, text="Dmg Elem.",  bg="#222", fg="#aaa", font=hdr_font,
+                 anchor="w").grid(row=0, column=4, sticky="w", padx=4, pady=4)
 
         # ── material rows ─────────────────────────────────────────────────────
         for mat in self._materials:
@@ -115,6 +131,7 @@ class IngredientEditor(tk.Toplevel):
         rf.columnconfigure(1, minsize=170)
         rf.columnconfigure(2, minsize=70)
         rf.columnconfigure(3, minsize=70)
+        rf.columnconfigure(4, minsize=90)
 
         # col 0 – material name
         tk.Label(rf, text=mat, bg=row_bg, fg=MAT_FG, anchor="w",
@@ -145,10 +162,18 @@ class IngredientEditor(tk.Toplevel):
                  font=("Segoe UI", 9), justify="center").grid(
             row=0, column=3, sticky="w", padx=4, pady=3)
 
+        # col 4 – damage element (C3)
+        elem_var = tk.StringVar(value=saved.get("damage_element", ""))
+        elem_combo = ttk.Combobox(rf, textvariable=elem_var,
+                                   values=ELEMENT_CHOICES,
+                                   state="readonly", width=COL_ELEM_W)
+        elem_combo.grid(row=0, column=4, sticky="w", padx=4, pady=3)
+
         self._rows[mat] = {
             "combo_var":      combo_var,
             "cv_mult_var":    cv_mult_var,
             "complexity_var": cmplx_var,
+            "elem_var":       elem_var,
         }
 
     # ── save ─────────────────────────────────────────────────────────────────
@@ -170,11 +195,15 @@ class IngredientEditor(tk.Toplevel):
             except (ValueError, TypeError):
                 cmplx = 0.0
 
-            result[mat] = {
+            entry = {
                 "effect_id":     chosen,
                 "cv_multiplier": cv_mult,
                 "complexity":    cmplx,
             }
+            elem = (row.get("elem_var").get() if row.get("elem_var") else "").strip()
+            if elem:
+                entry["damage_element"] = elem
+            result[mat] = entry
 
         save_material_effects(result)
 
@@ -182,3 +211,26 @@ class IngredientEditor(tk.Toplevel):
             self.on_save(result)
 
         self.destroy()
+
+    # ── J: auto-derive CV multiplier from material usage in Loot cards ─────
+    def _auto_cv_from_usage(self):
+        try:
+            from card_builder.models import load_cards as _load_cards
+        except Exception:
+            return
+        try:
+            loot_cards = _load_cards("Loot") or []
+        except Exception:
+            loot_cards = []
+        usage = compute_material_usage(loot_cards)
+        if not usage:
+            return
+        max_u = max(usage.values()) if usage else 1
+        for mat, row in self._rows.items():
+            u = usage.get(mat, 0)
+            cv = derive_cv_multiplier(u, max_u)
+            row["cv_mult_var"].set(f"{cv:.2f}")
+            # Also update complexity ~ proxy of rarity: rarer (high cv) → higher
+            # complexity. Keep it gentle: 0.5 .. 1.5
+            cmplx = 0.5 + (cv - 0.9) * 5  # 0.9→0.5, 1.1→1.5
+            row["complexity_var"].set(f"{cmplx:.2f}")

@@ -153,6 +153,26 @@ class SettingsPanel(tk.Frame):
                      bg="#2a2a2a", fg="white").pack(side="left", padx=2)
         self._toggle_el_weights()
 
+        # ── H: per-card element COUNT weights (1..6 elements per card) ───────
+        tk.Label(f, text="Element Anzahl pro Karte (Gewichte):",
+                 bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+        ec_frame = tk.Frame(f, bg="#1a1a1a")
+        ec_frame.pack(fill="x", **pad)
+        ec_cfg = self._gen_config.get("element_count_weights", {"1": 100})
+        self._vars["element_count_weights"] = {}
+        for n in range(1, 7):
+            row = tk.Frame(ec_frame, bg="#1a1a1a")
+            row.pack(fill="x", pady=1)
+            tk.Label(row, text=f"{n} Element{'e' if n != 1 else ''}",
+                     bg="#1a1a1a", fg="#888",
+                     width=12, anchor="w", font=("Arial", 8)).pack(side="left")
+            v = tk.StringVar(value=str(ec_cfg.get(str(n), 0)))
+            v.trace_add("write", self._schedule_autosave)
+            self._vars["element_count_weights"][str(n)] = v
+            tk.Entry(row, textvariable=v, width=6,
+                     bg="#2a2a2a", fg="white").pack(side="left", padx=2)
+
     def _toggle_el_weights(self):
         state = "normal" if self._vars.get("element_mode", tk.StringVar()).get() == "custom" else "disabled"
         for w in self._el_weights_frame.winfo_children():
@@ -316,9 +336,8 @@ class SettingsPanel(tk.Frame):
         cv_row.pack(fill="x", padx=12, pady=2)
 
         for label, key, default in [
-            ("Karte ≥",  "cv_card_min",      -999.0),
-            ("≤",        "cv_target",          3.0),
-            ("Sigil ≥",  "cv_per_sigil_min",   0.0),
+            ("Karte ≥",  "cv_card_min", -999.0),
+            ("≤",        "cv_target",     3.0),
         ]:
             tk.Label(cv_row, text=label, bg="#1a1a1a", fg="#888",
                      font=("Arial", 8)).pack(side="left")
@@ -328,13 +347,20 @@ class SettingsPanel(tk.Frame):
             tk.Entry(cv_row, textvariable=v, width=5,
                      bg="#2a2a2a", fg="white").pack(side="left", padx=4)
 
-        tk.Label(cv_row, text="  Sigil ≤", bg="#1a1a1a", fg="#888",
-                 font=("Arial", 8)).pack(side="left", padx=(4, 0))
-        self._vars["cv_per_box_max"] = v = tk.StringVar(
-            value=str(self._gen_config.get("cv_per_box_max", 3.0)))
-        v.trace_add("write", self._schedule_autosave)
-        tk.Entry(cv_row, textvariable=v, width=5,
-                 bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+        # Sigil CV row (separate line so the fields don't clip on narrow menus)
+        sig_row = tk.Frame(f, bg="#1a1a1a")
+        sig_row.pack(fill="x", padx=12, pady=2)
+        for label, key, default in [
+            ("Sigil ≥", "cv_per_sigil_min", 0.0),
+            ("≤",       "cv_per_box_max",   3.0),
+        ]:
+            tk.Label(sig_row, text=label, bg="#1a1a1a", fg="#888",
+                     font=("Arial", 8)).pack(side="left")
+            v = tk.StringVar(value=str(self._gen_config.get(key, default)))
+            v.trace_add("write", self._schedule_autosave)
+            self._vars[key] = v
+            tk.Entry(sig_row, textvariable=v, width=5,
+                     bg="#2a2a2a", fg="white").pack(side="left", padx=4)
 
         self._sep(f)
 
@@ -352,6 +378,12 @@ class SettingsPanel(tk.Frame):
             ("Sigils min",        "min_blocks",       1,    "(1–4)"),
             ("Condition Chance",  "condition_chance",  0.15, ""),
             ("Choose N Chance",   "choose_n_chance",   0.10, "(0–1)"),
+            # Sub-sigil category weights (mutually exclusive with Choose)
+            ("Chance Choose",     "chance_choose",     0.40, "(0–1)"),
+            ("Chance Enhance",    "chance_enhance",    0.20, "(0–1)"),
+            ("Chance Doublecast", "chance_doublecast", 0.10, "(0–1)"),
+            ("Chance Multicast",  "chance_multicast",  0.05, "(0–1)"),
+            ("Chance keins",      "chance_no_subsigil", 0.60, "(Rest-Gewicht)"),
         ]
         for label, key, default, hint in limit_fields:
             row = tk.Frame(f, bg="#1a1a1a")
@@ -623,6 +655,18 @@ class SettingsPanel(tk.Frame):
                     ew[el] = 10.0
             cfg["custom_element_weights"] = ew
 
+            # H: persist element_count_weights too
+            ec = {}
+            for n_str, v in self._vars.get("element_count_weights", {}).items():
+                try:
+                    ec[n_str] = float(v.get())
+                except Exception:
+                    ec[n_str] = 0.0
+            # only keep entries with non-zero weight
+            ec = {k: w for k, w in ec.items() if w > 0}
+            if ec:
+                cfg["element_count_weights"] = ec
+
         # Block rules
         block_rules = []
         for bt, v in self._vars.get("block_rules", {}).items():
@@ -669,7 +713,10 @@ class SettingsPanel(tk.Frame):
         # Scalar vars
         float_keys = ["cv_target", "cv_per_box_max", "cv_card_min",
                        "cv_per_sigil_min",
-                       "mana_chance", "condition_chance", "choose_n_chance"]
+                       "mana_chance", "condition_chance", "choose_n_chance",
+                       "chance_choose", "chance_enhance",
+                       "chance_doublecast", "chance_multicast",
+                       "chance_no_subsigil"]
         int_keys = ["mana_main_count", "mana_max_count", "max_other_costs",
                      "max_effects", "min_effects", "min_blocks"]
         for key in float_keys:

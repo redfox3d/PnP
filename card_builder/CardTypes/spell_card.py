@@ -15,6 +15,7 @@ from card_builder.constants import (
     ELEMENT_COLORS, ELEMENT_ICONS,
     TYPE_SYMBOLS, COND_SYMBOL, EFFECT_SYMBOL, COST_SYMBOL,
     MANA_COST_ID, GENERIC_MANA_ICON, GENERIC_MANA_COLOR,
+    card_type_label, sigil_label,
 )
 from card_builder.models import empty_box, migrate_ability
 from card_builder.widgets import BoxEditor
@@ -156,9 +157,12 @@ class SpellCardRenderer:
         c.create_text(12, 12, text=card.get("name", ""), anchor="nw",
                       font=(self.FF, 16, "bold"), fill="white")
 
-        # Layout: mana strip | action strip | blocks
-        content_left  = 6 + MANA_STRIP_W + ACTION_STRIP_W
-        content_top   = 40
+        # Card-type badge (A1/A2): "Chant" or "Act" with related icons
+        self._draw_card_type_badge(ct, x=12, y=32)
+
+        # Layout: mana strip (with action symbol on top) | blocks
+        content_left  = 6 + MANA_STRIP_W
+        content_top   = 52
 
         if ct == "Spells":
             # Symbol strip on the right for Spells
@@ -235,6 +239,69 @@ class SpellCardRenderer:
         c.create_text((x0+x1)//2, (y0+y1)//2,
                       text="Artwork", fill="#444", font=(self.FF, self.FS_S))
 
+    def _draw_card_type_badge(self, card_type: str, x: int, y: int):
+        """Draw a small icon + label for Chant (Spells) / Act (Prowess).
+
+        The two icons share a common hexagonal frame so they read as
+        related; the inner glyph differs: Chant = musical note (sound),
+        Act = star-burst (action).
+        """
+        c = self.canvas
+        label = card_type_label(card_type)
+        if card_type == "Spells":
+            accent = "#ffd580"   # warm gold
+            self._draw_chant_icon(x + 10, y + 10, r=9, color=accent)
+        elif card_type == "Prowess":
+            accent = "#ffb347"   # slightly oranger gold
+            self._draw_act_icon(x + 10, y + 10, r=9, color=accent)
+        else:
+            return
+        c.create_text(x + 24, y + 2, text=label, anchor="nw",
+                      font=(self.FF, 11, "bold"), fill=accent)
+
+    def _draw_hex_frame(self, cx: int, cy: int, r: int, color: str):
+        """Shared hexagonal frame around Chant/Act icons (A2 visual kinship)."""
+        import math
+        c = self.canvas
+        pts = []
+        for i in range(6):
+            a = math.pi / 6 + i * math.pi / 3  # flat-top hex
+            pts.extend([cx + r * math.cos(a), cy + r * math.sin(a)])
+        c.create_polygon(*pts, fill="#1a1a1a", outline=color, width=1)
+
+    def _draw_chant_icon(self, cx: int, cy: int, r: int, color: str):
+        """Chant (Spells): hex frame + stylised eighth-note glyph."""
+        c = self.canvas
+        self._draw_hex_frame(cx, cy, r, color)
+        # Note stem
+        c.create_line(cx + 1, cy - r + 3, cx + 1, cy + r - 4,
+                      fill=color, width=2)
+        # Note head (filled oval)
+        c.create_oval(cx - 4, cy + r - 7, cx + 2, cy + r - 3,
+                      fill=color, outline=color)
+        # Flag
+        c.create_line(cx + 1, cy - r + 3, cx + r - 3, cy - r + 6,
+                      fill=color, width=2)
+
+    def _draw_act_icon(self, cx: int, cy: int, r: int, color: str):
+        """Act (Prowess): same hex frame + four-point star-burst glyph."""
+        c = self.canvas
+        self._draw_hex_frame(cx, cy, r, color)
+        # 4-point star
+        s = r - 3
+        pts = [cx, cy - s,
+               cx + 2, cy - 1,
+               cx + s, cy,
+               cx + 2, cy + 2,
+               cx, cy + s,
+               cx - 2, cy + 2,
+               cx - s, cy,
+               cx - 2, cy - 1]
+        c.create_polygon(*pts, fill=color, outline=color)
+        # tiny centre pip
+        c.create_oval(cx - 1, cy - 1, cx + 1, cy + 1,
+                      fill="#1a1a1a", outline="")
+
     def _draw_artwork_strip(self, card):
         c  = self.canvas
         x0 = self.W - self.AW - 4
@@ -285,17 +352,18 @@ class SpellCardRenderer:
             btype = blk["type"]
             col   = BOX_COLORS.get(btype, "#333")
 
-            c.create_rectangle(left - MANA_STRIP_W - ACTION_STRIP_W, y0, right, y1,
+            c.create_rectangle(left - MANA_STRIP_W, y0, right, y1,
                                fill=col, outline="#888", width=1, stipple="gray50")
-            c.create_text(left, y0+4, text=f"[{btype}]", anchor="nw",
+            # Sigil label (A3: "Forgotten" → "Omen"); internal key stays stable.
+            c.create_text(left, y0+4, text=f"[{sigil_label(btype)}]", anchor="nw",
                           font=(self.FF, 10, "bold"), fill="white")
 
-            # Thin separator between mana and action strips
-            sx = left - ACTION_STRIP_W
-            c.create_line(sx, y0, sx, y1, fill="#555", width=1)
+            # Mana strip boundary
+            sx = left - MANA_STRIP_W
+            c.create_line(left, y0, left, y1, fill="#555", width=1)
 
-            # Draw mana symbols for this block's costs in the left strip
-            self._draw_mana_strip(blk, left - MANA_STRIP_W - ACTION_STRIP_W + 2, y0+20, y1-4, CD)
+            # Draw mana symbols (with manual-trigger icons on top) for this block
+            self._draw_mana_strip(blk, left - MANA_STRIP_W + 2, y0+20, y1-4, CD)
 
             ab_list = blk.get("abilities", [])
             if not ab_list:
@@ -310,30 +378,49 @@ class SpellCardRenderer:
                 groups = ab.get("effect_groups", [])
                 if groups:
                     n += len(non_mana)
-                    n += len(groups) * 2
+
+                    # Account for merged buckets: each targeting bucket uses
+                    # 1 header line + 1 line per primary; each non-targeting
+                    # bucket uses 1 line per primary.
+                    buckets = self._merge_display_buckets(groups)
+                    for b in buckets:
+                        n_primaries = max(1, len(b["primaries"]))
+                        if b["target_type"] in ("Target Enemy", "Target Ally",
+                                                "Target Neutral"):
+                            n += 1 + n_primaries
+                        else:
+                            n += n_primaries
+
                     cn = ab.get("choose_n")
                     if cn and cn < len(groups):
                         n += 1  # "Choose X of Y" line
 
-                    # NEW: Sub-sigils per group (Option A)
-                    for g in groups:
-                        group_sub = g.get("sub_sigil")
-                        if group_sub:
+                    # Sub-sigils per bucket
+                    for b in buckets:
+                        gs = b.get("sub_sigil")
+                        if gs:
                             n += 1  # sub-sigil header
-                            n += len(group_sub.get("effect_groups", []))
+                            sub_buckets = self._merge_display_buckets(
+                                gs.get("effect_groups", []))
+                            for sb in sub_buckets:
+                                np = max(1, len(sb["primaries"]))
+                                if sb["target_type"] in ("Target Enemy",
+                                                         "Target Ally",
+                                                         "Target Neutral"):
+                                    n += 1 + np
+                                else:
+                                    n += np
 
-                    # NEW: Global sub-sigil (Option B/C)
+                    # Global sub-sigil (Option B/C)
                     global_sub = ab.get("sub_sigil_global")
                     if global_sub:
-                        n += 1  # separator line
-                        n += 1  # global sub-sigil header
+                        n += 2  # separator + header
                         n += len(global_sub.get("effect_groups", []))
 
-                    # OLD: Backward compat global sub-sigil
+                    # Backward compat global sub-sigil
                     old_sub = ab.get("sub_sigil")
                     if old_sub and not global_sub:
-                        n += 1  # separator line
-                        n += 1  # sub-sigil header
+                        n += 2
                         n += len(old_sub.get("effect_groups", []))
                 else:
                     n += len(non_mana) + len(ab.get("effects", []))
@@ -349,33 +436,62 @@ class SpellCardRenderer:
                 if iy >= y1: break
 
     def _draw_mana_strip(self, blk, x, y_start, y_max, CD):
-        """Draw mana cost symbols stacked vertically in the left strip."""
+        """Draw manual-trigger icons (top) then sorted mana costs underneath.
+
+        Mana order: Quinta (Meta) first, then other specific elements, then Generic.
+        Manual triggers (Manual / Half / Third) are drawn first above the mana stack.
+        """
         c  = self.canvas
         cx = x + MANA_STRIP_W//2 - 2
         y  = y_start
         r  = 9   # circle radius
 
+        # 1) Manual trigger markers on top
+        for ab in blk.get("abilities", []):
+            tid = ab.get("trigger_id")
+            if tid in MANUAL_TRIGGER_IDS:
+                if y + r*2 + 2 > y_max:
+                    break
+                variant = {
+                    MANUAL_TRIGGER_ID:       "full",
+                    MANUAL_TRIGGER_HALF_ID:  "half",
+                    MANUAL_TRIGGER_THIRD_ID: "third",
+                }.get(tid, "full")
+                self._draw_action_symbol(cx, y + r, r, variant=variant)
+                y += r*2 + 3
+
+        # 2) Collect mana costs for this block (from all abilities) and sort
+        META = "Quinta"  # "Meta" mana
+        buckets = {"meta": [], "other": [], "generic": []}
         for ab in blk.get("abilities", []):
             for ci in ab.get("costs", []):
                 if ci.get("cost_id") != MANA_COST_ID:
                     continue
-                if y + r*2 + 2 > y_max:
-                    break
-                # Determine element from vals
                 vals    = ci.get("vals", {})
                 element = vals.get("element", vals.get("Element", ""))
-                if element and element in ELEMENT_COLORS:
-                    col  = ELEMENT_COLORS[element]
-                    icon = ELEMENT_ICONS[element]
+                if element == META:
+                    buckets["meta"].append(element)
+                elif element and element in ELEMENT_COLORS:
+                    buckets["other"].append(element)
                 else:
-                    col  = GENERIC_MANA_COLOR
-                    icon = GENERIC_MANA_ICON
+                    buckets["generic"].append(element or "")
+        ordered = buckets["meta"] + sorted(buckets["other"]) + buckets["generic"]
 
-                c.create_oval(cx-r, y, cx+r, y+r*2,
-                              fill=col, outline="gold", width=1)
-                c.create_text(cx, y+r, text=icon,
-                              font=("Arial", 9), anchor="center")
-                y += r*2 + 3
+        # 3) Draw mana circles in sorted order
+        for element in ordered:
+            if y + r*2 + 2 > y_max:
+                break
+            if element and element in ELEMENT_COLORS:
+                col  = ELEMENT_COLORS[element]
+                icon = ELEMENT_ICONS[element]
+            else:
+                col  = GENERIC_MANA_COLOR
+                icon = GENERIC_MANA_ICON
+            c.create_oval(cx-r, y, cx+r, y+r*2,
+                          fill=col, outline="gold", width=1)
+            c.create_text(cx, y+r, text=icon,
+                          font=("Arial", 9), anchor="center")
+            y += r*2 + 3
 
     def _draw_action_symbol(self, cx: int, cy: int, r: int,
                             variant: str = "full"):
@@ -399,24 +515,25 @@ class SpellCardRenderer:
             return
 
         if variant == "third":
-            # Bronze/brown disc with TWO triangles:
-            #  - main triangle pointing down (upper half)
-            #  - inverted triangle (pointing up) below, shifted upward so they overlap
+            # Bronze disc with TWO stacked triangles (upper = downward,
+            # lower = upward/inverted), both bronze. The lower one is shifted
+            # upward so they nearly touch at the center.
             c.create_oval(cx - r, cy - r, cx + r, cy + r,
                           fill="#2a1808", outline="#b87333", width=2)
-            tr2 = int(r * 0.48)
-            off_main = -int(r * 0.22)  # main triangle nudged up
-            # Main triangle (points down)
-            pts_main = [cx - tr2, cy + off_main - int(tr2 * 0.65),
-                        cx + tr2, cy + off_main - int(tr2 * 0.65),
-                        cx,       cy + off_main + int(tr2 * 0.80)]
-            c.create_polygon(pts_main, fill="#b87333")
-            # Inverted triangle (points up), placed below but shifted up to overlap
-            off_inv = int(r * 0.42)
-            pts_inv = [cx - tr2, cy + off_inv + int(tr2 * 0.15),
-                       cx + tr2, cy + off_inv + int(tr2 * 0.15),
-                       cx,       cy + off_inv - int(tr2 * 0.80) + int(tr2 * 0.15)]
-            c.create_polygon(pts_inv, fill="#8b5a2b")
+            tr2 = int(r * 0.44)
+            # Upper triangle (points down)
+            cy_u = cy - int(r * 0.28)
+            pts_up = [cx - tr2, cy_u - int(tr2 * 0.55),
+                      cx + tr2, cy_u - int(tr2 * 0.55),
+                      cx,       cy_u + int(tr2 * 0.75)]
+            c.create_polygon(pts_up, fill="#b87333")
+            # Lower triangle (points up), shifted up so its tip almost touches
+            # the upper triangle's tip.
+            cy_l = cy + int(r * 0.18)
+            pts_dn = [cx - tr2, cy_l + int(tr2 * 0.55),
+                      cx + tr2, cy_l + int(tr2 * 0.55),
+                      cx,       cy_l - int(tr2 * 0.75)]
+            c.create_polygon(pts_dn, fill="#8b5a2b")
             return
 
         # Default / "full": standard Manual_Trigger look
@@ -433,17 +550,8 @@ class SpellCardRenderer:
         max_w = right - left - 8
         lh    = self.FS + 6
 
-        # ── Action symbol (Manual trigger = costs one Action) ─────────────────
-        tid = ab.get("trigger_id")
-        if tid in MANUAL_TRIGGER_IDS:
-            ax = left - ACTION_STRIP_W // 2
-            ay = y + lh
-            variant = {
-                MANUAL_TRIGGER_ID:       "full",
-                MANUAL_TRIGGER_HALF_ID:  "half",
-                MANUAL_TRIGGER_THIRD_ID: "third",
-            }.get(tid, "full")
-            self._draw_action_symbol(ax, ay, 11, variant=variant)
+        # Manual-trigger markers are drawn above the mana strip,
+        # see _draw_mana_strip().
 
         # ── Header ───────────────────────────────────────────────────────────
         # Manual triggers are symbol-only — skip them in text
@@ -472,10 +580,18 @@ class SpellCardRenderer:
                     "var_values": ab.get("condition_vals", {}),
                     "opt_values": ab.get("condition_opt_vals", {})})
 
-        # Trigger template already contains the full "If you …" phrase
+        # Trigger template already contains the full "If you …" phrase.
+        # G: Triggers can contain literal newlines from their content_text
+        #    template (used for line breaking in editors). Collapse them
+        #    into single spaces and tidy the trailing period before use.
+        if trigger_text:
+            import re as _re
+            trigger_text = _re.sub(r"\s+", " ", trigger_text).strip()
         trig_clean = trigger_text.rstrip(".").strip() if trigger_text else ""
         if trig_clean and cond_text:
-            prefix = f"{trig_clean} and you have {cond_text}"
+            # G: Use "while you have …" — reads more naturally than
+            # "and you have" when the trigger already starts with "If you".
+            prefix = f"{trig_clean}, while you have {cond_text}"
         elif trig_clean:
             prefix = trig_clean
         elif cond_text:
@@ -547,88 +663,99 @@ class SpellCardRenderer:
 
         # ── Effect groups (new format) ────────────────────────────────────────
         if groups:
-            chars_per_line = max(1, int(max_w / max(1, FN[1] * 0.6)))
-            for gi, g in enumerate(groups):
+            # Merge consecutive groups sharing the same (target_type, modifier-sig)
+            # and no sub_sigil into one display bucket. Each bucket renders as
+            # a single header ("Target Enemy, ranged:") with its primaries as
+            # bullet lines beneath.
+            buckets = self._merge_display_buckets(groups)
+
+            for bi, bucket in enumerate(buckets):
                 if y + lh > y_max:
                     break
-                if use_or and gi > 0:
+                if use_or and bi > 0:
                     y = self._wrap("or", x + 6, y, max_w - 6,
                                    (self.FF, self.FS_S, "italic"), "#aaddff", y_max)
-                ttype = g.get("target_type", "Non Targeting")
+
+                ttype     = bucket["target_type"]
                 grp_color = TARGET_COLORS.get(ttype, "white")
-                # Visual indent per target type: Non Targeting at base, others indented
-                t_indent = TARGET_INDENT.get(ttype, 0)
+                t_indent  = TARGET_INDENT.get(ttype, 0)
+                modifiers = bucket["modifiers"]
+                primaries = bucket["primaries"]
+                group_sub = bucket["sub_sigil"]
 
-                # Check if group has multiple primaries - format differently
-                primaries = g.get("primaries") or g.get("effects") or []
-                if not primaries and "primary" in g:
-                    primaries = [g["primary"]]
-                modifiers = g.get("modifiers", [])
+                is_targeting = ttype in ("Target Enemy", "Target Ally",
+                                         "Target Neutral")
 
-                if len(primaries) > 1:
-                    # Multiple primaries: show as header + bullets
-                    mod_text = ""
-                    if modifiers:
-                        mod_parts = []
-                        for mod in modifiers:
-                            meff = CD.get("effect", mod.get("effect_id", ""))
-                            if meff:
-                                mt = meff.get("content_text") or ""
-                                for k, v in mod.get("vals", {}).items():
-                                    mt = mt.replace(f"{{{k}}}", str(v))
-                                if mt:
-                                    mod_parts.append(mt)
-                        if mod_parts:
-                            mod_text = " (+" + ", ".join(mod_parts) + ")"
+                # Build modifier text "ranged 5, precise"
+                mod_parts = []
+                for mod in modifiers:
+                    # D: Range Reform — skip Ranged modifier when X==0
+                    if mod.get("effect_id") == "Ranged" and \
+                       int(mod.get("vals", {}).get("X", 0) or 0) == 0:
+                        continue
+                    meff = CD.get("effect", mod.get("effect_id", ""))
+                    if meff:
+                        mt = meff.get("content_text") or ""
+                        for k, v in mod.get("vals", {}).items():
+                            mt = mt.replace(f"{{{k}}}", str(v))
+                        if mt:
+                            mod_parts.append(mt)
 
-                    header = ttype + mod_text + ":"
+                if is_targeting:
+                    # Header: "Target Enemy, ranged 5:" (or just "Target Enemy:")
+                    header_parts = [ttype] + mod_parts
+                    header = ", ".join(header_parts) + ":"
                     if y + lh <= y_max:
                         y = self._wrap(header, x + 6 + t_indent, y,
-                                       max_w - 6 - t_indent, FN, grp_color, y_max)
-
-                    # Render each primary as a bullet
+                                       max_w - 6 - t_indent, FN,
+                                       grp_color, y_max)
+                    # Primaries as bullets underneath
                     for primary in primaries:
                         if y + lh > y_max:
                             break
                         eff = CD.get("effect", primary.get("effect_id", ""))
-                        if eff:
+                        if not eff:
+                            continue
+                        # F1: route through _render_content so [if OPT…] tags
+                        # in the effect's content_text resolve correctly.
+                        pt = _render_content(eff, {
+                            "var_values": primary.get("vals", {}),
+                            "opt_values": primary.get("opt_vals", {})})
+                        if not pt:
                             pt = eff.get("content_text") or ""
                             for k, v in primary.get("vals", {}).items():
                                 pt = pt.replace(f"{{{k}}}", str(v))
-                            if pt:
-                                y = self._wrap(f"  • {pt}", x + 12 + t_indent, y,
-                                               max_w - 14 - t_indent, FN, grp_color, y_max)
+                        if pt:
+                            y = self._wrap(f"  • {pt}", x + 12 + t_indent, y,
+                                           max_w - 14 - t_indent, FN,
+                                           grp_color, y_max)
                 else:
-                    # Single primary: use original formatting
-                    gtxt, reminder_txt = self._render_group_text(g, CD)
-                    if not gtxt:
-                        continue
-                    prefix_sym = TARGET_PREFIX.get(ttype, "•")
-                    line_text = f"{prefix_sym} {gtxt}"
-                    line_x = x + 6 + t_indent
-                    line_w = max_w - 6 - t_indent
-                    # Append reminder in parentheses if it fits
-                    if reminder_txt:
-                        remaining_chars = chars_per_line - len(line_text)
-                        reminder_inline = f" ({reminder_txt})"
-                        if remaining_chars >= len(reminder_inline):
-                            line_text = line_text + reminder_inline
-                            y = self._wrap(line_text, line_x, y, line_w, FN, grp_color, y_max)
-                        else:
-                            y = self._wrap(line_text, line_x, y, line_w, FN, grp_color, y_max)
-                            if y + lh <= y_max:
-                                y = self._wrap(f"  ({reminder_txt})", line_x + 6, y,
-                                               line_w - 10,
-                                               (self.FF, self.FS_S, "italic"), grp_color, y_max)
-                    else:
-                        y = self._wrap(line_text, line_x, y, line_w, FN, grp_color, y_max)
+                    # Non Targeting: no header. Each primary on its own bullet
+                    # line; if there are modifiers, fold them into each line.
+                    mod_suffix = (", " + ", ".join(mod_parts)) if mod_parts else ""
+                    for primary in primaries:
+                        if y + lh > y_max:
+                            break
+                        eff = CD.get("effect", primary.get("effect_id", ""))
+                        if not eff:
+                            continue
+                        pt = _render_content(eff, {
+                            "var_values": primary.get("vals", {}),
+                            "opt_values": primary.get("opt_vals", {})})
+                        if not pt:
+                            pt = eff.get("content_text") or ""
+                            for k, v in primary.get("vals", {}).items():
+                                pt = pt.replace(f"{{{k}}}", str(v))
+                        if pt:
+                            y = self._wrap(f"• {pt}{mod_suffix}", x + 6, y,
+                                           max_w - 6, FN, grp_color, y_max)
 
-                # ── Sub-Sigil (per effect group - Option A) ──────────────────
-                group_sub = g.get("sub_sigil")
+                # ── Sub-Sigil attached to this bucket ─────────────────────────
                 if group_sub and y + lh <= y_max:
-                    # Render sub-sigil for this group (indented to match group)
-                    y = self._render_sub_sigil(group_sub, CD, c, x, y, max_w, y_max,
-                                             indent_x=6 + t_indent, color=grp_color)
+                    y = self._render_sub_sigil(group_sub, CD, c, x, y, max_w,
+                                               y_max,
+                                               indent_x=6 + t_indent,
+                                               color=grp_color)
 
             # ── Global Sub-Sigil (Option B/C - rendered at bottom) ─────────────
             global_sub = ab.get("sub_sigil_global")
@@ -709,6 +836,54 @@ class SpellCardRenderer:
 
         return y + 4
 
+    def _merge_display_buckets(self, groups: list) -> list:
+        """Merge consecutive effect groups that share the same target_type and
+        modifier signature (same modifier effect_ids with same vals) into
+        display buckets. Groups that own a sub_sigil always get their own bucket.
+
+        Each bucket: {
+            "target_type": str,
+            "modifiers":   list[mod dict],   # from first group in bucket
+            "primaries":   list[primary dict] (flattened across merged groups),
+            "sub_sigil":   dict | None,
+        }
+        """
+        def mod_sig(group):
+            sig = []
+            for m in group.get("modifiers", []):
+                mid  = m.get("effect_id", "")
+                vals = tuple(sorted(m.get("vals", {}).items()))
+                sig.append((mid, vals))
+            return tuple(sorted(sig))
+
+        buckets = []
+        for g in groups:
+            ttype = g.get("target_type", "Non Targeting")
+            # Extract primaries (support multiple field names)
+            primaries = g.get("primaries") or g.get("effects") or []
+            if not primaries and "primary" in g:
+                primaries = [g["primary"]]
+            sub_sigil = g.get("sub_sigil")
+            sig = mod_sig(g)
+
+            # Can we merge into the previous bucket?
+            if (buckets
+                    and buckets[-1]["target_type"] == ttype
+                    and buckets[-1]["_modsig"] == sig
+                    and buckets[-1]["sub_sigil"] is None
+                    and sub_sigil is None):
+                buckets[-1]["primaries"].extend(primaries)
+                continue
+
+            buckets.append({
+                "target_type": ttype,
+                "modifiers":   list(g.get("modifiers", [])),
+                "primaries":   list(primaries),
+                "sub_sigil":   sub_sigil,
+                "_modsig":     sig,
+            })
+        return buckets
+
     def _render_group_text(self, group: dict, CD) -> tuple:
         """
         Render one effect group as 'Target Type: Primary1 and Primary2, Modifier1, Modifier2'.
@@ -740,6 +915,10 @@ class SpellCardRenderer:
 
         mod_parts = []
         for mod in group.get("modifiers", []):
+            # D: Range Reform — skip Ranged with X==0
+            if mod.get("effect_id") == "Ranged" and \
+               int(mod.get("vals", {}).get("X", 0) or 0) == 0:
+                continue
             meff = CD.get("effect", mod.get("effect_id", ""))
             if meff:
                 mt = meff.get("content_text") or ""
@@ -787,20 +966,22 @@ class SpellCardRenderer:
         lh = self.FS + 6
         FN = (self.FF, self.FS, "normal")
 
-        if not sub_sigil or not sub_sigil.get("effect_groups"):
+        if not sub_sigil:
             return y
 
-        # Render costs. Mana has empty content_text (it's drawn as a symbol on
-        # the mana strip), so for sub-sigils we fall back to the element name
-        # to avoid producing a blank "Pay :" header.
+        sub_type = sub_sigil.get("sub_sigil_type", "enhance")
+
+        # Enhance w/o effects = no content, skip.
+        if sub_type == "enhance" and not sub_sigil.get("effect_groups"):
+            return y
+
+        # Render costs. For Mana, the symbol is drawn on the mana strip —
+        # show "Mana" generically (not the element name) to match game wording.
         sub_costs = []
         for ci in sub_sigil.get("costs", []):
             cid = ci.get("cost_id", "")
             if cid == MANA_COST_ID:
-                elem = (ci.get("vals", {}).get("element")
-                        or ci.get("opt_vals", {}).get("0", "")
-                        or "Mana")
-                sub_costs.append(str(elem))
+                sub_costs.append("Mana")
                 continue
             co = CD.get("cost", cid)
             if not co:
@@ -811,20 +992,79 @@ class SpellCardRenderer:
             if txt:
                 sub_costs.append(txt)
 
-        sub_header = ("Pay " + ", ".join(sub_costs) + ":") if sub_costs else "Bonus:"
+        # Header verb depends on sub-sigil type
+        verb = {
+            "enhance":    "Enhance",
+            "doublecast": "Doublecast",
+            "multicast":  "Multicast",
+        }.get(sub_type, "Enhance")
+        if sub_costs:
+            sub_header = f"{verb} — pay {', '.join(sub_costs)}:"
+        else:
+            sub_header = f"{verb}:"
 
         if y + lh <= y_max:
             y = self._wrap(sub_header, x + indent_x + 4, y, max_w - indent_x - 4,
                           (self.FF, self.FS_S, "bold"), color, y_max)
 
-        # Render effect groups in sub-sigil
-        for sg in sub_sigil.get("effect_groups", []):
+        # Render effect groups in sub-sigil using the same merge-and-header
+        # layout as the main ability, so "Target Enemy, ranged:" only appears
+        # once per bucket and its primaries become indented bullets.
+        TARGETING = ("Target Enemy", "Target Ally", "Target Neutral")
+        for bucket in self._merge_display_buckets(
+                sub_sigil.get("effect_groups", [])):
             if y + lh > y_max:
                 break
-            stxt, _srm = self._render_group_text(sg, CD)
-            if stxt:
-                y = self._wrap(f"  • {stxt}", x + indent_x + 10, y, max_w - indent_x - 14,
-                              FN, color, y_max)
+            ttype     = bucket["target_type"]
+            modifiers = bucket["modifiers"]
+            primaries = bucket["primaries"]
+
+            mod_parts = []
+            for mod in modifiers:
+                # D: Range Reform — skip Ranged with X==0
+                if mod.get("effect_id") == "Ranged" and \
+                   int(mod.get("vals", {}).get("X", 0) or 0) == 0:
+                    continue
+                meff = CD.get("effect", mod.get("effect_id", ""))
+                if meff:
+                    mt = meff.get("content_text") or ""
+                    for k, v in mod.get("vals", {}).items():
+                        mt = mt.replace(f"{{{k}}}", str(v))
+                    if mt:
+                        mod_parts.append(mt)
+
+            if ttype in TARGETING:
+                header = ", ".join([ttype] + mod_parts) + ":"
+                if y + lh <= y_max:
+                    y = self._wrap(header, x + indent_x + 10, y,
+                                   max_w - indent_x - 14, FN, color, y_max)
+                for primary in primaries:
+                    if y + lh > y_max:
+                        break
+                    eff = CD.get("effect", primary.get("effect_id", ""))
+                    if not eff:
+                        continue
+                    pt = eff.get("content_text") or ""
+                    for k, v in primary.get("vals", {}).items():
+                        pt = pt.replace(f"{{{k}}}", str(v))
+                    if pt:
+                        y = self._wrap(f"  • {pt}", x + indent_x + 16, y,
+                                       max_w - indent_x - 20, FN, color, y_max)
+            else:
+                mod_suffix = (", " + ", ".join(mod_parts)) if mod_parts else ""
+                for primary in primaries:
+                    if y + lh > y_max:
+                        break
+                    eff = CD.get("effect", primary.get("effect_id", ""))
+                    if not eff:
+                        continue
+                    pt = eff.get("content_text") or ""
+                    for k, v in primary.get("vals", {}).items():
+                        pt = pt.replace(f"{{{k}}}", str(v))
+                    if pt:
+                        y = self._wrap(f"• {pt}{mod_suffix}",
+                                       x + indent_x + 10, y,
+                                       max_w - indent_x - 14, FN, color, y_max)
 
         return y
 

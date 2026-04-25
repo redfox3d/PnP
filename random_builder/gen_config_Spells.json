@@ -1,13 +1,13 @@
 {
   "count": 100,
-  "element_mode": "equal",
+  "element_mode": "custom",
   "element_count_weights": {
-    "1": 55,
-    "2": 25,
-    "3": 12,
-    "4": 5,
-    "5": 2,
-    "6": 1
+    "1": 55.0,
+    "2": 25.0,
+    "3": 12.0,
+    "4": 5.0,
+    "5": 2.0,
+    "6": 1.0
   },
   "custom_element_weights": {
     "Fire": 10.0,
@@ -15,7 +15,7 @@
     "Ice": 10.0,
     "Nature": 10.0,
     "Blood": 10.0,
-    "Quinta": 10.0
+    "Quinta": 5.0
   },
   "block_rules": [
     {
@@ -32,11 +32,7 @@
     },
     {
       "block_type": "Concentration",
-      "probability": 0.03
-    },
-    {
-      "block_type": "Enchantment",
-      "probability": 0.03
+      "probability": 0.06
     },
     {
       "block_type": "Equipped",
@@ -48,7 +44,7 @@
     },
     {
       "block_type": "Discard",
-      "probability": 0.15
+      "probability": 0.5
     }
   ],
   "content_rules": [
@@ -117,6 +113,34 @@
       "probability": 1.0
     },
     {
+      "effect_id": "Echo",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Verse",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Rhythm",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Search_Backpack",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Fasten",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "TimeStep",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Mill_Search",
+      "probability": 1.0
+    },
+    {
       "cost_id": "Mana",
       "probability": 1.0
     },
@@ -138,6 +162,18 @@
     },
     {
       "trigger_id": "Manual_Trigger",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Manual_Trigger_Half",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Manual_Trigger_Third",
+      "probability": 1.0
+    },
+    {
+      "trigger_id": "Activate_A_Source",
       "probability": 1.0
     }
   ],
@@ -209,5 +245,11 @@
   "sub_sigil_group_chance": 0.15,
   "sub_sigil_global_chance": 0.2,
   "sub_sigil_target_enemy_manual_chance": 0.8,
-  "sub_sigil_target_ally_chance": 0.1
+  "sub_sigil_target_ally_chance": 0.1,
+  "cv_per_sigil_min": 1.0,
+  "chance_choose": 0.4,
+  "chance_enhance": 0.2,
+  "chance_doublecast": 0.1,
+  "chance_multicast": 0.05,
+  "chance_no_subsigil": 0.6
 }

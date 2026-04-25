@@ -27,6 +27,28 @@ Complexity of choices:
 import math
 
 
+# ── B2: Effects that inherit the containing Chant's CV ───────────────────────
+# Echo/Rhythm/Verse each add one "copy" of the rest of the sigil's CV. If the
+# Chant has base CV X (all other effects minus costs), each of these effects
+# contributes another X to the total — so one inheritor doubles the sigil,
+# two triple it, and so on.
+CV_INHERITS_SIGIL = {"Echo", "Rhythm", "Verse"}
+
+
+def _count_inheritors(groups: list) -> int:
+    """Count Echo/Rhythm/Verse occurrences across all effect groups."""
+    n = 0
+    for g in groups:
+        effs = g.get("effects") or g.get("primaries") or []
+        for e in effs:
+            if e.get("effect_id") in CV_INHERITS_SIGIL:
+                n += 1
+        for m in g.get("modifiers", []):
+            if m.get("effect_id") in CV_INHERITS_SIGIL:
+                n += 1
+    return n
+
+
 # ── Stat helpers ──────────────────────────────────────────────────────────────
 
 def cv_stat(stat: dict, x: float = 0.0) -> float:
@@ -70,15 +92,35 @@ def cv_content_item(item: dict, vals: dict, opt_vals: dict) -> float:
 
 # ── Effect CV (legacy flat list) ──────────────────────────────────────────────
 
+def _eff_instance_cv(eff: dict, item: dict) -> float:
+    """C4: Apply per-effect modifiers (currently `damage_cv_mod`) on top of
+    the raw item CV. Defaults to 1.0 when nothing is set.
+    """
+    base = cv_content_item(item, eff.get("vals", {}), eff.get("opt_vals", {}))
+    mod = eff.get("damage_cv_mod", 1.0)
+    try:
+        mod = float(mod) if mod is not None else 1.0
+    except (TypeError, ValueError):
+        mod = 1.0
+    return base * mod
+
+
 def _effects_cv(effects: list, effects_lookup: dict) -> float:
     """
     Compute the total CV of a flat list of ability effects (legacy format).
+
+    B2: Inheritor effects (Echo/Rhythm/Verse) contribute 0 here — the caller
+    is responsible for folding their inherited value in.
+    C4: Damage-type CV multiplier is applied via _eff_instance_cv().
     """
     total = 0.0
     for eff in effects:
-        item = effects_lookup.get(eff.get("effect_id", ""))
+        eid = eff.get("effect_id", "")
+        if eid in CV_INHERITS_SIGIL:
+            continue
+        item = effects_lookup.get(eid)
         if item:
-            total += cv_content_item(item, eff.get("vals", {}), eff.get("opt_vals", {}))
+            total += _eff_instance_cv(eff, item)
     return total
 
 
@@ -89,6 +131,9 @@ def cv_effect_group(group: dict, effects_lookup: dict) -> float:
     CV of one effect group = sum(primaries CVs) + sum(modifier CVs).
     Backward compat: falls back to 'primary' if 'primaries' not present.
     Also handles legacy 'effects' key for old data.
+
+    B2: Echo/Rhythm/Verse contribute 0 here; their CV is folded in at the
+    ability level (they inherit the rest-of-sigil CV).
     """
     total = 0.0
     # Check 'effects' first (new canonical key), then 'primaries', then old 'primary'
@@ -99,15 +144,19 @@ def cv_effect_group(group: dict, effects_lookup: dict) -> float:
         p = group.get("primary", {})
         effs = [p] if p.get("effect_id") else []
     for primary in effs:
-        item = effects_lookup.get(primary.get("effect_id", ""))
+        eid = primary.get("effect_id", "")
+        if eid in CV_INHERITS_SIGIL:
+            continue   # handled at ability level
+        item = effects_lookup.get(eid)
         if item:
-            total += cv_content_item(item, primary.get("vals", {}),
-                                     primary.get("opt_vals", {}))
+            total += _eff_instance_cv(primary, item)
     for mod in group.get("modifiers", []):
-        item = effects_lookup.get(mod.get("effect_id", ""))
+        eid = mod.get("effect_id", "")
+        if eid in CV_INHERITS_SIGIL:
+            continue
+        item = effects_lookup.get(eid)
         if item:
-            total += cv_content_item(item, mod.get("vals", {}),
-                                     mod.get("opt_vals", {}))
+            total += _eff_instance_cv(mod, item)
     return total
 
 
@@ -135,24 +184,65 @@ def cv_choose(group_cvs: list, choose_n: int, choose_repeat: bool = False) -> fl
 
 # ── Sub-Sigil CV ─────────────────────────────────────────────────────────────
 
-def cv_sub_sigil(sub_sigil: dict, effects_lookup: dict,
-                 costs_lookup: dict) -> float:
-    """
-    CV of a sub-sigil = sum(group CVs) - sum(cost CVs).
-    Sub-sigils are optional (player chooses to pay), so their CV contribution
-    is additive to the parent ability. Exact formula TBD.
-    """
-    if not sub_sigil:
-        return 0.0
-    eff_cv = _effect_groups_cv(sub_sigil.get("effect_groups", []),
-                               effects_lookup)
-    cost_cv = 0.0
+def _sub_sigil_cost_cv(sub_sigil: dict, costs_lookup: dict) -> float:
+    total = 0.0
     for cost in sub_sigil.get("costs", []):
         item = costs_lookup.get(cost.get("cost_id", ""))
         if item:
-            cost_cv += cv_content_item(item, cost.get("vals", {}),
-                                       cost.get("opt_vals", {}))
-    return max(0.0, eff_cv - cost_cv)
+            total += cv_content_item(item, cost.get("vals", {}),
+                                     cost.get("opt_vals", {}))
+    return total
+
+
+def _sub_sigil_cond_trig_mults(sub_sigil: dict,
+                               conditions_lookup: dict | None,
+                               triggers_lookup: dict | None) -> tuple[float, float]:
+    """Extract condition/trigger multipliers attached to the sub-sigil itself."""
+    cond_mult = 1.0
+    if sub_sigil.get("condition_id") and conditions_lookup:
+        citem = conditions_lookup.get(sub_sigil["condition_id"])
+        if citem:
+            cond_mult = float(citem.get("cv_mult", 1.0))
+    trig_mult = 1.0
+    if sub_sigil.get("trigger_id") and triggers_lookup:
+        titem = triggers_lookup.get(sub_sigil["trigger_id"])
+        if titem:
+            trig_mult = float(titem.get("cv_mult", 1.0))
+    return cond_mult, trig_mult
+
+
+def cv_sub_sigil(sub_sigil: dict, effects_lookup: dict,
+                 costs_lookup: dict,
+                 rest_sigil_cv: float = 0.0,
+                 conditions_lookup: dict | None = None,
+                 triggers_lookup:   dict | None = None) -> float:
+    """CV of a sub-sigil.
+
+    Formula depends on `sub_sigil_type`:
+      - "enhance"    :  max(0, eff_cv − cost_cv)
+      - "doublecast" :  (rest_sigil_cv − cost_cv) · cond · trig
+      - "multicast"  :  (rest_sigil_cv − cost_cv) · cond · trig · 3
+
+    `rest_sigil_cv` = CV of the rest of the parent sigil (used by doublecast/multicast).
+    """
+    if not sub_sigil:
+        return 0.0
+    cost_cv = _sub_sigil_cost_cv(sub_sigil, costs_lookup)
+
+    sub_type = sub_sigil.get("sub_sigil_type", "enhance")
+
+    if sub_type == "enhance" or not sub_type:
+        eff_cv = _effect_groups_cv(sub_sigil.get("effect_groups", []),
+                                   effects_lookup)
+        return max(0.0, eff_cv - cost_cv)
+
+    if sub_type in ("doublecast", "multicast"):
+        cond_mult, trig_mult = _sub_sigil_cond_trig_mults(
+            sub_sigil, conditions_lookup, triggers_lookup)
+        mult = 3.0 if sub_type == "multicast" else 1.0
+        return max(0.0, (rest_sigil_cv - cost_cv) * cond_mult * trig_mult * mult)
+
+    return 0.0
 
 
 # ── Ability / box CV ──────────────────────────────────────────────────────────
@@ -173,29 +263,33 @@ def cv_ability(ability: dict,
                costs_lookup: dict,
                condition_mult: float = 1.0,
                trigger_mult: float | None = None,
-               triggers_lookup: dict | None = None) -> float:
-    """CV of a single ability (one box entry). Supports both old and new format.
+               triggers_lookup: dict | None = None,
+               conditions_lookup: dict | None = None) -> float:
+    """CV of a single ability (one box entry).
 
     The trigger multiplier is looked up from `triggers_lookup[trigger_id].cv_mult`
-    when `trigger_mult` is not supplied explicitly.
+    when `trigger_mult` is not supplied explicitly. Sub-sigils of types
+    "doublecast" / "multicast" consume the REST of the sigil CV as their
+    base payoff.
     """
-    # New format: effect_groups
+    # Effects (new format: effect_groups)
+    n_inheritors = 0
     if "effect_groups" in ability and ability["effect_groups"]:
         groups = ability["effect_groups"]
         group_cvs = [cv_effect_group(g, effects_lookup) for g in groups]
+        n_inheritors = _count_inheritors(groups)
 
         choose_n = ability.get("choose_n")
         if choose_n and len(groups) > 1:
-            cv_eff = cv_choose(group_cvs, choose_n,
-                               ability.get("choose_repeat", False))
+            cv_eff_base = cv_choose(group_cvs, choose_n,
+                                    ability.get("choose_repeat", False))
         else:
-            cv_eff = sum(group_cvs)
-
-        cv_eff += cv_sub_sigil(ability.get("sub_sigil"), effects_lookup,
-                               costs_lookup)
+            cv_eff_base = sum(group_cvs)
     else:
-        # Legacy flat effects list
-        cv_eff = _effects_cv(ability.get("effects", []), effects_lookup)
+        flat = ability.get("effects", [])
+        cv_eff_base = _effects_cv(flat, effects_lookup)
+        n_inheritors = sum(1 for e in flat
+                           if e.get("effect_id") in CV_INHERITS_SIGIL)
 
     cv_cost = 0.0
     for cost in ability.get("costs", []):
@@ -204,17 +298,34 @@ def cv_ability(ability: dict,
             cv_cost += cv_content_item(item, cost.get("vals", {}),
                                        cost.get("opt_vals", {}))
 
+    # B2: every Echo/Rhythm/Verse adds one extra copy of the rest-of-sigil CV.
+    rest_sigil_cv = (cv_eff_base - cv_cost) * (1 + n_inheritors)
+
+    # Sub-sigil (legacy per-group or global). Doublecast/multicast use
+    # rest_sigil_cv as their base payoff.
+    sub_cv = 0.0
+    for sub_key in ("sub_sigil", "sub_sigil_global"):
+        sub = ability.get(sub_key)
+        if sub:
+            sub_cv += cv_sub_sigil(
+                sub, effects_lookup, costs_lookup,
+                rest_sigil_cv=max(0.0, rest_sigil_cv),
+                conditions_lookup=conditions_lookup,
+                triggers_lookup=triggers_lookup,
+            )
+
     if trigger_mult is None:
         trigger_mult = _trigger_multiplier(ability, triggers_lookup)
 
-    return condition_mult * trigger_mult * (cv_eff - cv_cost)
+    return condition_mult * trigger_mult * (rest_sigil_cv + sub_cv)
 
 
 # ── Card CV ───────────────────────────────────────────────────────────────────
 
 def cv_card(card: dict, box_config: dict,
             effects_lookup: dict, costs_lookup: dict,
-            triggers_lookup: dict | None = None) -> float:
+            triggers_lookup: dict | None = None,
+            conditions_lookup: dict | None = None) -> float:
     """
     Total CV of a card.
     Base value = -1.0; each block adds CV_ability * cv_modifier.
@@ -224,7 +335,8 @@ def cv_card(card: dict, box_config: dict,
         modifier = float(box_config.get(block["type"], {}).get("cv_modifier", 1.0))
         for ability in block.get("abilities", []):
             total += cv_ability(ability, effects_lookup, costs_lookup,
-                                triggers_lookup=triggers_lookup) * modifier
+                                triggers_lookup=triggers_lookup,
+                                conditions_lookup=conditions_lookup) * modifier
     return total
 
 

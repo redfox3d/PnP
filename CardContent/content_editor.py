@@ -42,6 +42,7 @@ from CardContent.window_memory import wm
 from CardContent.template_syntax_help import SyntaxHelpWindow
 
 from card_builder.constants import BOX_TYPES, ELEMENTS
+from CardContent.sigil_registry import get_sigil_names
 
 DEFAULT_ELEMENT_WEIGHT = 10   # used by auto-generator when field is empty
 
@@ -102,9 +103,15 @@ class ContentEditor(tk.Toplevel):
         self._sep()
         self._build_allowed_blocks_section()
         self._sep()
-        tk.Button(self._f, text="💾 Save", command=self._save,
+        btn_row = tk.Frame(self._f)
+        btn_row.grid(row=self._row, column=0, columnspan=6, pady=14)
+        tk.Button(btn_row, text="💾 Save", command=self._save,
                   bg="#1a6e3c", fg="white", font=("Arial", 10, "bold"),
-                  width=20).grid(row=self._row, column=0, columnspan=6, pady=14)
+                  width=20).pack(side="left", padx=6)
+        # K: generic type-change — move item between Effect/Trigger/Condition/Cost/Insert
+        tk.Button(btn_row, text="↔ Move to type…", command=self._move_to_type,
+                  bg="#33557a", fg="white", font=("Arial", 9, "bold"),
+                  width=18).pack(side="left", padx=6)
 
     def _sep(self):
         ttk.Separator(self._f, orient="horizontal").grid(
@@ -283,9 +290,15 @@ class ContentEditor(tk.Toplevel):
             cols_frame.columnconfigure(c, weight=1)
 
         self._allowed_ct_vars = {}
-        self._el_vars    = {}
-        self._el_weights = {}
-        self._rt_weights = {}
+        self._el_vars        = {}
+        self._el_weights     = {}
+        self._el_enabled     = {}   # B1: per-element enabled checkbox
+        self._rt_weights     = {}
+        self._rt_enabled     = {}   # B1: per-recipe-type enabled checkbox
+
+        # Existing per-element / per-recipe-type enable maps (default: all on)
+        el_enabled = self.item.get("element_enabled", {})
+        rt_enabled = self.item.get("recipe_type_enabled", {})
 
         def _make_gen_header(parent, label: str, var: tk.BooleanVar,
                              fg: str, hdr_bg: str):
@@ -320,6 +333,12 @@ class ContentEditor(tk.Toplevel):
             self._el_weights[el] = wv
             tk.Entry(row_f, textvariable=wv, width=5,
                      font=("Arial", 8)).pack(side="left", padx=2)
+            # B1: enable/disable checkbox per element
+            ev = tk.BooleanVar(value=el_enabled.get(el, True))
+            self._el_enabled[el] = ev
+            tk.Checkbutton(row_f, text="on", variable=ev,
+                           font=("Arial", 7), cursor="hand2",
+                           ).pack(side="left", padx=2)
 
         # ── Column 1: Prowess ─────────────────────────────────────────────────
         prowess_col = tk.Frame(cols_frame, relief="ridge", bd=1)
@@ -356,6 +375,12 @@ class ContentEditor(tk.Toplevel):
             self._rt_weights[rt] = wv
             tk.Entry(row_f, textvariable=wv, width=5,
                      font=("Arial", 8)).pack(side="left", padx=2)
+            # B1: enable/disable checkbox per recipe-type
+            ev = tk.BooleanVar(value=rt_enabled.get(rt, True))
+            self._rt_enabled[rt] = ev
+            tk.Checkbutton(row_f, text="on", variable=ev,
+                           font=("Arial", 7), cursor="hand2",
+                           ).pack(side="left", padx=2)
 
         # Show/hide body based on initial state
         if is_open:
@@ -434,8 +459,8 @@ class ContentEditor(tk.Toplevel):
 
     def _build_allowed_blocks_section(self):
         """Build checkbox section for allowed_in_blocks."""
-        # Use centrally-defined BOX_TYPES (imported at top of file)
-        block_types = list(BOX_TYPES)
+        # B3: single source of truth — includes any sigils added at runtime
+        block_types = get_sigil_names()
 
         # Initialize missing fields with default True (all enabled)
         allowed_blocks = self.item.setdefault("allowed_in_blocks", {})
@@ -640,11 +665,12 @@ class ContentEditor(tk.Toplevel):
             font=("Arial", 8)
         ).grid(row=0, column=9, padx=3, pady=1)
 
-        # Cols 10-11 – Dice checkboxes (variables only)
+        # Cols 10-11-pot – Dice checkboxes (variables only)
         if stat_type == "variable":
-            for col, (dk, dl) in zip([10, 11], [
+            for col, (dk, dl) in zip([10, 11, 13], [
                 ("dice_allowed", "🎲?"),
                 ("dice_only",    "🎲!"),
+                ("potion_only",  "🧪"),   # E1: dice only in Recipe context
             ]):
                 bv = tk.BooleanVar(value=bool(stat.get(dk, False)))
                 bv.trace_add("write",
@@ -789,6 +815,16 @@ class ContentEditor(tk.Toplevel):
             else:
                 self.item.pop("element_weights", None)
 
+        # B1: Per-element enabled flags. Only persist when at least one is off
+        # (default = all on = omit the whole dict for a clean JSON).
+        if hasattr(self, "_el_enabled"):
+            disabled = {el: False for el, v in self._el_enabled.items()
+                        if not v.get()}
+            if disabled:
+                self.item["element_enabled"] = disabled
+            else:
+                self.item.pop("element_enabled", None)
+
         # Recipe type weights
         if hasattr(self, "_rt_weights"):
             rtw = {}
@@ -801,6 +837,15 @@ class ContentEditor(tk.Toplevel):
                 self.item["recipe_type_weights"] = rtw
             else:
                 self.item.pop("recipe_type_weights", None)
+
+        # B1: Per-recipe-type enabled flags (same sparse-dict convention).
+        if hasattr(self, "_rt_enabled"):
+            disabled = {rt: False for rt, v in self._rt_enabled.items()
+                        if not v.get()}
+            if disabled:
+                self.item["recipe_type_enabled"] = disabled
+            else:
+                self.item.pop("recipe_type_enabled", None)
 
         # Primary types
         if hasattr(self, "_primary_type_vars"):
@@ -829,6 +874,87 @@ class ContentEditor(tk.Toplevel):
         self.destroy()
         if self.on_save:
             self.on_save()
+
+    # ── K: generic type-change ────────────────────────────────────────────────
+
+    def _detect_current_type(self) -> str | None:
+        """Find which list in self.data contains self.item (by identity)."""
+        for type_name in ("Effect", "Trigger", "Condition", "Cost", "Insert"):
+            items = self.data.get(type_name) or []
+            for it in items:
+                if it is self.item:
+                    return type_name
+        # Fallback: match by id
+        my_id = self.item.get("id", "")
+        if my_id:
+            for type_name in ("Effect", "Trigger", "Condition", "Cost", "Insert"):
+                items = self.data.get(type_name) or []
+                for it in items:
+                    if it.get("id") == my_id:
+                        return type_name
+        return None
+
+    def _move_to_type(self):
+        """Open dialog to move this item to a different content type."""
+        current = self._detect_current_type()
+        if current is None:
+            messagebox.showerror(
+                "Move to type…",
+                "Konnte den aktuellen Content-Typ nicht ermitteln.")
+            return
+
+        ALL_TYPES = ["Effect", "Trigger", "Condition", "Cost", "Insert"]
+        choices = [t for t in ALL_TYPES if t != current]
+
+        dlg = tk.Toplevel(self)
+        dlg.title("Move to type…")
+        dlg.transient(self)
+        dlg.grab_set()
+        dlg.geometry("360x180")
+
+        tk.Label(dlg, text=f"Aktueller Typ:  {current}",
+                 font=("Arial", 10, "bold"), fg="#aaaacc").pack(pady=(12, 4))
+        tk.Label(dlg, text=f"ID:  {self.item.get('id', '?')}",
+                 fg="#888", font=("Arial", 9)).pack()
+
+        tk.Label(dlg, text="Neuer Typ:", font=("Arial", 9)).pack(pady=(12, 2))
+        target_var = tk.StringVar(value=choices[0])
+        ttk.Combobox(dlg, textvariable=target_var, values=choices,
+                     state="readonly", width=20).pack()
+
+        warn = tk.Label(dlg,
+                        text="(Achtung: typ-spezifische Felder bleiben erhalten,\n"
+                             "evtl. manuelle Nacharbeit nötig.)",
+                        fg="#888", font=("Arial", 8))
+        warn.pack(pady=(8, 4))
+
+        bf = tk.Frame(dlg)
+        bf.pack(pady=8)
+
+        def _do_move():
+            new_type = target_var.get().strip()
+            if not new_type or new_type == current:
+                dlg.destroy()
+                return
+            # Remove from old list
+            src = self.data.get(current) or []
+            self.data[current] = [it for it in src if it is not self.item]
+            # Append to new list
+            dst = self.data.setdefault(new_type, [])
+            dst.append(self.item)
+            # Persist + close
+            self._flush_to_disk()
+            self._flash(f"'{self.item.get('id','?')}' → {new_type}")
+            dlg.destroy()
+            self.destroy()
+            if self.on_save:
+                self.on_save()
+
+        tk.Button(bf, text="Move", command=_do_move,
+                  bg="#1a6e3c", fg="white",
+                  font=("Arial", 9, "bold"), width=10).pack(side="left", padx=6)
+        tk.Button(bf, text="Cancel", command=dlg.destroy,
+                  width=10).pack(side="left", padx=6)
 
     def _flush_to_disk(self):
         """Write every content type back to its JSON file immediately."""
@@ -1017,7 +1143,7 @@ class ConditionsEditor(tk.Toplevel):
         self._bt_vars = {}
         bt_f = tk.Frame(f)
         bt_f.grid(row=row, column=0, columnspan=3, sticky="w", padx=16); row += 1
-        for i, bt in enumerate(BOX_TYPES):
+        for i, bt in enumerate(get_sigil_names()):
             enabled = (bt in allowed_bt) if allowed_bt else True
             v = tk.BooleanVar(value=enabled)
             self._bt_vars[bt] = v
@@ -1312,7 +1438,7 @@ class ConditionsEditor(tk.Toplevel):
 
         # Allowed box types – only save if not all checked
         sel_bt = [bt for bt, v in self._bt_vars.items() if v.get()]
-        if len(sel_bt) < len(BOX_TYPES):
+        if len(sel_bt) < len(get_sigil_names()):
             self.cond["allowed_box_types"] = sel_bt
         else:
             self.cond.pop("allowed_box_types", None)

@@ -9,11 +9,11 @@
     ],
     "column_order": [],
     "column_widths": {
-        "type": 290,
+        "type": 291,
         "id": 289,
-        "rarity": 167,
-        "sigil": 466,
-        "content_text": 649,
-        "reminder_text": 40
+        "rarity": 175,
+        "sigil": 465,
+        "content_text": 379,
+        "reminder_text": 302
     }
 }

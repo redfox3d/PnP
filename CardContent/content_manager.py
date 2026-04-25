@@ -115,6 +115,20 @@ class ContentManager:
         self.rarity_filter = tk.Entry(ff, width=5)
         self.rarity_filter.pack(side="left", padx=4)
 
+        # I: Element filter — filters items whose element_weights have a non-zero
+        #    weight for the chosen element. "All" disables the filter.
+        tk.Label(ff, text="Element").pack(side="left")
+        try:
+            from card_builder.constants import ELEMENTS as _ELEMENTS
+        except Exception:
+            _ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
+        self.element_filter = ttk.Combobox(
+            ff, values=["All"] + list(_ELEMENTS), width=8, state="readonly")
+        self.element_filter.set("All")
+        self.element_filter.pack(side="left", padx=4)
+        self.element_filter.bind("<<ComboboxSelected>>",
+                                  lambda _: self.apply_filters())
+
         tk.Label(ff, text="Search").pack(side="left")
         self.search_filter = tk.Entry(ff, width=22)
         self.search_filter.pack(side="left", padx=4)
@@ -132,6 +146,19 @@ class ContentManager:
         tk.Button(bf, text="Add Column", command=self._add_column).pack(side="left", padx=6)
         tk.Button(bf, text="Effekt Typen", command=self._open_effect_types,
                   bg="#3a1a5a", fg="#cc88ff",
+                  font=("Arial", 8, "bold")).pack(side="left", padx=6)
+        # B3: central sigil management (add/remove propagates everywhere)
+        tk.Button(bf, text="Sigils…", command=self._open_sigil_manager,
+                  bg="#1a3a5a", fg="#88ccff",
+                  font=("Arial", 8, "bold")).pack(side="left", padx=6)
+        # C2: damage-type ranking editor
+        tk.Button(bf, text="Damage Types…", command=self._open_damage_types_manager,
+                  bg="#5a1a1a", fg="#ff8888",
+                  font=("Arial", 8, "bold")).pack(side="left", padx=6)
+        # L: interactable registry editor
+        tk.Button(bf, text="Interactables…",
+                  command=self._open_interactable_manager,
+                  bg="#1a4a3a", fg="#88eecc",
                   font=("Arial", 8, "bold")).pack(side="left", padx=6)
         tk.Button(bf, text="💾 Save All", command=self.save_all,
                   bg="#1a3e8e", fg="white").pack(side="right", padx=6)
@@ -224,6 +251,9 @@ class ContentManager:
         search   = self.search_filter.get().lower()
         try:    min_rar = int(self.rarity_filter.get())
         except: min_rar = None
+        # I: element filter
+        sel_elem = getattr(self, "element_filter", None)
+        sel_elem = sel_elem.get() if sel_elem is not None else "All"
 
         all_ids = collect_all_ids(self.data)
 
@@ -234,6 +264,21 @@ class ContentManager:
             for item in items:
                 if min_rar is not None and item.get("rarity", 0) < min_rar:
                     continue
+                # I: element filter — keep only items whose element_weights
+                #    for the chosen element are > 0 AND the element is not
+                #    listed as disabled in element_enabled.
+                if sel_elem and sel_elem != "All":
+                    ew = item.get("element_weights", {})
+                    if ew:
+                        try:
+                            if float(ew.get(sel_elem, 0)) <= 0:
+                                continue
+                        except (TypeError, ValueError):
+                            continue
+                    disabled = item.get("element_enabled", {})
+                    if isinstance(disabled, dict) and \
+                       disabled.get(sel_elem) is False:
+                        continue
                 if search and not any(
                     search in str(item.get(c, "")).lower()
                     for c in self.columns if c != "type"
@@ -420,6 +465,528 @@ class ContentManager:
     def _open_effect_types(self):
         EffectTypePanel(self.root, self.data,
                         on_save=lambda: (self.load_all(), self._refresh_table()))
+
+    def _open_sigil_manager(self):
+        """B3: Small dialog for adding/removing sigils; changes are
+        propagated to every content item automatically."""
+        from CardContent.sigil_registry import (get_sigil_names, add_sigil,
+                                                remove_sigil)
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Sigils verwalten")
+        dlg.geometry("320x320")
+        dlg.transient(self.root)
+
+        tk.Label(dlg, text="Alle Sigile (Box-Typen)",
+                 font=("Arial", 10, "bold")).pack(pady=4)
+
+        lb_frame = tk.Frame(dlg); lb_frame.pack(fill="both", expand=True, padx=8)
+        lb = tk.Listbox(lb_frame, height=10)
+        lb.pack(side="left", fill="both", expand=True)
+        sb = tk.Scrollbar(lb_frame, command=lb.yview); sb.pack(side="right", fill="y")
+        lb.config(yscrollcommand=sb.set)
+
+        def _refresh_list():
+            lb.delete(0, tk.END)
+            for n in get_sigil_names():
+                lb.insert(tk.END, n)
+        _refresh_list()
+
+        entry_row = tk.Frame(dlg); entry_row.pack(fill="x", padx=8, pady=4)
+        tk.Label(entry_row, text="Neuer Sigil:").pack(side="left")
+        name_var = tk.StringVar()
+        tk.Entry(entry_row, textvariable=name_var, width=16).pack(side="left", padx=4)
+
+        def _add():
+            n = name_var.get().strip()
+            if not n: return
+            if add_sigil(n):
+                name_var.set("")
+                _refresh_list()
+                self.load_all()
+                self._refresh_table()
+
+        def _remove():
+            sel = lb.curselection()
+            if not sel: return
+            n = lb.get(sel[0])
+            if remove_sigil(n):
+                _refresh_list()
+                self.load_all()
+                self._refresh_table()
+
+        btn_row = tk.Frame(dlg); btn_row.pack(fill="x", padx=8, pady=4)
+        tk.Button(btn_row, text="+ Hinzufügen", command=_add,
+                  bg="#1a6e3c", fg="white").pack(side="left", padx=4)
+        tk.Button(btn_row, text="✕ Entfernen", command=_remove,
+                  bg="#6e1a1a", fg="white").pack(side="left", padx=4)
+        tk.Button(btn_row, text="Fertig", command=dlg.destroy).pack(side="right", padx=4)
+
+    # ── C2: Damage-Type Ranking Editor ────────────────────────────────────────
+    def _open_damage_types_manager(self):
+        """C2: Damage-Type editor.
+
+        Left column  – list of damage types (add/remove).
+        Right column – Notebook with one tab per Element and one for Prowess
+                       Cards (sub-dropdown). Each tab shows a rank-grid
+                       (rank 0 .. max_ranks-1); each rank holds any number of
+                       {type, cv} entries with weight 1/2**k.
+        """
+        try:
+            from CardContent import damage_registry as dreg
+        except Exception as e:
+            messagebox.showerror("Damage Types", f"Could not import damage_registry: {e}")
+            return
+
+        ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Damage Types verwalten")
+        dlg.geometry("780x520")
+        dlg.transient(self.root)
+
+        outer = tk.Frame(dlg); outer.pack(fill="both", expand=True, padx=6, pady=6)
+
+        # ── Left: damage-type list ────────────────────────────────────────────
+        left = tk.LabelFrame(outer, text="Damage Types")
+        left.pack(side="left", fill="y", padx=4)
+
+        lb = tk.Listbox(left, height=14, width=18, exportselection=False)
+        lb.pack(side="top", fill="y", padx=4, pady=4)
+
+        def _refresh_types():
+            lb.delete(0, tk.END)
+            for n in dreg.list_damage_types():
+                lb.insert(tk.END, n)
+        _refresh_types()
+
+        type_entry_row = tk.Frame(left); type_entry_row.pack(fill="x", padx=4, pady=2)
+        new_type_var = tk.StringVar()
+        tk.Entry(type_entry_row, textvariable=new_type_var, width=12).pack(side="left")
+
+        def _add_type():
+            n = new_type_var.get().strip()
+            if not n:
+                return
+            if dreg.add_type(n):
+                new_type_var.set("")
+                _refresh_types()
+                _refresh_section()  # combobox lists may need refresh
+
+        def _del_type():
+            sel = lb.curselection()
+            if not sel:
+                return
+            n = lb.get(sel[0])
+            if not messagebox.askyesno("Damage Type löschen",
+                                        f"'{n}' wirklich entfernen?\n"
+                                        f"(wird aus allen Rankings gelöscht)"):
+                return
+            dreg.remove_type(n)
+            _refresh_types()
+            _refresh_section()
+
+        type_btn_row = tk.Frame(left); type_btn_row.pack(fill="x", padx=4, pady=2)
+        tk.Button(type_btn_row, text="+", width=3, command=_add_type,
+                  bg="#1a6e3c", fg="white").pack(side="left", padx=2)
+        tk.Button(type_btn_row, text="✕", width=3, command=_del_type,
+                  bg="#6e1a1a", fg="white").pack(side="left", padx=2)
+
+        # ── Right: per-element / per-prowess tabs ─────────────────────────────
+        right = tk.Frame(outer); right.pack(side="left", fill="both", expand=True, padx=4)
+        nb = ttk.Notebook(right); nb.pack(fill="both", expand=True)
+
+        # State: { (section, key) : ranks_data }
+        # ranks_data is list[list[dict{type,cv}]]; we mutate then save on demand.
+        editing_state: dict = {}
+        tab_widgets: dict = {}  # (section,key) -> rebuild callback
+
+        def _make_section_tab(section: str, key: str, title: str | None = None):
+            page = tk.Frame(nb)
+            nb.add(page, text=title or key)
+            ranks_var = list(dreg.get_rankings(key, section=section))
+            # ensure list of lists of dicts
+            ranks_var = [[dict(e) for e in rk] for rk in ranks_var]
+            editing_state[(section, key)] = ranks_var
+
+            grid_frame = tk.Frame(page); grid_frame.pack(fill="both", expand=True,
+                                                         padx=6, pady=6)
+
+            def _rebuild():
+                for w in grid_frame.winfo_children():
+                    w.destroy()
+                max_rk = dreg.max_ranks()
+                tk.Label(grid_frame,
+                         text=f"Section: {section} / Key: {key}   "
+                              f"(rank k → weight 1/2^k)",
+                         font=("Arial", 9, "italic")).pack(anchor="w")
+
+                ranks = editing_state[(section, key)]
+                # pad to max_rk
+                while len(ranks) < max_rk:
+                    ranks.append([])
+
+                for k in range(max_rk):
+                    rk_frame = tk.LabelFrame(grid_frame,
+                                             text=f"Rank {k}  (weight {1/(2**k):.4f})")
+                    rk_frame.pack(fill="x", pady=3)
+
+                    entries = ranks[k]
+                    for idx, entry in enumerate(list(entries)):
+                        row = tk.Frame(rk_frame); row.pack(fill="x", padx=4, pady=1)
+                        type_var = tk.StringVar(value=entry.get("type", ""))
+                        cv_var   = tk.StringVar(value=str(entry.get("cv", 1.0)))
+                        cb = ttk.Combobox(row, textvariable=type_var, width=14,
+                                          values=dreg.list_damage_types(),
+                                          state="readonly")
+                        cb.pack(side="left", padx=2)
+                        tk.Label(row, text="cv:").pack(side="left")
+                        ce = tk.Entry(row, textvariable=cv_var, width=6)
+                        ce.pack(side="left", padx=2)
+
+                        def _on_type_change(_e=None, kk=k, ii=idx, tv=type_var):
+                            editing_state[(section, key)][kk][ii]["type"] = tv.get()
+                        def _on_cv_change(_e=None, kk=k, ii=idx, cv=cv_var):
+                            try:
+                                editing_state[(section, key)][kk][ii]["cv"] = \
+                                    float(cv.get())
+                            except ValueError:
+                                pass
+                        cb.bind("<<ComboboxSelected>>", _on_type_change)
+                        ce.bind("<FocusOut>", _on_cv_change)
+                        ce.bind("<Return>",   _on_cv_change)
+
+                        def _del_entry(kk=k, ii=idx):
+                            editing_state[(section, key)][kk].pop(ii)
+                            _rebuild()
+                        tk.Button(row, text="✕", width=2,
+                                  command=_del_entry,
+                                  bg="#6e1a1a", fg="white").pack(side="left", padx=2)
+
+                    def _add_entry(kk=k):
+                        types = dreg.list_damage_types()
+                        default_type = types[0] if types else ""
+                        editing_state[(section, key)][kk].append(
+                            {"type": default_type, "cv": 1.0})
+                        _rebuild()
+                    tk.Button(rk_frame, text="+ Eintrag", command=_add_entry,
+                              bg="#1a6e3c", fg="white").pack(anchor="w",
+                                                              padx=4, pady=2)
+
+                # Save / reset row
+                btns = tk.Frame(grid_frame); btns.pack(fill="x", pady=6)
+
+                def _save():
+                    # strip empty entries
+                    ranks = [[e for e in rk
+                              if e.get("type") and float(e.get("cv", 1)) != 0]
+                             for rk in editing_state[(section, key)]]
+                    # trim trailing empty ranks
+                    while ranks and not ranks[-1]:
+                        ranks.pop()
+                    dreg.set_rankings(key, ranks, section=section)
+                    messagebox.showinfo("Damage Types",
+                                         f"{section}/{key}: gespeichert "
+                                         f"({sum(len(r) for r in ranks)} entries).")
+
+                def _reset_from_disk():
+                    fresh = dreg.get_rankings(key, section=section)
+                    editing_state[(section, key)] = \
+                        [[dict(e) for e in rk] for rk in fresh]
+                    _rebuild()
+
+                tk.Button(btns, text="💾 Speichern", command=_save,
+                          bg="#1a3e8e", fg="white").pack(side="left", padx=4)
+                tk.Button(btns, text="↺ Reset", command=_reset_from_disk
+                          ).pack(side="left", padx=4)
+
+            tab_widgets[(section, key)] = _rebuild
+            _rebuild()
+
+        for el in ELEMENTS:
+            _make_section_tab("elements", el, title=el)
+
+        # ── Prowess tab (sub-dropdown to pick which Prowess card) ─────────────
+        prow_page = tk.Frame(nb); nb.add(prow_page, text="Prowess Cards")
+        prow_top = tk.Frame(prow_page); prow_top.pack(fill="x", padx=6, pady=4)
+        tk.Label(prow_top, text="Prowess Card ID:").pack(side="left")
+        prow_var = tk.StringVar()
+
+        # Existing keys plus a free-form entry to create new ones
+        try:
+            from CardContent.damage_registry import _load_rankings as _lr
+            existing = list(_lr().get("prowess_cards", {}).keys())
+        except Exception:
+            existing = []
+
+        prow_combo = ttk.Combobox(prow_top, textvariable=prow_var, width=24,
+                                  values=existing)
+        prow_combo.pack(side="left", padx=4)
+        if existing:
+            prow_var.set(existing[0])
+
+        prow_body = tk.Frame(prow_page); prow_body.pack(fill="both",
+                                                         expand=True,
+                                                         padx=6, pady=4)
+
+        def _load_prowess(_e=None):
+            for w in prow_body.winfo_children():
+                w.destroy()
+            key = prow_var.get().strip()
+            if not key:
+                tk.Label(prow_body,
+                         text="Bitte Prowess-Card-ID eingeben oder wählen.",
+                         fg="#888").pack(pady=20)
+                return
+            # reuse the same per-section grid by hosting it inline
+            host = tk.Frame(prow_body); host.pack(fill="both", expand=True)
+
+            ranks_var = list(dreg.get_rankings(key, section="prowess_cards"))
+            ranks_var = [[dict(e) for e in rk] for rk in ranks_var]
+            state_key = ("prowess_cards", key)
+            editing_state[state_key] = ranks_var
+
+            def _rebuild_inline():
+                for w in host.winfo_children():
+                    w.destroy()
+                tk.Label(host,
+                         text=f"prowess_cards / {key}   (rank k → weight 1/2^k)",
+                         font=("Arial", 9, "italic")).pack(anchor="w")
+                max_rk = dreg.max_ranks()
+                ranks = editing_state[state_key]
+                while len(ranks) < max_rk:
+                    ranks.append([])
+
+                for k in range(max_rk):
+                    rk_frame = tk.LabelFrame(host,
+                                             text=f"Rank {k}  (weight {1/(2**k):.4f})")
+                    rk_frame.pack(fill="x", pady=3)
+                    entries = ranks[k]
+                    for idx, entry in enumerate(list(entries)):
+                        row = tk.Frame(rk_frame); row.pack(fill="x", padx=4, pady=1)
+                        type_var = tk.StringVar(value=entry.get("type", ""))
+                        cv_var   = tk.StringVar(value=str(entry.get("cv", 1.0)))
+                        cb = ttk.Combobox(row, textvariable=type_var, width=14,
+                                          values=dreg.list_damage_types(),
+                                          state="readonly")
+                        cb.pack(side="left", padx=2)
+                        tk.Label(row, text="cv:").pack(side="left")
+                        ce = tk.Entry(row, textvariable=cv_var, width=6)
+                        ce.pack(side="left", padx=2)
+
+                        def _on_type_change(_e=None, kk=k, ii=idx, tv=type_var):
+                            editing_state[state_key][kk][ii]["type"] = tv.get()
+                        def _on_cv_change(_e=None, kk=k, ii=idx, cv=cv_var):
+                            try:
+                                editing_state[state_key][kk][ii]["cv"] = float(cv.get())
+                            except ValueError:
+                                pass
+                        cb.bind("<<ComboboxSelected>>", _on_type_change)
+                        ce.bind("<FocusOut>", _on_cv_change)
+                        ce.bind("<Return>",   _on_cv_change)
+
+                        def _del_entry(kk=k, ii=idx):
+                            editing_state[state_key][kk].pop(ii)
+                            _rebuild_inline()
+                        tk.Button(row, text="✕", width=2, command=_del_entry,
+                                  bg="#6e1a1a", fg="white").pack(side="left", padx=2)
+
+                    def _add_entry(kk=k):
+                        types = dreg.list_damage_types()
+                        default_type = types[0] if types else ""
+                        editing_state[state_key][kk].append(
+                            {"type": default_type, "cv": 1.0})
+                        _rebuild_inline()
+                    tk.Button(rk_frame, text="+ Eintrag", command=_add_entry,
+                              bg="#1a6e3c", fg="white").pack(anchor="w",
+                                                              padx=4, pady=2)
+
+                btns = tk.Frame(host); btns.pack(fill="x", pady=6)
+
+                def _save():
+                    ranks = [[e for e in rk
+                              if e.get("type") and float(e.get("cv", 1)) != 0]
+                             for rk in editing_state[state_key]]
+                    while ranks and not ranks[-1]:
+                        ranks.pop()
+                    dreg.set_rankings(key, ranks, section="prowess_cards")
+                    # update combobox values
+                    try:
+                        from CardContent.damage_registry import _load_rankings as _lr
+                        prow_combo["values"] = list(_lr().get("prowess_cards", {}).keys())
+                    except Exception:
+                        pass
+                    messagebox.showinfo("Damage Types",
+                                         f"prowess_cards/{key}: gespeichert.")
+
+                tk.Button(btns, text="💾 Speichern", command=_save,
+                          bg="#1a3e8e", fg="white").pack(side="left", padx=4)
+
+            _rebuild_inline()
+
+        prow_combo.bind("<<ComboboxSelected>>", _load_prowess)
+        prow_combo.bind("<Return>", _load_prowess)
+        tk.Button(prow_top, text="Laden / Neu", command=_load_prowess
+                  ).pack(side="left", padx=4)
+        if existing:
+            _load_prowess()
+
+        # ── Refresh helpers (after type add/remove) ───────────────────────────
+        def _refresh_section():
+            for cb in tab_widgets.values():
+                cb()
+
+        # ── Bottom row: close ────────────────────────────────────────────────
+        bottom = tk.Frame(dlg); bottom.pack(fill="x", padx=6, pady=4)
+        tk.Button(bottom, text="Fertig", command=dlg.destroy).pack(side="right")
+
+    # ── L: Interactable registry manager ─────────────────────────────────────
+    def _open_interactable_manager(self):
+        """L: Add/remove/edit registered Interactables.
+
+        These IDs power the ``\\Interactable`` template token. Each entry has
+        an id, a weight (0 = disabled), and a free-form description. Saved
+        immediately to ``cc_data/interactables.json`` on every change.
+        """
+        try:
+            from CardContent import interactable_registry as ireg
+        except Exception as e:
+            messagebox.showerror("Interactables",
+                                  f"Could not import interactable_registry: {e}")
+            return
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Interactables verwalten")
+        dlg.geometry("560x460")
+        dlg.transient(self.root)
+
+        outer = tk.Frame(dlg)
+        outer.pack(fill="both", expand=True, padx=8, pady=8)
+
+        tk.Label(outer,
+                 text=r"Registrierte Interactables – nutzbar via [\Interactable] in Sigils.",
+                 font=("Arial", 9, "italic"), fg="#888").pack(anchor="w", pady=(0, 6))
+
+        # ── Header row ──────────────────────────────────────────────────────
+        hdr = tk.Frame(outer)
+        hdr.pack(fill="x")
+        for txt, w in [("ID", 16), ("Weight", 8), ("Beschreibung", 30), ("", 4)]:
+            tk.Label(hdr, text=txt, font=("Arial", 9, "bold"),
+                     width=w, anchor="w").pack(side="left", padx=2)
+
+        # ── Scrollable list of rows ─────────────────────────────────────────
+        list_frame = tk.Frame(outer)
+        list_frame.pack(fill="both", expand=True, pady=(2, 4))
+
+        canvas = tk.Canvas(list_frame, highlightthickness=0)
+        vsb    = ttk.Scrollbar(list_frame, orient="vertical",
+                               command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        rows_frame = tk.Frame(canvas)
+        win_id     = canvas.create_window((0, 0), window=rows_frame, anchor="nw")
+        rows_frame.bind("<Configure>",
+                        lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>",
+                    lambda e: canvas.itemconfig(win_id, width=e.width))
+        canvas.bind_all("<MouseWheel>",
+                        lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
+
+        def _refresh():
+            for w in rows_frame.winfo_children():
+                w.destroy()
+            for it in ireg.get_interactables():
+                _make_row(it)
+
+        def _make_row(it: dict):
+            iid  = it.get("id", "")
+            wval = it.get("weight", ireg.DEFAULT_WEIGHT)
+            dval = it.get("description", "")
+
+            row = tk.Frame(rows_frame, relief="groove", bd=1)
+            row.pack(fill="x", pady=1)
+
+            tk.Label(row, text=iid, width=16, anchor="w",
+                     fg="#88eecc", font=("Arial", 9, "bold")).pack(
+                side="left", padx=4)
+
+            wv = tk.StringVar(value=str(wval))
+            we = tk.Entry(row, textvariable=wv, width=8)
+            we.pack(side="left", padx=2)
+
+            def _on_w_save(_e=None, name=iid, var=wv):
+                raw = var.get().strip()
+                try:
+                    ireg.set_weight(name, float(raw))
+                except ValueError:
+                    pass
+            we.bind("<FocusOut>", _on_w_save)
+            we.bind("<Return>",   _on_w_save)
+
+            dv = tk.StringVar(value=dval)
+            de = tk.Entry(row, textvariable=dv, width=30)
+            de.pack(side="left", padx=2, fill="x", expand=True)
+
+            def _on_d_save(_e=None, name=iid, var=dv):
+                ireg.set_description(name, var.get())
+            de.bind("<FocusOut>", _on_d_save)
+            de.bind("<Return>",   _on_d_save)
+
+            def _del(name=iid):
+                if not messagebox.askyesno(
+                        "Interactable löschen",
+                        f"'{name}' wirklich entfernen?"):
+                    return
+                ireg.remove_interactable(name)
+                _refresh()
+
+            tk.Button(row, text="✕", width=2, fg="white", bg="#6e1a1a",
+                      font=("Arial", 8, "bold"),
+                      command=_del).pack(side="left", padx=2)
+
+        # ── Add row ─────────────────────────────────────────────────────────
+        add_row = tk.Frame(outer)
+        add_row.pack(fill="x", pady=(4, 4))
+
+        new_id_var  = tk.StringVar()
+        new_w_var   = tk.StringVar(value=str(ireg.DEFAULT_WEIGHT))
+        new_d_var   = tk.StringVar()
+
+        tk.Entry(add_row, textvariable=new_id_var, width=16).pack(side="left", padx=2)
+        tk.Entry(add_row, textvariable=new_w_var, width=8).pack(side="left", padx=2)
+        tk.Entry(add_row, textvariable=new_d_var, width=30).pack(
+            side="left", padx=2, fill="x", expand=True)
+
+        def _add():
+            name = new_id_var.get().strip()
+            if not name:
+                return
+            try:
+                w = float(new_w_var.get().strip() or ireg.DEFAULT_WEIGHT)
+            except ValueError:
+                w = ireg.DEFAULT_WEIGHT
+            if not ireg.add_interactable(name, weight=w,
+                                          description=new_d_var.get().strip()):
+                messagebox.showerror("Interactables",
+                                      f"'{name}' existiert bereits.")
+                return
+            new_id_var.set("")
+            new_w_var.set(str(ireg.DEFAULT_WEIGHT))
+            new_d_var.set("")
+            _refresh()
+
+        tk.Button(add_row, text="＋ Add", command=_add,
+                  bg="#1a6e3c", fg="white",
+                  font=("Arial", 9, "bold")).pack(side="left", padx=4)
+
+        # ── Footer ──────────────────────────────────────────────────────────
+        bottom = tk.Frame(dlg)
+        bottom.pack(fill="x", padx=8, pady=6)
+        tk.Button(bottom, text="Fertig", command=dlg.destroy
+                  ).pack(side="right")
+
+        _refresh()
 
     def _open_editor(self, event):
         if self.tree.identify_region(event.x, event.y) == "heading":

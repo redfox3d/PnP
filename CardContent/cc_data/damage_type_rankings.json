@@ -1,0 +1,15 @@
+{
+  "_doc": "Per element (and per prowess card) a list of ranks. Each rank is a list of {type, cv}. Rank 0 = primary; each additional rank has half the probability of the previous one. CV = multiplier applied to damage-effect CV.",
+  "max_ranks": 4,
+
+  "elements": {
+    "Fire":   [[{"type": "Fire",     "cv": 1.0}], [{"type": "Physical", "cv": 0.9}]],
+    "Metal":  [[{"type": "Physical", "cv": 1.0}], [{"type": "Lightning","cv": 0.9}]],
+    "Ice":    [[{"type": "Cold",     "cv": 1.0}], [{"type": "Physical", "cv": 0.9}]],
+    "Nature": [[{"type": "Nature",   "cv": 1.0}], [{"type": "Physical", "cv": 0.9}]],
+    "Blood":  [[{"type": "Physical", "cv": 1.0}], [{"type": "Arcane",   "cv": 0.9}]],
+    "Quinta": [[{"type": "Arcane",   "cv": 1.0}]]
+  },
+
+  "prowess_cards": {}
+}

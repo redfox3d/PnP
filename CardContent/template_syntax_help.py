@@ -32,6 +32,11 @@ HELP_TEXT = """
                  Expandiert zu den IDs aus dem AOE Designer.
                  Beispiel:  Cast in pattern [\AOE].
 
+[\Interactable]  Alle registrierten Interactables als Auswahl  (L)
+                 Expandiert zu den IDs aus dem Interactable Manager
+                 (Source, Door, Switch, …). Generator wählt gewichtet.
+                 Beispiel:  Activate the [\Interactable].
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CONTENT TEXT / REMINDER TEXT  –  Bedingter Text

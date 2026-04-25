@@ -1,0 +1,44 @@
+{
+  "interactables": [
+    {
+      "id": "Source",
+      "weight": 10,
+      "description": "Resource node"
+    },
+    {
+      "id": "Door",
+      "weight": 6,
+      "description": "Passage that can be opened/closed"
+    },
+    {
+      "id": "Switch",
+      "weight": 6,
+      "description": "Generic toggle"
+    },
+    {
+      "id": "Lever",
+      "weight": 4,
+      "description": "Mechanical lever"
+    },
+    {
+      "id": "Lock",
+      "weight": 4,
+      "description": "Lock requiring a key"
+    },
+    {
+      "id": "Crystal",
+      "weight": 4,
+      "description": "Magical crystal"
+    },
+    {
+      "id": "Chest",
+      "weight": 4,
+      "description": "Container with loot"
+    },
+    {
+      "id": "Altar",
+      "weight": 3,
+      "description": "Ritual altar"
+    }
+  ]
+}

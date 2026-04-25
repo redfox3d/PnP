@@ -26,7 +26,7 @@ from .generator import CardGenerator
 from .generator.base import list_to_lookup
 from .cv_calc import cv_card, cv_content_item, complexity_card, complexity_content_item
 
-from card_builder.constants import ELEMENTS
+from card_builder.constants import ELEMENTS, ELEMENT_ICONS
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -79,15 +79,35 @@ def _load_containers() -> dict:
         return {}
 
 
+def _element_symbols(card: dict) -> str:
+    """Compact element-symbol string for a card (recipes use recipe type text)."""
+    rtype = card.get("recipe_type")
+    if rtype:
+        return f"[{rtype}]"
+    elems = card.get("elements") or ([card.get("element")] if card.get("element") else [])
+    if not elems:
+        return "·"
+    return "".join(ELEMENT_ICONS.get(e, "?") for e in elems)
+
+
 def _render_card_summary(card: dict) -> str:
-    el  = card.get("recipe_type") or card.get("element") or card.get("card_type") or "?"
-    cv  = card.get("_cv", "?")
-    cmx = card.get("_complexity", "?")
+    """Listbox line: CV + Complexity + Elements (no card name)."""
+    cv   = card.get("_cv", "?")
+    cmx  = card.get("_complexity", "?")
+    syms = _element_symbols(card)
+    try:
+        cv_s = f"{float(cv):>6.2f}"
+    except Exception:
+        cv_s = f"{str(cv):>6}"
+    try:
+        cmx_s = f"{float(cmx):>5.2f}"
+    except Exception:
+        cmx_s = f"{str(cmx):>5}"
     if card.get("ingredients") is not None:
         ni = len(card.get("ingredients", []))
-        return f"{el:<10}  CV={cv:<6}  Cmplx={cmx:<5}  Zutaten={ni}"
+        return f"CV {cv_s}  Cx {cmx_s}  {syms:<6}  Z={ni}"
     nb  = len(card.get("blocks", []))
-    return f"{el:<10}  CV={cv:<6}  Cmplx={cmx:<5}  Sigils={nb}"
+    return f"CV {cv_s}  Cx {cmx_s}  {syms:<6}  S={nb}"
 
 
 def render_effect(item: dict, vals: dict, opt_vals: dict,
@@ -256,7 +276,8 @@ class RandomBuilder(tk.Frame):
                  font=("Arial", 8)).pack(side="left", padx=(6, 0))
         self._sort_var = tk.StringVar(value="Standard")
         sort_cb = ttk.Combobox(filter_f, textvariable=self._sort_var,
-                               values=["Standard", "A → Z", "Z → A", "CV ↑", "CV ↓"],
+                               values=["Standard", "A → Z", "Z → A",
+                                       "CV ↑", "CV ↓", "Cx ↑", "Cx ↓"],
                                state="readonly", width=9)
         sort_cb.pack(side="left", padx=2)
         sort_cb.bind("<<ComboboxSelected>>", lambda _: self._refresh_list())
@@ -310,10 +331,13 @@ class RandomBuilder(tk.Frame):
             visible.sort(key=lambda ic: float(ic[1].get("_cv", 0)))
         elif sort_mode == "CV ↓":
             visible.sort(key=lambda ic: float(ic[1].get("_cv", 0)), reverse=True)
+        elif sort_mode == "Cx ↑":
+            visible.sort(key=lambda ic: float(ic[1].get("_complexity", 0)))
+        elif sort_mode == "Cx ↓":
+            visible.sort(key=lambda ic: float(ic[1].get("_complexity", 0)), reverse=True)
         self._visible_indices = [i for i, _ in visible]
         for i, card in visible:
-            self._card_lb.insert("end", f"{card.get('name', '?'):<26} "
-                                        + _render_card_summary(card))
+            self._card_lb.insert("end", _render_card_summary(card))
         self._count_label.config(text=f"{len(visible)} / {len(self._cards)} Karten")
 
     def _on_card_select(self, _=None):
@@ -540,7 +564,8 @@ class RandomBuilder(tk.Frame):
                 try:
                     from .cv_calc import cv_ability as _cv_ability
                     ab_cv = _cv_ability(ab, self._effects_lu, self._costs_lu,
-                                        triggers_lookup=self._triggers_lu)
+                                        triggers_lookup=self._triggers_lu,
+                                        conditions_lookup=self._conditions_lu)
                 except Exception:
                     pass
                 # Complexity over all effects (groups + legacy)
@@ -577,6 +602,18 @@ class RandomBuilder(tk.Frame):
                          text=f"CV={ab_cv:+.2f}   Cmplx={ab_cmplx:.1f}",
                          bg=BG, fg="#aaaaaa",
                          font=("Consolas", 8)).pack(side="right", padx=6)
+
+                # CV formula breakdown
+                try:
+                    formula = self._cv_formula_text(ab)
+                except Exception:
+                    formula = ""
+                if formula:
+                    frow = tk.Frame(ab_frame, bg=BG)
+                    frow.pack(fill="x", padx=4, pady=(0, 2))
+                    tk.Label(frow, text="  " + formula,
+                             bg=BG, fg="#668866",
+                             font=("Consolas", 7)).pack(side="left")
 
                 # Condition
                 if ab.get("condition_id"):
@@ -966,10 +1003,60 @@ class RandomBuilder(tk.Frame):
             if 0 <= vis_idx < len(self._visible_indices):
                 self._show_detail(self._cards[self._visible_indices[vis_idx]])
 
+    def _cv_formula_text(self, ab: dict) -> str:
+        """Human-readable CV formula for one ability.
+
+        Layout: trig_mult × cond_mult × (effs_cv − cost_cv) [+ sub_sigil_cv]
+        """
+        from .cv_calc import (cv_content_item, cv_effect_group,
+                               cv_choose, cv_sub_sigil, _trigger_multiplier)
+        # Effect side
+        parts_eff = []
+        groups = ab.get("effect_groups", [])
+        if groups:
+            gcvs = [cv_effect_group(g, self._effects_lu) for g in groups]
+            choose_n = ab.get("choose_n")
+            if choose_n and len(groups) > 1:
+                eff_cv = cv_choose(gcvs, choose_n, ab.get("choose_repeat", False))
+                parts_eff.append(f"choose({', '.join(f'{v:.2f}' for v in gcvs)},n={choose_n})={eff_cv:.2f}")
+            else:
+                eff_cv = sum(gcvs)
+                parts_eff.append(f"effs=" + "+".join(f"{v:.2f}" for v in gcvs)
+                                 + f"={eff_cv:.2f}")
+            sub_cv = cv_sub_sigil(ab.get("sub_sigil"), self._effects_lu,
+                                   self._costs_lu)
+            if sub_cv:
+                parts_eff.append(f"+sub={sub_cv:+.2f}")
+                eff_cv += sub_cv
+        else:
+            eff_cv = 0.0
+            for e in ab.get("effects", []):
+                item = self._effects_lu.get(e.get("effect_id", ""))
+                if item:
+                    eff_cv += cv_content_item(item, e.get("vals", {}),
+                                              e.get("opt_vals", {}))
+            parts_eff.append(f"effs={eff_cv:.2f}")
+
+        # Cost side
+        cost_cv = 0.0
+        for ci in ab.get("costs", []):
+            item = self._costs_lu.get(ci.get("cost_id", ""))
+            if item:
+                cost_cv += cv_content_item(item, ci.get("vals", {}),
+                                           ci.get("opt_vals", {}))
+
+        trig_mult = _trigger_multiplier(ab, self._triggers_lu)
+        # Condition mult: we don't multiply yet in cv_ability, but show placeholder
+        cond_mult = 1.0
+
+        return (f"{trig_mult:.2f}·{cond_mult:.2f}·"
+                f"({' '.join(parts_eff)} − cost={cost_cv:.2f})")
+
     def _recompute_card(self, card: dict):
         card["_cv"] = round(cv_card(card, self._box_config,
                                     self._effects_lu, self._costs_lu,
-                                    triggers_lookup=self._triggers_lu), 3)
+                                    triggers_lookup=self._triggers_lu,
+                                    conditions_lookup=self._conditions_lu), 3)
         card["_complexity"] = round(complexity_card(card, self._effects_lu,
                                                     self._costs_lu), 3)
 

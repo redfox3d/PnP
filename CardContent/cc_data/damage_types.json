@@ -1,0 +1,10 @@
+{
+  "types": [
+    {"id": "Physical",  "description": "Blunt/piercing damage."},
+    {"id": "Fire",      "description": "Burning damage."},
+    {"id": "Cold",      "description": "Frost/ice damage."},
+    {"id": "Lightning", "description": "Electric damage."},
+    {"id": "Nature",    "description": "Poison/plant damage."},
+    {"id": "Arcane",    "description": "Magical/chaotic damage."}
+  ]
+}

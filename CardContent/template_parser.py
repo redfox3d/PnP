@@ -4,8 +4,9 @@ template_parser.py – Template parsing, rendering, ID management, reference tra
 Sigil syntax  (for structure):
     {X}          → free variable named X
     [a, b, c]    → dropdown with choices a, b, c
-    [\\Elements] → expands to all game elements as choices
-    [\\AOE]      → expands to all saved AOE pattern IDs as choices
+    [\\Elements]     → expands to all game elements as choices
+    [\\AOE]          → expands to all saved AOE pattern IDs as choices
+    [\\Interactable] → expands to all registered interactables as choices (L)
 
 Content Text / Reminder Text syntax  (for conditional rendering):
     {X}                         → insert value of variable X
@@ -32,9 +33,27 @@ def _expand_special_markers(text: str) -> str:
     Expand special markers inside bracket groups before parsing/rendering.
         \\Elements  →  Fire, Metal, Ice, Nature, Blood, Meta
         \\AOE       →  <comma-separated list of saved AOE pattern IDs>
+
+    G: Per-element mana glyphs. ``\\Fire``, ``\\Metal``, ``\\Ice``,
+    ``\\Nature``, ``\\Blood``, ``\\Quinta`` expand to a unicode mana glyph
+    (the same icons used elsewhere). Use a longest-match approach so
+    ``\\Elements`` is expanded **before** ``\\E…`` per-element substitutions.
     """
     elements_csv = ", ".join(ELEMENTS)
     text = re.sub(r"\\Elements", elements_csv, text)
+
+    # G: per-element mana symbols. Mirror card_builder.constants.ELEMENT_ICONS
+    # but kept private here to avoid a hard import cycle.
+    _ELEM_GLYPH = {
+        "Fire":   "🔥",
+        "Metal":  "⚙",
+        "Ice":    "❄",
+        "Nature": "🌿",
+        "Blood":  "🩸",
+        "Quinta": "✨",
+    }
+    for name, glyph in _ELEM_GLYPH.items():
+        text = re.sub(rf"\\{name}\b", glyph, text)
 
     # \\AOE – load pattern IDs lazily so the import doesn't fail if the
     # aoe_designer package isn't on the path yet.
@@ -49,6 +68,18 @@ def _expand_special_markers(text: str) -> str:
             ids = get_pattern_ids()
             replacement = ", ".join(ids) if ids else "no_aoe_pattern"
             text = re.sub(r"\\AOE", replacement, text)
+        except Exception:
+            pass
+
+    # L: \\Interactable – expand to the list of registered interactable IDs
+    # (mirrors \\Elements / \\AOE). Used inside option brackets to give the
+    # generator a weighted choice.
+    if r"\Interactable" in text:
+        try:
+            from CardContent.interactable_registry import list_interactables
+            ids = list_interactables()
+            replacement = ", ".join(ids) if ids else "Object"
+            text = re.sub(r"\\Interactable\b", replacement, text)
         except Exception:
             pass
 
@@ -275,16 +306,29 @@ def render_content_text(sigil: str,
     """
     Render sigil (structural template) into plain text.
     Used for the Sigil → Content Text preview.
+
+    F1: [if/elif/else/endif] control tags are evaluated FIRST so they don't
+    get mistaken for option-choice brackets (e.g. ``[if OPT1=Fire]``).
     """
     text = _expand_special_markers(sigil)
 
     for name, val in var_values.items():
         text = text.replace(f"{{{name}}}", str(val) if val else name)
 
+    # F1: Evaluate conditional tags before treating any remaining [..] as
+    # option brackets. _render_block resolves [if]/[elif]/[else]/[/if] using
+    # the same OPT/var values used by the runtime renderer.
+    text = _render_block(text, var_values, opt_selections)
+
     opt_idx = 0
     def _replace(m):
         nonlocal opt_idx
-        default = m.group(1).split(",")[0].strip()
+        inner = m.group(1)
+        # Skip residual control tags just in case
+        if inner.startswith("if ") or inner.startswith("elif ") \
+                or inner == "else" or inner == "/if":
+            return m.group(0)
+        default = inner.split(",")[0].strip()
         choice  = opt_selections.get(str(opt_idx), default)
         opt_idx += 1
         return choice

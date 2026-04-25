@@ -198,7 +198,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -386,7 +385,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -537,7 +535,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -572,7 +569,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -607,7 +603,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -642,12 +637,187 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
         "Discard": true
       }
+    },
+    {
+      "id": "Activate_A_Source",
+      "sigil": "[You, Anyone, Ally] [any, supply, Equipment] [any, Generic, \\Elements]",
+      "content_text": "[if OPT0=You]When you activate[elif OPT0=Anyone]When anyone activates[else]When an Ally activates[/if] [if OPT1=any][if OPT2=any]a Source.[else]a[/if][else][if OPT1=Equipment][if OPT2=any]an[/if][else]a[/if][/if][if OPT2=Generic] Generic[/if][if OPT2=Fire] \\Fire[/if][if OPT2=Metal] \\Metal[/if][if OPT2=Ice] \\Ice[/if][if OPT2=Nature] \\Nature[/if][if OPT2=Blood] \\Blood[/if][if OPT2=Quinta] \\Quinta[/if][if OPT1=Supply] Supply[/if][if OPT1=Equipment] Equipment[/if][if OPT2!=any][if OPT1=any] Source.[else] Source.[/if][/if][if OPT1!=any][if OPT2=any] Source.[/if][/if]",
+      "reminder_text": "",
+      "rarity": 2,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {
+        "0": {
+          "choices": [
+            "You",
+            "Anyone",
+            "Ally"
+          ],
+          "per_choice": {
+            "You": {
+              "id": "Activated_A_Source.o0",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Anyone": {
+              "id": "Activated_A_Source.o1",
+              "rarity": 2,
+              "complexity": 1.0,
+              "conditions": {},
+              "cv": 1.0
+            },
+            "Ally": {
+              "id": "Activated_A_Source.o2",
+              "rarity": 5,
+              "complexity": 1.0,
+              "conditions": {},
+              "cv": 1.0
+            }
+          }
+        },
+        "1": {
+          "choices": [
+            "any",
+            "supply",
+            "Equipment"
+          ],
+          "per_choice": {
+            "any": {
+              "id": "Activated_A_Source.o3",
+              "rarity": 30,
+              "complexity": 1.0,
+              "conditions": {},
+              "cv": 1.0
+            },
+            "supply": {
+              "id": "Activated_A_Source.o4",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Equipment": {
+              "id": "Activated_A_Source.o5",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            }
+          }
+        },
+        "2": {
+          "choices": [
+            "any",
+            "Generic",
+            "Fire",
+            "Metal",
+            "Ice",
+            "Nature",
+            "Blood",
+            "Quinta"
+          ],
+          "per_choice": {
+            "any": {
+              "id": "Activated_A_Source.o6",
+              "rarity": 4,
+              "complexity": 1.0,
+              "conditions": {},
+              "cv": 1.0
+            },
+            "Generic": {
+              "id": "Activated_A_Source.o7",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Fire": {
+              "id": "Activated_A_Source.o8",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Metal": {
+              "id": "Activated_A_Source.o9",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Ice": {
+              "id": "Activated_A_Source.o10",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Nature": {
+              "id": "Activated_A_Source.o11",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Blood": {
+              "id": "Activated_A_Source.o12",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Quinta": {
+              "id": "Activated_A_Source.o13",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            }
+          }
+        }
+      },
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true,
+        "Lost": true
+      },
+      "weights_open": false,
+      "cv": 1.0,
+      "element_weights": {}
     }
   ]
 }

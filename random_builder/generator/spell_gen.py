@@ -32,29 +32,43 @@ class SpellGenerator(BaseGenerator):
         # of this card. Reads 'card_id_conditions' from content items.
         card_scope = self.push_id_scope(key="card_id_conditions")
         sigil_min = float(self.cfg.get("cv_per_sigil_min", 0.0))
+        sigil_max_retries = int(self.cfg.get("sigil_min_max_retries", 30))
         try:
             for btype in block_types:
                 ability = None
                 best = None
                 best_cv = float("-inf")
-                for _ in range(8):
+                for _ in range(sigil_max_retries):
                     used_solo: dict = {}
                     ab = self._build_ability(btype, element,
                                              used_containers, used_solo, elements)
                     ok_groups = len(ab.get("effect_groups", [])) >= min_grp
                     ab_cv = cv_ability(ab, self.effects, self.costs,
-                                       triggers_lookup=self.triggers)
+                                       triggers_lookup=self.triggers,
+                                       conditions_lookup=self.conditions)
                     if ok_groups and ab_cv >= sigil_min:
                         ability = ab
                         break
-                    # Keep the best candidate we've seen as a fallback
                     if ok_groups and ab_cv > best_cv:
                         best, best_cv = ab, ab_cv
                 if ability is None:
+                    # Still didn't reach sigil_min → reject this card entirely so
+                    # the outer loop can try again.
+                    if sigil_min > 0.0 and best is None:
+                        self.pop_id_scope()
+                        return None
+                    if sigil_min > 0.0 and best_cv < sigil_min:
+                        # Best attempt under min → reject whole card
+                        self.pop_id_scope()
+                        return None
                     ability = best if best is not None else ab
                 blocks.append({"type": btype, "abilities": [ability]})
         finally:
-            self.pop_id_scope()
+            # pop_id_scope is safe to call multiple times only if we don't mix;
+            # the early-return branches above already popped, so re-pop here
+            # would underflow. Use a guard instead:
+            if self._get_id_scopes() and self._get_id_scopes()[-1] is card_scope:
+                self.pop_id_scope()
 
         card = {
             "name": make_card_name(element or "Prowess"),
@@ -67,7 +81,8 @@ class SpellGenerator(BaseGenerator):
 
         card["_cv"] = round(cv_card(card, self.box_config,
                                     self.effects, self.costs,
-                                    triggers_lookup=self.triggers), 3)
+                                    triggers_lookup=self.triggers,
+                                    conditions_lookup=self.conditions), 3)
         card["_complexity"] = round(complexity_card(card, self.effects,
                                                     self.costs), 3)
         return card
@@ -509,8 +524,11 @@ class SpellGenerator(BaseGenerator):
                     break
 
         # ── Choose N of X ────────────────────────────────────────────────────
+        # Choose counts as one of the mutually-exclusive sub-sigil categories
+        # (see sub-sigil slot below). chance_choose controls frequency.
         n_groups = len(ability["effect_groups"])
-        if n_groups >= 2 and random.random() < 0.40:
+        choose_chance = float(self.cfg.get("chance_choose", 0.40))
+        if n_groups >= 2 and random.random() < choose_chance:
             ability["choose_total"] = n_groups
             ability["choose_n"] = random.randint(1, n_groups - 1)
             ability["choose_repeat"] = random.random() < 0.25
@@ -520,31 +538,37 @@ class SpellGenerator(BaseGenerator):
         sub_budget_frac = float(self.cfg.get("sub_sigil_cv_budget_frac", 0.3))
         is_manual_trigger = trigger_id in MANUAL_IDS
 
-        for group in ability["effect_groups"]:
-            target_type = group.get("target_type", "Non Targeting")
-            group_sub_chance = self._sub_sigil_group_chance(target_type, is_manual_trigger)
+        # ── Sub-Sigil slot: ONE per sigil ────────────────────────────────────
+        # Categories (mutually exclusive): choose | enhance | doublecast | multicast | none
+        # Choose is set earlier above via ability["choose_n"] → treat as already taken.
+        already_has_choose = bool(ability.get("choose_n"))
+        if not already_has_choose:
+            # Read weights from config; fall back to legacy sub_sigil_global_chance.
+            w_none       = float(self.cfg.get("chance_no_subsigil", 0.60))
+            w_choose     = float(self.cfg.get("chance_choose",      0.0))  # choose decided earlier
+            w_enhance    = float(self.cfg.get("chance_enhance",
+                                 self.cfg.get("sub_sigil_global_chance", 0.20)))
+            w_doublecast = float(self.cfg.get("chance_doublecast", 0.10))
+            w_multicast  = float(self.cfg.get("chance_multicast",  0.05))
+            opts    = ["none", "enhance", "doublecast", "multicast"]
+            weights = [w_none, w_enhance, w_doublecast, w_multicast]
+            total   = sum(max(0.0, w) for w in weights)
+            pick    = "none"
+            if total > 0:
+                pick = random.choices(opts, weights=[max(0.0, w) for w in weights], k=1)[0]
 
-            # Build sub-sigil for this group if roll succeeds
-            if random.random() < group_sub_chance:
+            if pick != "none" and ability["effect_groups"]:
+                used_tts = {g.get("target_type") for g in ability["effect_groups"]}
+                forbid = {t for t in used_tts if t in {"Target Enemy", "Target Ally"}}
                 sub_budget = max(0.5, effect_budget * sub_budget_frac)
                 sub = self.build_sub_sigil(
                     element, sub_budget, block_type,
-                    target_type=target_type  # Sub-sigil matches group's target type
+                    restrict_to_targets={"Non Targeting", "Target Enemy",
+                                         "Target Ally", "Target Neutral"},
+                    sub_type=pick,
+                    forbid_target_types=forbid,
                 )
                 if sub:
-                    group["sub_sigil"] = sub
-
-        # ── Sub-Sigil (Option B/C: global overload) ─────────────────────────
-        # Global sub-sigil that can have its own target type (overload effect)
-        sub_global_chance = float(self.cfg.get("sub_sigil_global_chance", 0.20))
-        if ability["effect_groups"] and random.random() < sub_global_chance:
-            sub_budget = max(0.5, effect_budget * sub_budget_frac)
-            # Global sub-sigil can be any target type (Non Targeting, Target Enemy, Target Ally, Target Neutral)
-            global_sub = self.build_sub_sigil(
-                element, sub_budget, block_type,
-                restrict_to_targets={"Non Targeting", "Target Enemy", "Target Ally", "Target Neutral"}
-            )
-            if global_sub:
-                ability["sub_sigil_global"] = global_sub
+                    ability["sub_sigil_global"] = sub
 
         return ability

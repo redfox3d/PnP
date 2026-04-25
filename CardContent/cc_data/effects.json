@@ -46,7 +46,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -102,7 +101,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -145,7 +143,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -213,7 +210,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -256,14 +252,18 @@
         "resource"
       ],
       "element_weights": {
-        "Nature": 10.0
+        "Fire": 0.0,
+        "Metal": 0.0,
+        "Ice": 0.0,
+        "Nature": 10.0,
+        "Blood": 0.0,
+        "Quinta": 1.0
       },
       "allowed_in_blocks": {
         "Play": true,
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -320,7 +320,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -353,7 +352,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -394,7 +392,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -435,7 +432,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -476,7 +472,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -548,7 +543,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -598,7 +592,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -683,7 +676,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -743,7 +735,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -786,7 +777,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -830,7 +820,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -863,7 +852,7 @@
           "cv2": 0,
           "cv3": 0,
           "conditions": {
-            "var_min": 2.0
+            "var_min": 0.0
           }
         }
       },
@@ -886,7 +875,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -944,7 +932,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -996,7 +983,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -1010,16 +996,6 @@
       "reminder_text": "",
       "rarity": 10,
       "complexity_base": 1.0,
-      "element_weights": {
-        "Fire": 0.0,
-        "Metal": 0.0,
-        "Ice": 0.0,
-        "Nature": 0.0,
-        "Blood": 0.0,
-        "Quinta": 0.0,
-        "Potion": 0,
-        "Skills": 0
-      },
       "conditions": {},
       "variables": {
         "X": {
@@ -1033,7 +1009,7 @@
         }
       },
       "options": {},
-      "cv": 1.0,
+      "cv": 0.0,
       "primary_types": [
         "Non Targeting",
         "Target Ally"
@@ -1048,12 +1024,12 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
         "Discard": true
-      }
+      },
+      "element_weights": {}
     },
     {
       "id": "Shuffle",
@@ -1090,7 +1066,6 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
@@ -1114,7 +1089,7 @@
           "cv2": 0,
           "cv3": 0,
           "conditions": {
-            "var_min": 1.0
+            "var_min": 2.0
           }
         }
       },
@@ -1138,18 +1113,18 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
         "Discard": true
-      }
+      },
+      "element_weights": {}
     },
     {
       "id": "Rummage",
-      "sigil": "{X}{Y}",
-      "content_text": "Rummage {X} Sources {Y} Cards deep.",
-      "reminder_text": "",
+      "sigil": "{X}",
+      "content_text": "Rummage {X} ",
+      "reminder_text": "[if X=1]Activate the top Card of your backpack.[else]Look at the top {X} cards of your backpack. Activate one of them.[/if]",
       "rarity": 10,
       "complexity_base": 1.0,
       "conditions": {},
@@ -1165,17 +1140,6 @@
             "var_min": 1.0,
             "var_max": 10.0
           }
-        },
-        "Y": {
-          "id": "Rummage.v1",
-          "rarity": 10,
-          "complexity": 1.0,
-          "cv1": 1,
-          "cv2": 0,
-          "cv3": 0,
-          "conditions": {
-            "var_min": 1.0
-          }
         }
       },
       "options": {},
@@ -1189,18 +1153,17 @@
       "tags": [
         "card_action"
       ],
-      "element_weights": {},
       "allowed_in_blocks": {
         "Play": true,
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
         "Discard": true
-      }
+      },
+      "element_weights": {}
     },
     {
       "id": "Throw",
@@ -1226,13 +1189,417 @@
         "Excavate": true,
         "Hand": true,
         "Concentration": true,
-        "Enchantment": true,
         "Equipped": true,
         "Exhausted": true,
         "Fleeting": true,
         "Discard": true
       },
       "element_weights": {}
+    },
+    {
+      "id": "Echo",
+      "sigil": "",
+      "content_text": "Echo",
+      "reminder_text": "Use this Cards Chant",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      },
+      "cv": 1.0,
+      "weights_open": true,
+      "allowed_card_types": [
+        "Spells"
+      ],
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Verse",
+      "sigil": "",
+      "content_text": "Verse",
+      "reminder_text": "Use this Cards Chant",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "allowed_in_blocks": {
+        "Play": false,
+        "Excavate": false,
+        "Hand": false,
+        "Concentration": false,
+        "Equipped": false,
+        "Exhausted": false,
+        "Fleeting": false,
+        "Discard": true
+      },
+      "cv": 1.0,
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Rhythm",
+      "sigil": "",
+      "content_text": "Rhythm",
+      "reminder_text": "Use this Cards Chant",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "allowed_in_blocks": {
+        "Play": false,
+        "Excavate": false,
+        "Hand": false,
+        "Concentration": true,
+        "Equipped": false,
+        "Exhausted": false,
+        "Fleeting": false,
+        "Discard": false
+      },
+      "cv": 1.0,
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "Search_Backpack",
+      "sigil": "[any, Supply, Equipment] [any, Neutral, \\Elements]",
+      "content_text": "Search your Backpack for a[if OPT1=Fire] \\Fire[/if][if OPT1=Metal] \\Metal[/if][if OPT1=Ice] \\Ice[/if][if OPT1=Nature] \\Nature[/if][if OPT1=Blood] \\Blood[/if][if OPT1=Quinta] \\Quinta[/if][if OPT0=Supply] Supply[/if][if OPT0=Equipment] Equipment[/if] Source. Activate it.",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {
+        "0": {
+          "choices": [
+            "any",
+            "Supply",
+            "Equipment"
+          ],
+          "per_choice": {
+            "any": {
+              "id": "Search_Backpack.o0",
+              "rarity": 30,
+              "complexity": 1.0,
+              "conditions": {},
+              "cv": 1.0
+            },
+            "Supply": {
+              "id": "Search_Backpack.o1",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Equipment": {
+              "id": "Search_Backpack.o2",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            }
+          }
+        },
+        "1": {
+          "choices": [
+            "any",
+            "Neutral",
+            "Fire",
+            "Metal",
+            "Ice",
+            "Nature",
+            "Blood",
+            "Quinta"
+          ],
+          "per_choice": {
+            "any": {
+              "id": "Search_Backpack.o9",
+              "rarity": 70,
+              "complexity": 1.0,
+              "conditions": {},
+              "cv": 1.0
+            },
+            "Neutral": {
+              "id": "Search_Backpack.o11",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Fire": {
+              "id": "Search_Backpack.o3",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Metal": {
+              "id": "Search_Backpack.o4",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Ice": {
+              "id": "Search_Backpack.o5",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Nature": {
+              "id": "Search_Backpack.o6",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Blood": {
+              "id": "Search_Backpack.o7",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Quinta": {
+              "id": "Search_Backpack.o8",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            }
+          }
+        }
+      },
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      },
+      "cv": 1.0,
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Fasten",
+      "sigil": "",
+      "content_text": "Fasten",
+      "reminder_text": "Get an Additional Initiative Card, up to your max Speed",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true,
+        "Lost": true
+      },
+      "cv": 6.0,
+      "primary_types": [
+        "Target Ally",
+        "Non Targeting"
+      ]
+    },
+    {
+      "id": "TimeStep",
+      "sigil": "",
+      "content_text": "Time Step",
+      "reminder_text": "take a quick turn next round",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {},
+      "options": {},
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true
+      },
+      "weights_open": true,
+      "cv": 1.0,
+      "element_weights": {},
+      "primary_types": [
+        "Non Targeting",
+        "Target Ally"
+      ]
+    },
+    {
+      "id": "Mill_Search",
+      "sigil": "{X} [\\Interactable]",
+      "content_text": "Mill {X} Cards add one of them to your hand",
+      "reminder_text": "",
+      "rarity": 10,
+      "complexity_base": 1.0,
+      "conditions": {},
+      "variables": {
+        "X": {
+          "id": "Mill_Search.v0",
+          "rarity": 10,
+          "complexity": 1.0,
+          "cv1": 1,
+          "cv2": 0,
+          "cv3": 0,
+          "conditions": {
+            "var_min": 2.0
+          }
+        }
+      },
+      "options": {
+        "0": {
+          "choices": [
+            "Source",
+            "Door",
+            "Switch",
+            "Lever",
+            "Lock",
+            "Crystal",
+            "Chest",
+            "Altar"
+          ],
+          "per_choice": {
+            "Source": {
+              "id": "Mill_Search.o1",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Door": {
+              "id": "Mill_Search.o2",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Switch": {
+              "id": "Mill_Search.o3",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Lever": {
+              "id": "Mill_Search.o4",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Lock": {
+              "id": "Mill_Search.o5",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Crystal": {
+              "id": "Mill_Search.o6",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Chest": {
+              "id": "Mill_Search.o7",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            },
+            "Altar": {
+              "id": "Mill_Search.o8",
+              "rarity": 10,
+              "complexity": 1.0,
+              "cv1": 1,
+              "cv2": 0,
+              "cv3": 0,
+              "conditions": {}
+            }
+          }
+        }
+      },
+      "allowed_in_blocks": {
+        "Play": true,
+        "Excavate": true,
+        "Hand": true,
+        "Concentration": true,
+        "Equipped": true,
+        "Exhausted": true,
+        "Fleeting": true,
+        "Discard": true,
+        "Lost": true
+      },
+      "cv": 1.0
     }
   ]
 }

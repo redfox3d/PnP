@@ -4,12 +4,40 @@ constants.py – all static configuration.
 
 BOX_TYPES = [
     "Play", "Excavate", "Hand", "Concentration",
-    "Enchantment", "Equipped", "Exhausted", "Fleeting", "Discard",
+    "Equipped", "Exhausted", "Fleeting", "Discard",
 ]
+
+# B4: Enchantment merged into Concentration. Any stored data using the old
+# key is transparently mapped on load. Do NOT reintroduce "Enchantment" to
+# BOX_TYPES — it would split the merged sigil again.
+BOX_TYPE_ALIASES = {
+    "Enchantment": "Concentration",
+}
 
 ABILITY_TYPES = ["Trigger", "Play", "Continues", "Activate"]
 
 ELEMENTS = ["Fire", "Metal", "Ice", "Nature", "Blood", "Quinta"]
+
+# ── Display labels (A1/A2/A3) ─────────────────────────────────────────────────
+# Internal keys stay stable; only the rendered label changes.
+CARD_TYPE_LABELS = {
+    "Spells":  "Chant",   # A1: "Spell"  → "Chant"
+    "Prowess": "Act",     # A2: "Skill"  → "Act"
+}
+
+# Sigil (box) rename table. Maps internal box-type names to what appears on
+# the card. If a key is missing, the internal name is used verbatim.
+SIGIL_LABELS = {
+    "Forgotten": "Omen",  # A3: ONLY the sigil name changes
+}
+
+def card_type_label(card_type: str) -> str:
+    """Display label for a card type (e.g. 'Spells' → 'Chant')."""
+    return CARD_TYPE_LABELS.get(card_type, card_type)
+
+def sigil_label(box_type: str) -> str:
+    """Display label for a sigil/box (e.g. 'Forgotten' → 'Omen')."""
+    return SIGIL_LABELS.get(box_type, box_type)
 
 # Generic mana symbol (used when no element is specified)
 GENERIC_MANA_ICON  = "◎"
@@ -27,7 +55,6 @@ BOX_COLORS = {
     "Excavate":      "#8B6914",
     "Hand":          "#1a6e3c",
     "Concentration": "#2a4a6e",
-    "Enchantment":   "#6a1a8e",
     "Equipped":      "#3a5a3a",
     "Exhausted":     "#5a3a2a",
     "Fleeting":      "#1a5a5a",
@@ -57,12 +84,20 @@ BOX_SYMBOLS = {
     "Excavate":      "⛏",
     "Hand":          "✋",
     "Concentration": "◉",
-    "Enchantment":   "✦",
     "Equipped":      "⚔",
     "Exhausted":     "💤",
     "Fleeting":      "💨",
     "Discard":       "🗑",
 }
+
+
+def canonical_box_type(btype: str) -> str:
+    """Apply box-type aliases (e.g. Enchantment → Concentration) for B4.
+
+    Call this when reading persisted data; keep original keys only for
+    error-path display.
+    """
+    return BOX_TYPE_ALIASES.get(btype, btype)
 
 TYPE_SYMBOLS = {
     "Trigger":   "⚡",
