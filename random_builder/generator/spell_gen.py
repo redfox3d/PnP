@@ -9,7 +9,7 @@ import math
 import random
 
 from random_builder.cv_calc import (
-    cv_content_item, cv_ability, cv_card, cv_effect_group,
+    cv_content_item, cv_ability, cv_ability_primary, cv_card, cv_effect_group,
     complexity_card,
 )
 from .base import BaseGenerator, make_card_name
@@ -32,6 +32,9 @@ class SpellGenerator(BaseGenerator):
         # of this card. Reads 'card_id_conditions' from content items.
         card_scope = self.push_id_scope(key="card_id_conditions")
         sigil_min = float(self.cfg.get("cv_per_sigil_min", 0.0))
+        # NEW: minimum CV for the *primary* part of a sigil (i.e. without the
+        # sub-sigil contribution). Stops cards that are useless before Enhance.
+        primary_min = float(self.cfg.get("cv_primary_per_sigil_min", 0.0))
         sigil_max_retries = int(self.cfg.get("sigil_min_max_retries", 30))
         try:
             for btype in block_types:
@@ -46,19 +49,27 @@ class SpellGenerator(BaseGenerator):
                     ab_cv = cv_ability(ab, self.effects, self.costs,
                                        triggers_lookup=self.triggers,
                                        conditions_lookup=self.conditions)
-                    if ok_groups and ab_cv >= sigil_min:
+                    primary_cv = cv_ability_primary(
+                        ab, self.effects, self.costs,
+                        triggers_lookup=self.triggers,
+                        conditions_lookup=self.conditions)
+                    ok_primary = primary_cv >= primary_min
+                    if ok_groups and ab_cv >= sigil_min and ok_primary:
                         ability = ab
                         break
-                    if ok_groups and ab_cv > best_cv:
-                        best, best_cv = ab, ab_cv
+                    # Score by min(primary_cv, ab_cv) so a high-CV-via-sub-sigil
+                    # card doesn't beat one with real primary value.
+                    score = min(primary_cv, ab_cv) if primary_min > 0 else ab_cv
+                    if ok_groups and score > best_cv:
+                        best, best_cv = ab, score
                 if ability is None:
-                    # Still didn't reach sigil_min → reject this card entirely so
-                    # the outer loop can try again.
-                    if sigil_min > 0.0 and best is None:
+                    # Still didn't reach sigil_min OR primary_min → reject card
+                    if (sigil_min > 0.0 or primary_min > 0.0) and best is None:
                         self.pop_id_scope()
                         return None
-                    if sigil_min > 0.0 and best_cv < sigil_min:
-                        # Best attempt under min → reject whole card
+                    if (sigil_min > 0.0 or primary_min > 0.0) and \
+                            best_cv < max(sigil_min, primary_min):
+                        # Best attempt still under threshold → reject
                         self.pop_id_scope()
                         return None
                     ability = best if best is not None else ab
@@ -79,6 +90,18 @@ class SpellGenerator(BaseGenerator):
         if elements:
             card["elements"] = elements
 
+        # B): apply cross-sigil rules. If the card violates any, reject it
+        # so the outer loop tries again. Rules are forgiving — they only
+        # trigger when their if-clause matches, and may be satisfied either
+        # via require (AND) or or_satisfy_by (OR fallback).
+        try:
+            from CardContent import sigil_rules as _srules
+            violations = _srules.evaluate(card)
+            if violations:
+                return None
+        except Exception:
+            pass
+
         card["_cv"] = round(cv_card(card, self.box_config,
                                     self.effects, self.costs,
                                     triggers_lookup=self.triggers,
@@ -90,9 +113,78 @@ class SpellGenerator(BaseGenerator):
     # ── Blocks ───────────────────────────────────────────────────────────────
 
     def _pick_blocks(self) -> list:
+        """Pick the sigils (blocks) for this card.
+
+        Effective probability per sigil:
+          1. ``box_config[sigil].card_type_weights[card_type]`` (managed in
+             the Sigil Manager) — the per-card-type live source.
+          2. fallback to the gen_config ``block_rules`` ``probability``.
+          3. fallback to 1.0 if the sigil is allowed for this card type.
+          4. fallback to 0.0 (= never) otherwise.
+        """
+        from CardContent.sigil_registry import (sigil_card_type_weight,
+                                                  sigil_allowed_card_types)
+        card_type = self.cfg.get("card_type_output") or self.cfg.get(
+            "profile_name", "Spells")
         rules = self.cfg.get("block_rules", [])
+        rule_prob = {r.get("block_type", ""): float(r.get("probability", 0.0))
+                     for r in rules if r.get("block_type")}
+
+        # Build the merged rules list using box_config first
+        all_sigils = list({**rule_prob, **dict.fromkeys(
+            (self.box_config or {}).keys(), 0.0)})
+        merged_rules: list = []
+        for sig in all_sigils:
+            # box_config-defined weight (subtype-aware: caller can pass
+            # card_type via cfg["card_subtype_for_pick"] for fine-grained
+            # control later).
+            w = sigil_card_type_weight(sig, card_type)
+            if w == 0.0 and sig in rule_prob:
+                w = rule_prob[sig]
+            if w > 0:
+                merged_rules.append({"block_type": sig, "probability": w})
+        # Fall back to gen_config block_rules entirely if nothing matched.
+        if not merged_rules:
+            merged_rules = list(rules)
+        rules = merged_rules
+
         min_blks = max(1, int(self.cfg.get("min_blocks", 1)))
 
+        # New path: explicit count distribution
+        count_cfg = self.cfg.get("sigil_count_weights")
+        if count_cfg:
+            keys = [k for k in count_cfg]
+            wts  = [float(count_cfg[k]) for k in keys]
+            total = sum(wts)
+            if total > 0:
+                target_n = int(random.choices(keys, weights=wts)[0])
+            else:
+                target_n = 1
+            target_n = max(1, min(6, target_n))
+
+            # Build a weighted pool of block_types from rules (prob = weight).
+            pool = [(r.get("block_type", ""), float(r.get("probability", 0.0)))
+                    for r in rules if r.get("block_type")]
+            pool = [(bt, w) for bt, w in pool if bt and w > 0]
+            if not pool:
+                return ["Play"]
+
+            for _attempt in range(10):
+                chosen: list = []
+                avail = list(pool)
+                while avail and len(chosen) < target_n:
+                    bts, ws = zip(*avail)
+                    bt = random.choices(list(bts), weights=list(ws))[0]
+                    chosen.append(bt)
+                    # Allow same sigil twice (matches the legacy flat-roll
+                    # behaviour); change to single-pick if duplicates undesired.
+                    # avail = [(b, w) for b, w in avail if b != bt]
+                chosen = self._remove_incompatible(chosen)
+                if len(chosen) >= min_blks:
+                    return chosen
+            return chosen if chosen else ["Play"]
+
+        # Legacy path
         for _attempt in range(10):
             chosen = []
             for rule in rules:
@@ -306,6 +398,15 @@ class SpellGenerator(BaseGenerator):
         forbidden_ids = set(bt_constraints.get("forbidden", []))
         required_ids = list(bt_constraints.get("required", []))
 
+        # Pre-roll the choose decision so we can ban `excluded_from_choose`
+        # effects from appearing inside this ability when choose will fire.
+        will_choose = random.random() < float(
+            self.cfg.get("chance_choose", self.cfg.get("choose_n_chance", 0.40)))
+        if will_choose:
+            for eid, item in self.effects.items():
+                if item.get("excluded_from_choose"):
+                    forbidden_ids.add(eid)
+
         # required_groups: for each group (playlist) pick exactly one effect
         for grp in bt_constraints.get("required_groups", []):
             pool = [e for e in grp if e not in forbidden_ids]
@@ -362,6 +463,23 @@ class SpellGenerator(BaseGenerator):
                                        max(min_groups, max_groups_cfg))
         groups_added = 0
 
+        # NEW: max distinct target_types per sigil — multiple groups with the
+        # same target_type (which merge in display) count as ONE "effect".
+        max_eff_per_sigil = int(self.cfg.get("max_effects_per_sigil", 99))
+
+        def _bucket_count() -> int:
+            return len({g.get("target_type", "") for g in
+                         ability.get("effect_groups", [])})
+
+        def _bucket_full(new_target: str) -> bool:
+            """True iff adding a group with this target_type would exceed the
+            distinct-bucket limit. Adding to an existing bucket is always OK."""
+            cur = {g.get("target_type", "") for g in
+                   ability.get("effect_groups", [])}
+            if new_target in cur:
+                return False
+            return len(cur) >= max_eff_per_sigil
+
         sigil_rules = self.cfg.get("sigil_rules", {}).get(block_type, [])
 
         if sigil_rules:
@@ -392,6 +510,16 @@ class SpellGenerator(BaseGenerator):
                     if groups_added >= target_groups:
                         break
                     target_type = self.pick_target_type(exclude=used_target_types)
+                    if _bucket_full(target_type):
+                        # Adding a *new* target_type would blow the bucket cap;
+                        # try once more constrained to existing target_types,
+                        # else skip this pick.
+                        existing_targets = {g.get("target_type", "") for g
+                                            in ability.get("effect_groups", [])}
+                        if existing_targets:
+                            target_type = random.choice(list(existing_targets))
+                        else:
+                            continue
                     if (target_type in NON_REPEATABLE
                             and target_type in groups_by_type
                             and len(groups_by_type[target_type].get("primaries", [])) < 3):
@@ -453,6 +581,13 @@ class SpellGenerator(BaseGenerator):
                     continue
 
                 target_type = self.pick_target_type(exclude=used_target_types)
+                if _bucket_full(target_type):
+                    existing_targets = {g.get("target_type", "") for g
+                                        in ability.get("effect_groups", [])}
+                    if existing_targets:
+                        target_type = random.choice(list(existing_targets))
+                    else:
+                        continue
                 if (target_type in NON_REPEATABLE
                         and target_type in groups_by_type
                         and len(groups_by_type[target_type].get("primaries", [])) < 3):
@@ -526,12 +661,28 @@ class SpellGenerator(BaseGenerator):
         # ── Choose N of X ────────────────────────────────────────────────────
         # Choose counts as one of the mutually-exclusive sub-sigil categories
         # (see sub-sigil slot below). chance_choose controls frequency.
+        # NEW: All option CVs must be within 20% of the maximum, otherwise
+        # choosing is dominated by one obvious pick — kill the choose flag.
         n_groups = len(ability["effect_groups"])
         choose_chance = float(self.cfg.get("chance_choose", 0.40))
+        choose_tolerance = float(self.cfg.get("choose_cv_tolerance", 0.20))
         if n_groups >= 2 and random.random() < choose_chance:
-            ability["choose_total"] = n_groups
-            ability["choose_n"] = random.randint(1, n_groups - 1)
-            ability["choose_repeat"] = random.random() < 0.25
+            # Bucket-aware CV: groups sharing the same target_type merge into
+            # one option (because they merge in display).
+            bucket_cvs: dict = {}
+            for g in ability["effect_groups"]:
+                tt = g.get("target_type", "")
+                bucket_cvs[tt] = bucket_cvs.get(tt, 0.0) + cv_effect_group(
+                    g, self.effects)
+            cvs = [v for v in bucket_cvs.values() if v > 0]
+            if cvs:
+                hi, lo = max(cvs), min(cvs)
+                spread = (hi - lo) / hi if hi > 0 else 0.0
+                if spread <= choose_tolerance:
+                    ability["choose_total"] = n_groups
+                    ability["choose_n"] = random.randint(1, n_groups - 1)
+                    ability["choose_repeat"] = random.random() < 0.25
+                # else: too lopsided → skip choose silently
 
         # ── Sub-Sigils (Option A: per effect group) ──────────────────────────
         # Attach sub-sigils to individual effect groups (Target Enemy/Ally/Non Targeting)
@@ -545,13 +696,18 @@ class SpellGenerator(BaseGenerator):
         if not already_has_choose:
             # Read weights from config; fall back to legacy sub_sigil_global_chance.
             w_none       = float(self.cfg.get("chance_no_subsigil", 0.60))
-            w_choose     = float(self.cfg.get("chance_choose",      0.0))  # choose decided earlier
             w_enhance    = float(self.cfg.get("chance_enhance",
                                  self.cfg.get("sub_sigil_global_chance", 0.20)))
             w_doublecast = float(self.cfg.get("chance_doublecast", 0.10))
             w_multicast  = float(self.cfg.get("chance_multicast",  0.05))
-            opts    = ["none", "enhance", "doublecast", "multicast"]
-            weights = [w_none, w_enhance, w_doublecast, w_multicast]
+            # NEW: dedicated sub-sigil flavors (Target Enemy / Ally / Choose)
+            w_target_enemy = float(self.cfg.get("chance_sub_target_enemy", 0.05))
+            w_target_ally  = float(self.cfg.get("chance_sub_target_ally",  0.04))
+            w_choose_sub   = float(self.cfg.get("chance_sub_choose",       0.04))
+            opts    = ["none", "enhance", "doublecast", "multicast",
+                        "target_enemy", "target_ally", "choose"]
+            weights = [w_none, w_enhance, w_doublecast, w_multicast,
+                        w_target_enemy, w_target_ally, w_choose_sub]
             total   = sum(max(0.0, w) for w in weights)
             pick    = "none"
             if total > 0:
@@ -563,8 +719,9 @@ class SpellGenerator(BaseGenerator):
                 sub_budget = max(0.5, effect_budget * sub_budget_frac)
                 sub = self.build_sub_sigil(
                     element, sub_budget, block_type,
+                    # Target Neutral is a permission tag, not a bucket.
                     restrict_to_targets={"Non Targeting", "Target Enemy",
-                                         "Target Ally", "Target Neutral"},
+                                         "Target Ally"},
                     sub_type=pick,
                     forbid_target_types=forbid,
                 )

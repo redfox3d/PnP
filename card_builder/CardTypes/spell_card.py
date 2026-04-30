@@ -53,8 +53,10 @@ class SpellCardEditor(BaseCardEditor):
         tk.Label(ctrl, text="Add Block:", bg=self.BG, fg="#ccc",
                  font=("Arial", 9, "bold")).pack(side="left")
         self._new_block_var = tk.StringVar(value="Play")
+        # Use the live sigil registry so removed sigils disappear here too
+        from CardContent.sigil_registry import get_sigil_names as _gsn
         ttk.Combobox(ctrl, textvariable=self._new_block_var,
-                     values=BOX_TYPES, width=16, state="readonly").pack(
+                     values=_gsn(), width=16, state="readonly").pack(
             side="left", padx=4)
         tk.Button(ctrl, text="+ Add Block", command=self._add_block,
                   bg="#1a6e3c", fg="white", font=("Arial", 8)).pack(
@@ -80,8 +82,9 @@ class SpellCardEditor(BaseCardEditor):
             tk.Label(type_row, text="Typ:", bg="#212121", fg="#888",
                      font=("Arial", 8)).pack(side="left", padx=4)
             tv = tk.StringVar(value=blk.get("type", "Play"))
+            from CardContent.sigil_registry import get_sigil_names as _gsn
             tc = ttk.Combobox(type_row, textvariable=tv,
-                              values=BOX_TYPES, state="readonly",
+                              values=_gsn(), state="readonly",
                               width=16, font=("Arial", 8))
             tc.pack(side="left", padx=4)
 
@@ -95,6 +98,7 @@ class SpellCardEditor(BaseCardEditor):
             BoxEditor(wrapper, blk,
                         on_change=self.on_change,
                         on_delete=lambda i=idx: self._del_block(i),
+                        card_type=self.card.get("card_type", ""),
                         bg="#212121").pack(fill="x")
 
     def _add_block(self):
@@ -354,8 +358,11 @@ class SpellCardRenderer:
 
             c.create_rectangle(left - MANA_STRIP_W, y0, right, y1,
                                fill=col, outline="#888", width=1, stipple="gray50")
-            # Sigil label (A3: "Forgotten" → "Omen"); internal key stays stable.
-            c.create_text(left, y0+4, text=f"[{sigil_label(btype)}]", anchor="nw",
+            # Sigil label (A3 + per-card-type renames, e.g. Play→Chant on
+            # Spells, Play→Act on Prowess). Internal key stays stable.
+            ct = card.get("card_type", "")
+            c.create_text(left, y0+4, text=f"[{sigil_label(btype, ct)}]",
+                          anchor="nw",
                           font=(self.FF, 10, "bold"), fill="white")
 
             # Mana strip boundary
@@ -630,12 +637,14 @@ class SpellCardRenderer:
             "Non Targeting":  "•",
             "Target Neutral": "→",
         }
-        # Target-type specific indent (Non Targeting stays at base, others indent)
+        # Target-type specific indent. Headers ("• Target Enemy:") sit at the
+        # same indent as Non-Targeting bullets; primaries below them get the
+        # extra step inwards from the +12 in their _wrap call.
         TARGET_INDENT = {
             "Non Targeting":  0,
-            "Target Ally":    10,
-            "Target Enemy":   10,
-            "Target Neutral": 10,
+            "Target Ally":    0,
+            "Target Enemy":   0,
+            "Target Neutral": 0,
         }
 
         use_or      = False
@@ -689,11 +698,18 @@ class SpellCardRenderer:
                 # Build modifier text "ranged 5, precise"
                 mod_parts = []
                 for mod in modifiers:
-                    # D: Range Reform — skip Ranged modifier when X==0
-                    if mod.get("effect_id") == "Ranged" and \
-                       int(mod.get("vals", {}).get("X", 0) or 0) == 0:
+                    eid = mod.get("effect_id", "")
+                    # D: Range Reform — skip Ranged modifier when X∈{0,1}
+                    if eid == "Ranged" and \
+                       int(mod.get("vals", {}).get("X", 0) or 0) <= 1:
                         continue
-                    meff = CD.get("effect", mod.get("effect_id", ""))
+                    # AoE modifier — synthesized, not an effect entry
+                    if eid == "AoE":
+                        pattern = mod.get("aoe_pattern", "")
+                        if pattern:
+                            mod_parts.append(f"AoE {pattern}")
+                        continue
+                    meff = CD.get("effect", eid)
                     if meff:
                         mt = meff.get("content_text") or ""
                         for k, v in mod.get("vals", {}).items():
@@ -702,9 +718,10 @@ class SpellCardRenderer:
                             mod_parts.append(mt)
 
                 if is_targeting:
-                    # Header: "Target Enemy, ranged 5:" (or just "Target Enemy:")
+                    # Header: "• Target Enemy, ranged 5:" — bullet for the
+                    # bucket label so it visually leads the indented primaries.
                     header_parts = [ttype] + mod_parts
-                    header = ", ".join(header_parts) + ":"
+                    header = "• " + ", ".join(header_parts) + ":"
                     if y + lh <= y_max:
                         y = self._wrap(header, x + 6 + t_indent, y,
                                        max_w - 6 - t_indent, FN,
@@ -725,6 +742,7 @@ class SpellCardRenderer:
                             pt = eff.get("content_text") or ""
                             for k, v in primary.get("vals", {}).items():
                                 pt = pt.replace(f"{{{k}}}", str(v))
+                        pt = self._decorate_damage(pt, primary)
                         if pt:
                             y = self._wrap(f"  • {pt}", x + 12 + t_indent, y,
                                            max_w - 14 - t_indent, FN,
@@ -746,6 +764,7 @@ class SpellCardRenderer:
                             pt = eff.get("content_text") or ""
                             for k, v in primary.get("vals", {}).items():
                                 pt = pt.replace(f"{{{k}}}", str(v))
+                        pt = self._decorate_damage(pt, primary)
                         if pt:
                             y = self._wrap(f"• {pt}{mod_suffix}", x + 6, y,
                                            max_w - 6, FN, grp_color, y_max)
@@ -835,6 +854,23 @@ class SpellCardRenderer:
                 y = self._wrap(f"• {etxt}", x + 6, y, max_w - 6, FN, "white", y_max)
 
         return y + 4
+
+    @staticmethod
+    def _decorate_damage(text: str, primary: dict) -> str:
+        """Append the damage type after a damage-tagged effect's text.
+
+        Turns ``"Damage 4D6"`` into ``"Damage 4D6 (Ice)"`` so users can see
+        the rolled damage flavour. Leaves non-damage effects untouched.
+        """
+        dtype = primary.get("damage_type")
+        if not dtype:
+            return text
+        if not text:
+            return text
+        # Avoid double-decoration if the type name is already in the text
+        if dtype.lower() in text.lower():
+            return text
+        return f"{text} ({dtype})"
 
     def _merge_display_buckets(self, groups: list) -> list:
         """Merge consecutive effect groups that share the same target_type and
@@ -971,17 +1007,24 @@ class SpellCardRenderer:
 
         sub_type = sub_sigil.get("sub_sigil_type", "enhance")
 
-        # Enhance w/o effects = no content, skip.
-        if sub_type == "enhance" and not sub_sigil.get("effect_groups"):
+        # Skip silent sub-sigils: enhance / target_enemy / target_ally / choose
+        # all need at least one effect_group to be worth rendering.
+        _NEEDS_GROUPS = ("enhance", "target_enemy", "target_ally", "choose")
+        if sub_type in _NEEDS_GROUPS and not sub_sigil.get("effect_groups"):
             return y
 
-        # Render costs. For Mana, the symbol is drawn on the mana strip —
-        # show "Mana" generically (not the element name) to match game wording.
-        sub_costs = []
+        # Render costs. Mana costs are rendered as element glyphs inline
+        # (e.g. "Enhance ❄ ⚙:") — no "Pay Mana" wording. Multiple mana costs
+        # become multiple symbols. Other costs render as plain text.
+        mana_glyphs: list[str] = []
+        sub_other_costs: list[str] = []
         for ci in sub_sigil.get("costs", []):
             cid = ci.get("cost_id", "")
             if cid == MANA_COST_ID:
-                sub_costs.append("Mana")
+                vals    = ci.get("vals", {})
+                element = vals.get("element", vals.get("Element", ""))
+                glyph   = ELEMENT_ICONS.get(element, GENERIC_MANA_ICON)
+                mana_glyphs.append(glyph)
                 continue
             co = CD.get("cost", cid)
             if not co:
@@ -990,18 +1033,24 @@ class SpellCardRenderer:
                 "var_values": ci.get("vals", {}),
                 "opt_values": ci.get("opt_vals", {})})
             if txt:
-                sub_costs.append(txt)
+                sub_other_costs.append(txt)
 
         # Header verb depends on sub-sigil type
         verb = {
-            "enhance":    "Enhance",
-            "doublecast": "Doublecast",
-            "multicast":  "Multicast",
+            "enhance":      "Enhance",
+            "doublecast":   "Doublecast",
+            "multicast":    "Multicast",
+            "target_enemy": "Vs. Enemy",
+            "target_ally":  "Aid Ally",
+            "choose":       "Choose 1",
         }.get(sub_type, "Enhance")
-        if sub_costs:
-            sub_header = f"{verb} — pay {', '.join(sub_costs)}:"
-        else:
-            sub_header = f"{verb}:"
+        # Compose: "Enhance ❄ ⚙ — Discard a card:" / "Enhance ❄:" / "Enhance:"
+        head_parts = [verb]
+        if mana_glyphs:
+            head_parts.append(" ".join(mana_glyphs))
+        if sub_other_costs:
+            head_parts.append("— " + ", ".join(sub_other_costs))
+        sub_header = " ".join(head_parts) + ":"
 
         if y + lh <= y_max:
             y = self._wrap(sub_header, x + indent_x + 4, y, max_w - indent_x - 4,
@@ -1021,9 +1070,9 @@ class SpellCardRenderer:
 
             mod_parts = []
             for mod in modifiers:
-                # D: Range Reform — skip Ranged with X==0
+                # D: Range Reform — skip Ranged with X∈{0,1}
                 if mod.get("effect_id") == "Ranged" and \
-                   int(mod.get("vals", {}).get("X", 0) or 0) == 0:
+                   int(mod.get("vals", {}).get("X", 0) or 0) <= 1:
                     continue
                 meff = CD.get("effect", mod.get("effect_id", ""))
                 if meff:
@@ -1034,7 +1083,7 @@ class SpellCardRenderer:
                         mod_parts.append(mt)
 
             if ttype in TARGETING:
-                header = ", ".join([ttype] + mod_parts) + ":"
+                header = "• " + ", ".join([ttype] + mod_parts) + ":"
                 if y + lh <= y_max:
                     y = self._wrap(header, x + indent_x + 10, y,
                                    max_w - indent_x - 14, FN, color, y_max)
@@ -1047,6 +1096,7 @@ class SpellCardRenderer:
                     pt = eff.get("content_text") or ""
                     for k, v in primary.get("vals", {}).items():
                         pt = pt.replace(f"{{{k}}}", str(v))
+                    pt = self._decorate_damage(pt, primary)
                     if pt:
                         y = self._wrap(f"  • {pt}", x + indent_x + 16, y,
                                        max_w - indent_x - 20, FN, color, y_max)
@@ -1061,6 +1111,7 @@ class SpellCardRenderer:
                     pt = eff.get("content_text") or ""
                     for k, v in primary.get("vals", {}).items():
                         pt = pt.replace(f"{{{k}}}", str(v))
+                    pt = self._decorate_damage(pt, primary)
                     if pt:
                         y = self._wrap(f"• {pt}{mod_suffix}",
                                        x + indent_x + 10, y,

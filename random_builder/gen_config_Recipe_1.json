@@ -23,11 +23,11 @@
       "probability": 0.15
     },
     {
-      "block_type": "Discard",
+      "block_type": "Exhausted",
       "probability": 0.1
     },
     {
-      "block_type": "Lost",
+      "block_type": "Forgotten",
       "probability": 0.15
     }
   ],

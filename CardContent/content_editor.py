@@ -42,7 +42,7 @@ from CardContent.window_memory import wm
 from CardContent.template_syntax_help import SyntaxHelpWindow
 
 from card_builder.constants import BOX_TYPES, ELEMENTS
-from CardContent.sigil_registry import get_sigil_names
+from CardContent.sigil_registry import get_sigil_names, prune_stale_allowed_blocks
 
 DEFAULT_ELEMENT_WEIGHT = 10   # used by auto-generator when field is empty
 
@@ -204,6 +204,16 @@ class ContentEditor(tk.Toplevel):
         tk.Button(bf, text="◈ Effect Conditions",
                   command=self._edit_effect_conditions,
                   bg="#553300", fg="white").pack(side="left", padx=4)
+
+        # Master Registry visibility flag — items with this flag appear in
+        # the "Marked Effects" tab of the Master Registry browser.
+        self._show_master_var = tk.BooleanVar(
+            value=bool(self.item.get("show_in_interactables", False)))
+        tk.Checkbutton(bf, text="In Master-Liste anzeigen",
+                       variable=self._show_master_var,
+                       fg="#88eecc", font=("Arial", 9, "bold"),
+                       selectcolor="#222"
+                       ).pack(side="left", padx=12)
         self._row += 1
 
         # ── Primary Types (target types this effect is valid for) ─────────────
@@ -459,7 +469,10 @@ class ContentEditor(tk.Toplevel):
 
     def _build_allowed_blocks_section(self):
         """Build checkbox section for allowed_in_blocks."""
-        # B3: single source of truth — includes any sigils added at runtime
+        # B3: single source of truth — includes any sigils added at runtime.
+        # Prune any stale legacy block-types (e.g. "Fleeting") that are no
+        # longer registered as sigils, so the user never sees ghosts.
+        prune_stale_allowed_blocks(self.item)
         block_types = get_sigil_names()
 
         # Initialize missing fields with default True (all enabled)
@@ -471,7 +484,7 @@ class ContentEditor(tk.Toplevel):
         hdr_frame = tk.Frame(self._f, bg=self._f.cget("bg"))
         hdr_frame.grid(row=self._row, column=0, columnspan=6,
                        sticky="ew", padx=8, pady=(4, 2))
-        tk.Label(hdr_frame, text="Allowed in Block Types",
+        tk.Label(hdr_frame, text="Allowed in Sigils",
                  font=("Arial", 10, "bold"), fg="#88ccff").pack(side="left")
         tk.Button(hdr_frame, text="All", font=("Arial", 8),
                   command=lambda: self._toggle_all_blocks(True),
@@ -846,6 +859,13 @@ class ContentEditor(tk.Toplevel):
                 self.item["recipe_type_enabled"] = disabled
             else:
                 self.item.pop("recipe_type_enabled", None)
+
+        # Master Registry visibility flag
+        if hasattr(self, "_show_master_var"):
+            if self._show_master_var.get():
+                self.item["show_in_interactables"] = True
+            else:
+                self.item.pop("show_in_interactables", None)
 
         # Primary types
         if hasattr(self, "_primary_type_vars"):

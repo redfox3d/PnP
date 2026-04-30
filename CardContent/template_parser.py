@@ -42,16 +42,21 @@ def _expand_special_markers(text: str) -> str:
     elements_csv = ", ".join(ELEMENTS)
     text = re.sub(r"\\Elements", elements_csv, text)
 
-    # G: per-element mana symbols. Mirror card_builder.constants.ELEMENT_ICONS
-    # but kept private here to avoid a hard import cycle.
-    _ELEM_GLYPH = {
-        "Fire":   "🔥",
-        "Metal":  "⚙",
-        "Ice":    "❄",
-        "Nature": "🌿",
-        "Blood":  "🩸",
-        "Quinta": "✨",
-    }
+    # G: per-element mana symbols. Use the SAME glyph dict the card renderer
+    # uses for the mana strip, so e.g. \Quinta in text renders identically
+    # to the Quinta mana circle (including U+FE0F emoji presentation
+    # selectors).
+    try:
+        from card_builder.constants import ELEMENT_ICONS as _ELEM_GLYPH
+    except Exception:
+        _ELEM_GLYPH = {
+            "Fire":   "🔥",
+            "Metal":  "⚙️",
+            "Ice":    "❄️",
+            "Nature": "🌿",
+            "Blood":  "🩸",
+            "Quinta": "✨",
+        }
     for name, glyph in _ELEM_GLYPH.items():
         text = re.sub(rf"\\{name}\b", glyph, text)
 
@@ -346,7 +351,12 @@ def render_display_text(template: str,
 
     var_values:     {"X": "3"}
     opt_selections: {"0": "top"}    – keys are option indices as strings
+
+    Special markers like ``\\Fire`` / ``\\Quinta`` / ``\\Interactable`` are
+    expanded BEFORE the block-level evaluation so they show up in the
+    rendered output (and use the same glyphs the mana strip uses).
     """
+    template = _expand_special_markers(template)
     return _render_block(template, var_values, opt_selections)
 
 
@@ -377,12 +387,18 @@ def generate_stat_id(effect_id: str, counter: int,
 
 def collect_all_ids(data: dict) -> dict:
     """
-    Returns flat dict: { id_str: {"type": "variable"|"choice"|"item", "item_id", "name"} }
+    Returns flat dict: { id_str: {"type": ..., "item_id", "name"} }
 
-    - 'variable' / 'choice' = stat IDs inside variables/options (for conditional text)
-    - 'item'                = the content item's own ID (Effect/Trigger/Cost/Condition name),
-                              so id_conditions can reference other content items for
-                              generator exclusion/requirement rules.
+    Types registered:
+      - 'variable' / 'choice'  – stat IDs inside variables/options
+      - 'item'                  – the content item's own ID
+      - 'sigil'                 – every registered sigil (from sigil_registry)
+      - 'element'               – every game element (Fire, Metal, ...)
+      - 'card_type'             – every registered card type
+      - 'damage_type'           – every registered damage type
+      - 'interactable'          – every registered interactable
+    These extra registrations let id_conditions / sigil rules reference
+    infrastructure items as first-class IDs.
     """
     registry = {}
     for type_name, items in data.items():
@@ -401,6 +417,43 @@ def collect_all_ids(data: dict) -> dict:
                     sid = stat.get("id", "")
                     if sid:
                         registry[sid] = {"type": "choice", "item_id": item_id, "name": choice}
+
+    # ── C): infrastructure registries ───────────────────────────────────────
+    # Sigils
+    try:
+        from CardContent.sigil_registry import get_sigil_names
+        for s in get_sigil_names():
+            registry.setdefault(s, {"type": "sigil", "item_id": s, "name": s})
+    except Exception:
+        pass
+    # Elements + card types
+    try:
+        from card_builder.constants import ELEMENTS, SIGILS_FOR_CARD_TYPE
+        for el in ELEMENTS:
+            registry.setdefault(el,
+                {"type": "element", "item_id": el, "name": el})
+        for ct in SIGILS_FOR_CARD_TYPE.keys():
+            registry.setdefault(ct,
+                {"type": "card_type", "item_id": ct, "name": ct})
+    except Exception:
+        pass
+    # Damage types
+    try:
+        from CardContent.damage_registry import list_damage_types
+        for dt in list_damage_types():
+            registry.setdefault(dt,
+                {"type": "damage_type", "item_id": dt, "name": dt})
+    except Exception:
+        pass
+    # Interactables
+    try:
+        from CardContent.interactable_registry import list_interactables
+        for it in list_interactables():
+            registry.setdefault(it,
+                {"type": "interactable", "item_id": it, "name": it})
+    except Exception:
+        pass
+
     return registry
 
 

@@ -154,6 +154,14 @@ def cv_effect_group(group: dict, effects_lookup: dict) -> float:
         eid = mod.get("effect_id", "")
         if eid in CV_INHERITS_SIGIL:
             continue
+        # NEW: synthetic AoE modifier carries its own ``aoe_cv`` field
+        # because it isn't a regular content item in effects.json.
+        if eid == "AoE":
+            try:
+                total += float(mod.get("aoe_cv", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                pass
+            continue
         item = effects_lookup.get(eid)
         if item:
             total += _eff_instance_cv(mod, item)
@@ -231,9 +239,26 @@ def cv_sub_sigil(sub_sigil: dict, effects_lookup: dict,
 
     sub_type = sub_sigil.get("sub_sigil_type", "enhance")
 
-    if sub_type == "enhance" or not sub_type:
+    if sub_type in ("enhance", "target_enemy", "target_ally") or not sub_type:
+        # New target_enemy / target_ally are just enhance variants with a
+        # fixed target_type — same CV formula.
         eff_cv = _effect_groups_cv(sub_sigil.get("effect_groups", []),
                                    effects_lookup)
+        return max(0.0, eff_cv - cost_cv)
+
+    if sub_type == "choose":
+        # Choose pays cost once and the player picks ONE option.
+        # CV = top-N option CV + 0.1·sum(rest)  − cost
+        groups = sub_sigil.get("effect_groups", [])
+        if not groups:
+            return 0.0
+        cvs = sorted(
+            (cv_effect_group(g, effects_lookup) for g in groups),
+            reverse=True,
+        )
+        n = int(sub_sigil.get("choose_n", 1) or 1)
+        n = max(1, min(n, len(cvs)))
+        eff_cv = sum(cvs[:n]) + 0.1 * sum(cvs[n:])
         return max(0.0, eff_cv - cost_cv)
 
     if sub_type in ("doublecast", "multicast"):
@@ -318,6 +343,29 @@ def cv_ability(ability: dict,
         trigger_mult = _trigger_multiplier(ability, triggers_lookup)
 
     return condition_mult * trigger_mult * (rest_sigil_cv + sub_cv)
+
+
+def cv_ability_primary(ability: dict,
+                        effects_lookup: dict,
+                        costs_lookup: dict,
+                        triggers_lookup: dict | None = None,
+                        conditions_lookup: dict | None = None) -> float:
+    """CV of an ability's *primary* part — i.e. with sub-sigils stripped.
+
+    Use this when you want to know what the ability is worth BEFORE the
+    player pays any sub-sigil cost (Enhance / Doublecast / Multicast). The
+    spell generator uses it to reject cards whose only value is locked
+    behind a paid sub-sigil.
+    """
+    if not ability:
+        return 0.0
+    # Shallow copy is enough — we only blank out the sub-sigil keys.
+    stripped = dict(ability)
+    stripped.pop("sub_sigil",        None)
+    stripped.pop("sub_sigil_global", None)
+    return cv_ability(stripped, effects_lookup, costs_lookup,
+                       triggers_lookup=triggers_lookup,
+                       conditions_lookup=conditions_lookup)
 
 
 # ── Card CV ───────────────────────────────────────────────────────────────────

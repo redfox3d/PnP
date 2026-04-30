@@ -16,6 +16,8 @@ CARD_CATEGORIES = {
     "Loot":    ["Equipment", "Supplies"],
     "Skills":  ["Spells", "Prowess"],
     "Recipes": ["Potions", "Phials", "Tinctures"],
+    # NEW: in-play references the player accumulates / discards.
+    "World":   ["Tokens", "Creatures", "StatusEffects"],
 }
 
 ALL_CARD_TYPES = [sub for subs in CARD_CATEGORIES.values() for sub in subs]
@@ -58,14 +60,34 @@ def empty_card(card_type: str = "Spells") -> dict:
             "element_sources": [],
             "object_type":     [],
             "materials":       [],
-            "effect_text":     "",
             "weight":          0,
             "value":           0,
             "_count":          1,
+            # NEW: block-based content. Empty list = blank card; the editor
+            # adds optional Play/Equipped/Sacrifice/etc blocks. Materials
+            # is implicit (always rendered from card.materials) — no block
+            # entry needed.
+            "blocks":          [],
         })
-        if card_type == "Equipment":
-            base["equip_text"]      = ""
-            base["equip_cost_text"] = ""
+    elif card_type in ("Tokens", "Creatures", "StatusEffects"):
+        # Same block-based shape as Supplies, but no weight/value/materials.
+        base.update({
+            "element_sources": [],
+            "tags":            [],
+            "blocks":          [],
+        })
+        if card_type == "Creatures":
+            # Creatures get HP, movement, and lists of elements they are
+            # strong / weak against (rendered on the right of the artwork).
+            base["hp"]            = 1
+            base["move"]          = 1
+            base["strong_against"] = []
+            base["weak_against"]   = []
+        elif card_type == "StatusEffects":
+            # Status effects optionally last for N turns + a sub-category
+            # (one of "Condition", "Curse", "Blessing").
+            base["duration"] = 1
+            base["subtype"]  = "Condition"
     elif card_type == "Alchemy":
         base.update({
             "ingredients":       [],
@@ -176,10 +198,56 @@ def migrate_ability(ability: dict, effects_lookup: dict = None) -> dict:
     return ability
 
 
+def migrate_item_card(card: dict) -> bool:
+    """Convert legacy item-card text fields into the block-based model.
+
+    Old shape stored ``effect_text`` (the on-Play description) and
+    ``equip_text`` / ``equip_cost_text`` (the persistent equip rules) as
+    free-form strings. New shape stores them as block ``raw_text`` /
+    ``raw_cost_text`` fields under sigil-typed blocks. Idempotent.
+    """
+    ct = card.get("card_type")
+    if ct not in ("Equipment", "Supplies", "Alchemy"):
+        return False
+    blocks = card.setdefault("blocks", [])
+    changed = False
+
+    eff = (card.get("effect_text") or "").strip()
+    if eff and not any(b.get("type") == "Play" for b in blocks):
+        blocks.append({"type": "Play",
+                        "abilities": [{"raw_text": eff,
+                                        "effect_groups": [],
+                                        "costs": []}]})
+        changed = True
+
+    equip = (card.get("equip_text") or "").strip()
+    cost  = (card.get("equip_cost_text") or "").strip()
+    if (equip or cost) and not any(b.get("type") == "Equipped" for b in blocks):
+        blocks.append({"type": "Equipped",
+                        "abilities": [{"raw_text": equip,
+                                        "raw_cost_text": cost,
+                                        "effect_groups": [],
+                                        "costs": []}]})
+        changed = True
+
+    # Strip the legacy text fields so they no longer appear in saved JSON.
+    if changed:
+        for legacy in ("effect_text", "equip_text", "equip_cost_text"):
+            card.pop(legacy, None)
+    return changed
+
+
 def _apply_box_aliases(cards: list) -> None:
-    """B4: Rewrite Enchantment → Concentration on load (in-place)."""
+    """B4: Rewrite Enchantment → Concentration on load (in-place).
+
+    Also migrates legacy item cards (Equipment / Supplies / Alchemy) into
+    the block-based model on load.
+    """
     from .constants import canonical_box_type
     for card in cards:
+        # Item-card migration must run BEFORE the alias loop so any blocks
+        # produced from legacy text get the same alias rewriting.
+        migrate_item_card(card)
         for blk in card.get("blocks", []):
             t = blk.get("type")
             if t:

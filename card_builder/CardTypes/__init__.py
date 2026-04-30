@@ -10,7 +10,10 @@ Usage:
 
 from card_builder.CardTypes.spell_card       import SpellCardEditor,     SpellCardRenderer
 from card_builder.CardTypes.loot_editor      import LootCardEditor
-from card_builder.CardTypes.equipment_editor import EquipmentCardEditor, SuppliesCardEditor
+from card_builder.CardTypes.equipment_editor import (
+    EquipmentCardEditor, SuppliesCardEditor,
+    TokensCardEditor, CreaturesCardEditor, StatusEffectsCardEditor,
+)
 from card_builder.CardTypes.loot_renderer    import LootCardRenderer
 # AlchemyCard kept for data migration only (not in card type dropdown)
 from card_builder.CardTypes.alchemy_card     import AlchemyCardEditor,   AlchemyCardRenderer
@@ -18,25 +21,31 @@ from card_builder.CardTypes.recipe_card      import RecipeCardEditor,    RecipeC
 
 
 _EDITORS = {
-    "Spells":     SpellCardEditor,
-    "Prowess":    SpellCardEditor,
-    "Loot":       LootCardEditor,
-    "Supplies":   SuppliesCardEditor,
-    "Equipment":  EquipmentCardEditor,
-    "Potions":    RecipeCardEditor,
-    "Phials":     RecipeCardEditor,
-    "Tinctures":  RecipeCardEditor,
+    "Spells":         SpellCardEditor,
+    "Prowess":        SpellCardEditor,
+    "Loot":           LootCardEditor,
+    "Supplies":       SuppliesCardEditor,
+    "Equipment":      EquipmentCardEditor,
+    "Potions":        RecipeCardEditor,
+    "Phials":         RecipeCardEditor,
+    "Tinctures":      RecipeCardEditor,
+    "Tokens":         TokensCardEditor,
+    "Creatures":      CreaturesCardEditor,
+    "StatusEffects":  StatusEffectsCardEditor,
 }
 
 _RENDERERS = {
-    "Spells":     SpellCardRenderer,
-    "Prowess":    SpellCardRenderer,
-    "Loot":       LootCardRenderer,
-    "Supplies":   LootCardRenderer,
-    "Equipment":  LootCardRenderer,
-    "Potions":    RecipeCardRenderer,
-    "Phials":     RecipeCardRenderer,
-    "Tinctures":  RecipeCardRenderer,
+    "Spells":         SpellCardRenderer,
+    "Prowess":        SpellCardRenderer,
+    "Loot":           LootCardRenderer,
+    "Supplies":       LootCardRenderer,
+    "Equipment":      LootCardRenderer,
+    "Potions":        RecipeCardRenderer,
+    "Phials":         RecipeCardRenderer,
+    "Tinctures":      RecipeCardRenderer,
+    "Tokens":         LootCardRenderer,
+    "Creatures":      LootCardRenderer,
+    "StatusEffects":  LootCardRenderer,
 }
 
 

@@ -249,7 +249,7 @@ class BaseGenerator:
     # ── Effect / cost building ───────────────────────────────────────────────
 
     def build_effect(self, effect_id: str, element: str,
-                     cv_budget: float) -> dict | None:
+                     cv_budget: float, range_x: int | None = None) -> dict | None:
         item = self.effects.get(effect_id)
         if not item:
             return None
@@ -259,14 +259,23 @@ class BaseGenerator:
             stat = item.get("options", {}).get(opt_key, {}).get("per_choice", {}).get(sel, {})
             base_cv += float(stat.get("cv", stat.get("cv1", 0.0)))
 
-        # C4: For damage-tagged effects, sample damage type from the per-element
-        # ranking and capture the cv multiplier so cv_calc / renderer can use it.
+        # C4: For damage-tagged effects, sample damage type from the
+        # per-element ranking (or the dedicated "Prowess" ranking when this
+        # generator is producing Prowess cards). When ``range_x`` is given,
+        # the damage type's [range_min, range_max] interval is honoured so
+        # e.g. Bash never appears at Range 5+.
         damage_type = None
         damage_cv_mod = 1.0
-        if "damage" in (item.get("tags") or []) and element:
+        is_prowess_run = (self.cfg.get("profile_name") == "Prowess")
+        if "damage" in (item.get("tags") or []):
             try:
                 from CardContent import damage_registry as _dreg
-                damage_type, damage_cv_mod = _dreg.pick_damage_type(element)
+                if is_prowess_run:
+                    damage_type, damage_cv_mod = _dreg.pick_damage_type(
+                        "Prowess", section="prowess_cards", range_x=range_x)
+                elif element:
+                    damage_type, damage_cv_mod = _dreg.pick_damage_type(
+                        element, range_x=range_x)
             except Exception:
                 damage_type, damage_cv_mod = None, 1.0
 
@@ -534,22 +543,81 @@ class BaseGenerator:
 
     # ── Target type / group building ────────────────────────────────────────
 
+    # Target types that *generate* their own bucket on a sigil. "Target
+    # Neutral" is intentionally NOT one of them — it acts as a permission
+    # tag (an effect tagged Target Neutral is eligible inside Target Enemy
+    # AND Target Ally groups, never as its own bucket).
+    _GENERATABLE_TARGET_TYPES = ("Target Enemy", "Target Ally", "Non Targeting")
+
     def pick_target_type(self, exclude: set = None) -> str:
-        """Weighted random selection of target type, excluding already-used types."""
+        """Weighted random selection of target type, excluding already-used types.
+
+        Target Neutral is filtered out — it's a permission tag, not a bucket.
+        """
         weights_cfg = self.cfg.get("target_type_weights", {
-            "Target Enemy": 10, "Target Ally": 8,
-            "Non Targeting": 10, "Target Neutral": 3,
+            "Target Enemy": 10, "Target Ally": 8, "Non Targeting": 10,
         })
-        all_types = list(weights_cfg.keys())
+        # Hard filter: never produce Target Neutral as a target_type
+        all_types = [t for t in weights_cfg.keys()
+                     if t in self._GENERATABLE_TARGET_TYPES]
+        if not all_types:
+            all_types = list(self._GENERATABLE_TARGET_TYPES)
         # Prefer types not yet used; fall back to all if every type is taken
         avail = [t for t in all_types if not exclude or t not in exclude]
         if not avail:
             avail = all_types
-        weights = [float(weights_cfg[t]) for t in avail]
+        weights = [float(weights_cfg.get(t, 1.0)) for t in avail]
         total = sum(weights)
         if total <= 0:
             return random.choice(avail)
         return random.choices(avail, weights=weights)[0]
+
+    def _build_aoe_modifier(self, primary_item: dict | None,
+                              cv_budget: float, primary_cv: float
+                              ) -> dict | None:
+        """Pick an AoE pattern from the AOE Designer registry, weighted by
+        per-pattern CV (capped at the budget remaining after the primary).
+
+        Returns an effect-modifier dict with ``effect_id="AoE"`` plus the
+        chosen pattern id and its CV stamped on. Returns None if no
+        registered patterns or none fit the budget.
+        """
+        try:
+            from aoe_designer.models import get_pattern_ids_with_cv
+        except Exception:
+            return None
+        items = get_pattern_ids_with_cv()
+        if not items:
+            return None
+        remaining = max(0.5, cv_budget - primary_cv)
+        # Eligible = patterns whose CV is <= remaining; if none, take the
+        # cheapest one (so we never silently lose AoE).
+        affordable = [(pid, cv) for pid, cv in items if cv <= remaining]
+        pool = affordable or [min(items, key=lambda t: t[1])]
+        weights = [max(cv, 0.1) for _, cv in pool]
+        pid, cv = random.choices(pool, weights=weights)[0]
+        return {
+            "effect_id":     "AoE",
+            "vals":          {},
+            "opt_vals":      {},
+            "aoe_pattern":   pid,
+            "aoe_cv":        round(float(cv), 2),
+        }
+
+    @staticmethod
+    def _target_type_compatible(target_type: str,
+                                  candidate_types: list) -> bool:
+        """True if an item with ``primary_types``=candidate_types fits in a
+        group of target_type. Target Neutral acts as a permission tag for
+        Target Enemy AND Target Ally groups."""
+        if not candidate_types:
+            return True   # untyped item — accept anywhere
+        if target_type in candidate_types:
+            return True
+        if target_type in ("Target Enemy", "Target Ally") and \
+                "Target Neutral" in candidate_types:
+            return True
+        return False
 
     def _pick_weighted(self, candidates: list, element: str):
         """Pick one (eid, item) from candidates using rarity + element weights."""
@@ -592,7 +660,8 @@ class BaseGenerator:
                 continue
             if target_type is not None:
                 ptypes = item.get("primary_types", [])
-                if ptypes and target_type not in ptypes:
+                # Target Neutral acts as a permission tag for Enemy/Ally groups
+                if not self._target_type_compatible(target_type, ptypes):
                     continue
             allowed_el = item.get("conditions", {}).get("allowed_elements", [])
             if allowed_el and element and element not in allowed_el:
@@ -625,9 +694,11 @@ class BaseGenerator:
                 continue
             if not self.passes_all_id_conditions(item):
                 continue
-            # target_type filter
+            # target_type filter — Target Neutral on attaches_to permits
+            # both Target Enemy and Target Ally groups.
             attaches = item.get("attaches_to", [])
-            if attaches and target_type not in attaches:
+            if attaches and not self._target_type_compatible(target_type,
+                                                              attaches):
                 continue
             # tag filter: if modifier requires specific primary tags, check them
             req_tags = item.get("requires_primary_tags", [])
@@ -672,7 +743,27 @@ class BaseGenerator:
         if not chosen:
             return None
         eid, chosen_item = chosen
-        primary = self.build_effect(eid, element, cv_budget)
+
+        # NEW: pre-roll the Range X so build_effect can pick a damage type
+        # whose [range_min, range_max] interval covers it. Range only
+        # applies to Target Enemy buckets and only when AoE doesn't win
+        # the modifier roll.
+        pre_range_x: int | None = None
+        pre_aoe = False
+        if target_type == "Target Enemy":
+            pre_aoe = random.random() < float(
+                self.cfg.get("aoe_modifier_chance", 0.10))
+            if not pre_aoe:
+                rv_cfg = self.cfg.get("range_value_weights")
+                if rv_cfg:
+                    keys = [k for k in rv_cfg]
+                    wts  = [float(rv_cfg[k]) for k in keys]
+                    if sum(wts) > 0:
+                        pre_range_x = int(random.choices(
+                            keys, weights=wts)[0])
+
+        primary = self.build_effect(eid, element, cv_budget,
+                                      range_x=pre_range_x)
         if not primary:
             return None
         # Register picked primary for id_conditions tracking
@@ -680,11 +771,21 @@ class BaseGenerator:
 
         # Use the actual primary_type of the chosen effect (important when
         # target_type was relaxed above to accommodate a specific container).
+        # Target Neutral is a permission tag — when an effect is tagged
+        # only Target Neutral and we're filling a Target Enemy/Ally bucket,
+        # keep the requested target_type instead of falling back to "Target
+        # Neutral" (which would create a phantom bucket).
         actual_ptypes = chosen_item.get("primary_types", [])
-        resolved_type = (
-            target_type if (not actual_ptypes or target_type in actual_ptypes)
-            else actual_ptypes[0]
-        )
+        if not actual_ptypes or target_type in actual_ptypes:
+            resolved_type = target_type
+        elif target_type in ("Target Enemy", "Target Ally") and \
+                "Target Neutral" in actual_ptypes:
+            resolved_type = target_type
+        else:
+            # Fall back to the effect's first type, but never use Target
+            # Neutral as a real bucket — promote it to Non Targeting.
+            first = actual_ptypes[0]
+            resolved_type = "Non Targeting" if first == "Target Neutral" else first
 
         # Deduct primary CV
         primary_item = self.effects.get(primary["effect_id"])
@@ -698,38 +799,63 @@ class BaseGenerator:
             except (TypeError, ValueError):
                 pass
 
-        # ── D: Range Reform — force-attach Ranged to every Target-Enemy group ─
+        # ── D: Range Reform — force-attach Ranged to every Target-Enemy group.
+        # NEW: with ``aoe_modifier_chance`` (default 10%) we instead attach
+        # an AoE pattern picked from the AOE Designer registry, weighted by
+        # the patterns' CV. AoE replaces Range — never both.
+        # The Range X / AoE coin flip was pre-rolled above so the damage
+        # type pick could honour the chosen Range interval.
         modifiers = []
         ranged_forced = False
+        aoe_forced    = False
         if resolved_type == "Target Enemy":
-            ranged_item = self.effects.get("Ranged")
-            if ranged_item and "Ranged" not in forbidden_ids and \
-                    self.allowed_for_profile(ranged_item) and \
-                    self.passes_block_filters(ranged_item, block_type) and \
-                    self.passes_all_id_conditions(ranged_item) and \
-                    self.item_enabled_for(ranged_item, element):
-                # Check requires_primary_tags
-                req_tags = ranged_item.get("requires_primary_tags", [])
-                primary_tags = set(primary_item.get("tags", []) or []) if primary_item else set()
-                if not req_tags or primary_tags.intersection(req_tags):
-                    # 40% → range 0 (no render); otherwise pick X normally
-                    range_zero_chance = float(
-                        self.cfg.get("range_zero_chance", 0.40))
-                    if random.random() < range_zero_chance:
-                        eff = {"effect_id": "Ranged", "vals": {"X": 0},
-                               "opt_vals": {}}
-                    else:
-                        eff = self.build_effect("Ranged", element,
-                                                cv_budget - primary_cv)
-                        if eff is None:
-                            eff = {"effect_id": "Ranged", "vals": {"X": 0},
-                                   "opt_vals": {}}
-                        # Ensure X is at least 1 in this branch
-                        if int(eff.get("vals", {}).get("X", 0) or 0) < 1:
-                            eff["vals"]["X"] = 1
-                    modifiers.append(eff)
-                    ranged_forced = True
-                    self.register_id_used_all(ranged_item)
+            if pre_aoe:
+                eff_aoe = self._build_aoe_modifier(primary_item, cv_budget,
+                                                    primary_cv)
+                if eff_aoe is not None:
+                    modifiers.append(eff_aoe)
+                    aoe_forced = True
+
+            if not aoe_forced:
+                ranged_item = self.effects.get("Ranged")
+                if ranged_item and "Ranged" not in forbidden_ids and \
+                        self.allowed_for_profile(ranged_item) and \
+                        self.passes_block_filters(ranged_item, block_type) and \
+                        self.passes_all_id_conditions(ranged_item) and \
+                        self.item_enabled_for(ranged_item, element):
+                    # Check requires_primary_tags
+                    req_tags = ranged_item.get("requires_primary_tags", [])
+                    primary_tags = set(primary_item.get("tags", []) or []) if primary_item else set()
+                    if not req_tags or primary_tags.intersection(req_tags):
+                        if pre_range_x is not None:
+                            eff = {"effect_id": "Ranged",
+                                   "vals": {"X": pre_range_x}, "opt_vals": {}}
+                        elif self.cfg.get("range_value_weights"):
+                            rv_cfg = self.cfg["range_value_weights"]
+                            keys = [k for k in rv_cfg]
+                            wts  = [float(rv_cfg[k]) for k in keys]
+                            x_pick = (int(random.choices(keys, weights=wts)[0])
+                                      if sum(wts) > 0 else 0)
+                            eff = {"effect_id": "Ranged",
+                                   "vals": {"X": x_pick}, "opt_vals": {}}
+                        else:
+                            # Legacy: 40% → range 0; else solve from budget
+                            range_zero_chance = float(
+                                self.cfg.get("range_zero_chance", 0.40))
+                            if random.random() < range_zero_chance:
+                                eff = {"effect_id": "Ranged", "vals": {"X": 0},
+                                       "opt_vals": {}}
+                            else:
+                                eff = self.build_effect("Ranged", element,
+                                                        cv_budget - primary_cv)
+                                if eff is None:
+                                    eff = {"effect_id": "Ranged",
+                                           "vals": {"X": 0}, "opt_vals": {}}
+                                if int(eff.get("vals", {}).get("X", 0) or 0) < 1:
+                                    eff["vals"]["X"] = 1
+                        modifiers.append(eff)
+                        ranged_forced = True
+                        self.register_id_used_all(ranged_item)
 
         # Roll for further modifiers
         mod_chance = float(self.cfg.get("modifier_chance", 0.3))
@@ -737,6 +863,10 @@ class BaseGenerator:
             mod_forbidden = forbidden_ids | {primary["effect_id"]}
             if ranged_forced:
                 mod_forbidden = mod_forbidden | {"Ranged"}
+            if aoe_forced:
+                # When AoE is the primary movement/spread modifier, also
+                # forbid Ranged so we don't accidentally stack both.
+                mod_forbidden = mod_forbidden | {"Ranged", "AoE"}
             mod_candidates = self._filter_modifiers(
                 resolved_type, element, block_type, mod_forbidden,
                 primary_item=primary_item)
@@ -771,11 +901,46 @@ class BaseGenerator:
                             pass
                         remaining -= mod_cv
 
-        return {
+        result = {
             "target_type": resolved_type,
             "primaries":   [primary],
             "modifiers":   modifiers,
         }
+
+        # NEW: Target Enemy / Target Ally buckets may carry multiple primary
+        # effects (the renderer shows them as one bucket with several bullets).
+        # We give each extra slot an independent roll so a card with a single
+        # primary remains the common case.
+        if resolved_type in ("Target Enemy", "Target Ally"):
+            extra_chance = float(self.cfg.get("multi_primary_chance", 0.30))
+            max_extras   = int(self.cfg.get("multi_primary_max", 2))
+            extras_added = 0
+            for _ in range(max_extras):
+                if random.random() >= extra_chance:
+                    break
+                # Budget left = whatever remained after the primary + modifiers
+                left = max(0.5, remaining if 'remaining' in locals() else
+                            (cv_budget - primary_cv))
+                # Banned: primary + already-used modifier ids (avoid dupes)
+                banned = set(forbidden_ids) | {primary["effect_id"]} | {
+                    m.get("effect_id") for m in modifiers
+                    if m.get("effect_id")
+                }
+                added = self.add_primary_to_group(result, element, left,
+                                                    block_type,
+                                                    forbidden_ids=banned,
+                                                    source_eids=source_eids)
+                if not added:
+                    break
+                # Migrate the canonical-key slot if the helper used `effects`
+                if "effects" in result and "primaries" in result:
+                    # Merge into 'primaries' so the rest of the pipeline
+                    # (cv_calc, renderer) sees a single canonical key.
+                    extras = result.pop("effects", [])
+                    result["primaries"].extend(extras)
+                extras_added += 1
+
+        return result
 
     def add_primary_to_group(self, group: dict, element: str,
                               cv_budget: float, block_type: str = "",
@@ -869,16 +1034,20 @@ class BaseGenerator:
         """Build a sub-sigil.
 
         sub_type:
-            - "enhance"    : costs + (opt) condition + effect_groups (classic)
-            - "doublecast" : costs + (opt) condition, NO effects
-            - "multicast"  : costs + (opt) condition, NO effects  (×3 payoff)
+            - "enhance"      : costs + (opt) condition + 1 effect_group  (classic)
+            - "doublecast"   : costs + (opt) condition, NO effects
+            - "multicast"    : costs + (opt) condition, NO effects   (×3)
+            - "target_enemy" : costs + 1 effect_group with target_type=Target Enemy
+            - "target_ally"  : same with Target Ally
+            - "choose"       : costs + N effect_groups; player picks one each
+                               cast. Each option may target different things,
+                               and damage types are allowed to differ
+                               ("einmalig"-Choose).
 
         forbid_target_types:
-            Set of target_types the sub-sigil's own effect_group(s) must NOT use
-            (to enforce "one Target Enemy / one Target Ally per sigil incl sub-sigil").
-
-        Returns: dict with sub_sigil_type, target_type, condition, costs,
-                 effect_groups (empty for doublecast/multicast).
+            Set of target_types the sub-sigil's own effect_group(s) must NOT
+            use (to enforce "one Target Enemy / one Target Ally per sigil
+            incl sub-sigil").
         """
         costs = []
         if "Mana" in self.costs:
@@ -911,6 +1080,21 @@ class BaseGenerator:
                 "effect_groups":      [],
             }
 
+        # NEW: target_enemy / target_ally — fixed target, otherwise like enhance
+        if sub_type == "target_enemy":
+            target_type = "Target Enemy"
+        elif sub_type == "target_ally":
+            target_type = "Target Ally"
+
+        # NEW: choose sub-sigil — produces 2..N effect_groups with different
+        # target_types or damage variations. Allowed to use different damage
+        # types since this is a one-time decision per cast.
+        if sub_type == "choose":
+            return self._build_choose_sub_sigil(
+                element, cv_budget, block_type, costs,
+                condition_id, condition_vals, condition_opt_vals,
+                forbid_target_types or set())
+
         # Enhance: pick target_type honoring the forbid set
         forbid = forbid_target_types or set()
         if target_type is None:
@@ -925,18 +1109,100 @@ class BaseGenerator:
             # Requested target is forbidden → fall back
             target_type = self.pick_target_type(exclude=forbid) or target_type
 
+        # Override budget by per-target-type CV range if configured
+        per_target = self.cfg.get("sub_sigil_cv_per_target", {})
+        tt_cfg = per_target.get(target_type) if isinstance(per_target, dict) else None
+        if isinstance(tt_cfg, dict):
+            try:
+                mn = float(tt_cfg.get("min", 0.0))
+                mx = float(tt_cfg.get("max", cv_budget))
+                if mx < mn:
+                    mn, mx = mx, mn
+                if mx > 0:
+                    cv_budget = random.uniform(max(mn, 0.0), max(mx, 0.0))
+            except (TypeError, ValueError):
+                pass
+
         group = self.build_effect_group(target_type, element, cv_budget, block_type)
         if not group:
             return None
 
+        # Map back to a stable sub_sigil_type label
+        out_type = sub_type if sub_type in ("target_enemy", "target_ally",
+                                              "enhance") else "enhance"
         return {
-            "sub_sigil_type":     "enhance",
+            "sub_sigil_type":     out_type,
             "target_type":        target_type,
             "condition_id":       condition_id,
             "condition_vals":     condition_vals,
             "condition_opt_vals": condition_opt_vals,
             "costs":              costs,
             "effect_groups":      [group],
+        }
+
+    def _build_choose_sub_sigil(self, element: str, cv_budget: float,
+                                  block_type: str, costs: list,
+                                  cond_id, cond_vals, cond_opt_vals,
+                                  forbid: set) -> dict | None:
+        """Build a sub-sigil that offers a one-time choice between several
+        effect_groups (different target types or damage flavors).
+
+        Tolerance: the option CVs must be within
+        ``choose_cv_tolerance`` of the highest, otherwise we drop the
+        long-tail ones until they fit.
+        """
+        # Aim for 2..3 options
+        n_options = random.randint(2, 3)
+        # Each option burns roughly 1/n of the budget; allow ±20% jitter.
+        per_opt   = cv_budget / max(1, n_options)
+        groups: list = []
+        used_targets: set = set()
+        candidate_targets = ["Target Enemy", "Target Ally", "Non Targeting"]
+        # Bias towards different targets but allow the same one twice
+        # (e.g. both Target Enemy with different damage types).
+        for _ in range(n_options):
+            tt_pool = [t for t in candidate_targets if t not in forbid]
+            if not tt_pool:
+                tt_pool = list(candidate_targets)
+            # Prefer unused targets first, fall back to any if exhausted
+            unused = [t for t in tt_pool if t not in used_targets]
+            tt = random.choice(unused or tt_pool)
+            used_targets.add(tt)
+
+            jitter = per_opt * random.uniform(0.85, 1.15)
+            grp = self.build_effect_group(tt, element, jitter, block_type)
+            if grp:
+                groups.append(grp)
+
+        if len(groups) < 2:
+            return None
+
+        # Tolerance check: drop options whose CV is too low. (Per user spec:
+        # all options should be within 20% of the max so the choice matters.)
+        try:
+            from random_builder.cv_calc import cv_effect_group as _cg
+        except Exception:
+            _cg = lambda g, l: 1.0
+        cvs = [(g, _cg(g, self.effects)) for g in groups]
+        if not cvs:
+            return None
+        hi = max(c for _, c in cvs) or 1.0
+        tol = float(self.cfg.get("choose_cv_tolerance", 0.20))
+        kept = [g for g, c in cvs if (hi - c) / hi <= tol]
+        if len(kept) < 2:
+            return None
+
+        return {
+            "sub_sigil_type":     "choose",
+            "target_type":        "",
+            "condition_id":       cond_id,
+            "condition_vals":     cond_vals,
+            "condition_opt_vals": cond_opt_vals,
+            "costs":              costs,
+            "effect_groups":      kept,
+            # Choose-Y-of-X:
+            "choose_n":           1,
+            "choose_total":       len(kept),
         }
 
     # ── Generate (to be implemented by subclass) ─────────────────────────────

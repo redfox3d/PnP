@@ -160,6 +160,11 @@ class ContentManager:
                   command=self._open_interactable_manager,
                   bg="#1a4a3a", fg="#88eecc",
                   font=("Arial", 8, "bold")).pack(side="left", padx=6)
+        # B): sigil rules editor (cross-sigil constraints)
+        tk.Button(bf, text="Sigil Rules…",
+                  command=self._open_sigil_rules_editor,
+                  bg="#3a3a1a", fg="#ffcc66",
+                  font=("Arial", 8, "bold")).pack(side="left", padx=6)
         tk.Button(bf, text="💾 Save All", command=self.save_all,
                   bg="#1a3e8e", fg="white").pack(side="right", padx=6)
 
@@ -467,59 +472,16 @@ class ContentManager:
                         on_save=lambda: (self.load_all(), self._refresh_table()))
 
     def _open_sigil_manager(self):
-        """B3: Small dialog for adding/removing sigils; changes are
-        propagated to every content item automatically."""
-        from CardContent.sigil_registry import (get_sigil_names, add_sigil,
-                                                remove_sigil)
-        dlg = tk.Toplevel(self.root)
-        dlg.title("Sigils verwalten")
-        dlg.geometry("320x320")
+        """Full Sigil Manager: list of sigils on the left, properties /
+        per-card-type weights / labels / incompatibility on the right.
+
+        Single source of truth: ``cc_data/box_config.json``.
+        """
+        from CardContent.sigil_manager import SigilManagerDialog
+        dlg = SigilManagerDialog(self.root,
+                                  on_close=lambda: (self.load_all(),
+                                                     self._refresh_table()))
         dlg.transient(self.root)
-
-        tk.Label(dlg, text="Alle Sigile (Box-Typen)",
-                 font=("Arial", 10, "bold")).pack(pady=4)
-
-        lb_frame = tk.Frame(dlg); lb_frame.pack(fill="both", expand=True, padx=8)
-        lb = tk.Listbox(lb_frame, height=10)
-        lb.pack(side="left", fill="both", expand=True)
-        sb = tk.Scrollbar(lb_frame, command=lb.yview); sb.pack(side="right", fill="y")
-        lb.config(yscrollcommand=sb.set)
-
-        def _refresh_list():
-            lb.delete(0, tk.END)
-            for n in get_sigil_names():
-                lb.insert(tk.END, n)
-        _refresh_list()
-
-        entry_row = tk.Frame(dlg); entry_row.pack(fill="x", padx=8, pady=4)
-        tk.Label(entry_row, text="Neuer Sigil:").pack(side="left")
-        name_var = tk.StringVar()
-        tk.Entry(entry_row, textvariable=name_var, width=16).pack(side="left", padx=4)
-
-        def _add():
-            n = name_var.get().strip()
-            if not n: return
-            if add_sigil(n):
-                name_var.set("")
-                _refresh_list()
-                self.load_all()
-                self._refresh_table()
-
-        def _remove():
-            sel = lb.curselection()
-            if not sel: return
-            n = lb.get(sel[0])
-            if remove_sigil(n):
-                _refresh_list()
-                self.load_all()
-                self._refresh_table()
-
-        btn_row = tk.Frame(dlg); btn_row.pack(fill="x", padx=8, pady=4)
-        tk.Button(btn_row, text="+ Hinzufügen", command=_add,
-                  bg="#1a6e3c", fg="white").pack(side="left", padx=4)
-        tk.Button(btn_row, text="✕ Entfernen", command=_remove,
-                  bg="#6e1a1a", fg="white").pack(side="left", padx=4)
-        tk.Button(btn_row, text="Fertig", command=dlg.destroy).pack(side="right", padx=4)
 
     # ── C2: Damage-Type Ranking Editor ────────────────────────────────────────
     def _open_damage_types_manager(self):
@@ -590,6 +552,50 @@ class ContentManager:
                   bg="#1a6e3c", fg="white").pack(side="left", padx=2)
         tk.Button(type_btn_row, text="✕", width=3, command=_del_type,
                   bg="#6e1a1a", fg="white").pack(side="left", padx=2)
+
+        # ── Range constraints for the selected damage type ────────────────────
+        rng_box = tk.LabelFrame(left, text="Range gültig für")
+        rng_box.pack(fill="x", padx=4, pady=(8, 4))
+
+        rng_min_var = tk.StringVar()
+        rng_max_var = tk.StringVar()
+
+        rng_row = tk.Frame(rng_box); rng_row.pack(fill="x", padx=4, pady=2)
+        tk.Label(rng_row, text="min:").pack(side="left")
+        tk.Entry(rng_row, textvariable=rng_min_var, width=4
+                  ).pack(side="left", padx=2)
+        tk.Label(rng_row, text="max:").pack(side="left")
+        tk.Entry(rng_row, textvariable=rng_max_var, width=4
+                  ).pack(side="left", padx=2)
+        tk.Label(rng_box, text="leer = ohne Begrenzung",
+                  fg="#888", font=("Arial", 8, "italic")
+                  ).pack(anchor="w", padx=4)
+
+        def _on_lb_select(_e=None):
+            sel = lb.curselection()
+            if not sel:
+                rng_min_var.set(""); rng_max_var.set(""); return
+            t = lb.get(sel[0])
+            mn, mx = dreg.get_range_for_type(t)
+            rng_min_var.set("" if mn == 0 else str(mn))
+            rng_max_var.set("" if mx == 99 else str(mx))
+        lb.bind("<<ListboxSelect>>", _on_lb_select)
+
+        def _save_range(*_):
+            sel = lb.curselection()
+            if not sel:
+                return
+            t = lb.get(sel[0])
+            def _parse(s):
+                s = s.strip()
+                if not s: return None
+                try: return int(s)
+                except ValueError: return None
+            dreg.set_range_for_type(t,
+                                      _parse(rng_min_var.get()),
+                                      _parse(rng_max_var.get()))
+        rng_min_var.trace_add("write", _save_range)
+        rng_max_var.trace_add("write", _save_range)
 
         # ── Right: per-element / per-prowess tabs ─────────────────────────────
         right = tk.Frame(outer); right.pack(side="left", fill="both", expand=True, padx=4)
@@ -705,130 +711,11 @@ class ContentManager:
         for el in ELEMENTS:
             _make_section_tab("elements", el, title=el)
 
-        # ── Prowess tab (sub-dropdown to pick which Prowess card) ─────────────
-        prow_page = tk.Frame(nb); nb.add(prow_page, text="Prowess Cards")
-        prow_top = tk.Frame(prow_page); prow_top.pack(fill="x", padx=6, pady=4)
-        tk.Label(prow_top, text="Prowess Card ID:").pack(side="left")
-        prow_var = tk.StringVar()
-
-        # Existing keys plus a free-form entry to create new ones
-        try:
-            from CardContent.damage_registry import _load_rankings as _lr
-            existing = list(_lr().get("prowess_cards", {}).keys())
-        except Exception:
-            existing = []
-
-        prow_combo = ttk.Combobox(prow_top, textvariable=prow_var, width=24,
-                                  values=existing)
-        prow_combo.pack(side="left", padx=4)
-        if existing:
-            prow_var.set(existing[0])
-
-        prow_body = tk.Frame(prow_page); prow_body.pack(fill="both",
-                                                         expand=True,
-                                                         padx=6, pady=4)
-
-        def _load_prowess(_e=None):
-            for w in prow_body.winfo_children():
-                w.destroy()
-            key = prow_var.get().strip()
-            if not key:
-                tk.Label(prow_body,
-                         text="Bitte Prowess-Card-ID eingeben oder wählen.",
-                         fg="#888").pack(pady=20)
-                return
-            # reuse the same per-section grid by hosting it inline
-            host = tk.Frame(prow_body); host.pack(fill="both", expand=True)
-
-            ranks_var = list(dreg.get_rankings(key, section="prowess_cards"))
-            ranks_var = [[dict(e) for e in rk] for rk in ranks_var]
-            state_key = ("prowess_cards", key)
-            editing_state[state_key] = ranks_var
-
-            def _rebuild_inline():
-                for w in host.winfo_children():
-                    w.destroy()
-                tk.Label(host,
-                         text=f"prowess_cards / {key}   (rank k → weight 1/2^k)",
-                         font=("Arial", 9, "italic")).pack(anchor="w")
-                max_rk = dreg.max_ranks()
-                ranks = editing_state[state_key]
-                while len(ranks) < max_rk:
-                    ranks.append([])
-
-                for k in range(max_rk):
-                    rk_frame = tk.LabelFrame(host,
-                                             text=f"Rank {k}  (weight {1/(2**k):.4f})")
-                    rk_frame.pack(fill="x", pady=3)
-                    entries = ranks[k]
-                    for idx, entry in enumerate(list(entries)):
-                        row = tk.Frame(rk_frame); row.pack(fill="x", padx=4, pady=1)
-                        type_var = tk.StringVar(value=entry.get("type", ""))
-                        cv_var   = tk.StringVar(value=str(entry.get("cv", 1.0)))
-                        cb = ttk.Combobox(row, textvariable=type_var, width=14,
-                                          values=dreg.list_damage_types(),
-                                          state="readonly")
-                        cb.pack(side="left", padx=2)
-                        tk.Label(row, text="cv:").pack(side="left")
-                        ce = tk.Entry(row, textvariable=cv_var, width=6)
-                        ce.pack(side="left", padx=2)
-
-                        def _on_type_change(_e=None, kk=k, ii=idx, tv=type_var):
-                            editing_state[state_key][kk][ii]["type"] = tv.get()
-                        def _on_cv_change(_e=None, kk=k, ii=idx, cv=cv_var):
-                            try:
-                                editing_state[state_key][kk][ii]["cv"] = float(cv.get())
-                            except ValueError:
-                                pass
-                        cb.bind("<<ComboboxSelected>>", _on_type_change)
-                        ce.bind("<FocusOut>", _on_cv_change)
-                        ce.bind("<Return>",   _on_cv_change)
-
-                        def _del_entry(kk=k, ii=idx):
-                            editing_state[state_key][kk].pop(ii)
-                            _rebuild_inline()
-                        tk.Button(row, text="✕", width=2, command=_del_entry,
-                                  bg="#6e1a1a", fg="white").pack(side="left", padx=2)
-
-                    def _add_entry(kk=k):
-                        types = dreg.list_damage_types()
-                        default_type = types[0] if types else ""
-                        editing_state[state_key][kk].append(
-                            {"type": default_type, "cv": 1.0})
-                        _rebuild_inline()
-                    tk.Button(rk_frame, text="+ Eintrag", command=_add_entry,
-                              bg="#1a6e3c", fg="white").pack(anchor="w",
-                                                              padx=4, pady=2)
-
-                btns = tk.Frame(host); btns.pack(fill="x", pady=6)
-
-                def _save():
-                    ranks = [[e for e in rk
-                              if e.get("type") and float(e.get("cv", 1)) != 0]
-                             for rk in editing_state[state_key]]
-                    while ranks and not ranks[-1]:
-                        ranks.pop()
-                    dreg.set_rankings(key, ranks, section="prowess_cards")
-                    # update combobox values
-                    try:
-                        from CardContent.damage_registry import _load_rankings as _lr
-                        prow_combo["values"] = list(_lr().get("prowess_cards", {}).keys())
-                    except Exception:
-                        pass
-                    messagebox.showinfo("Damage Types",
-                                         f"prowess_cards/{key}: gespeichert.")
-
-                tk.Button(btns, text="💾 Speichern", command=_save,
-                          bg="#1a3e8e", fg="white").pack(side="left", padx=4)
-
-            _rebuild_inline()
-
-        prow_combo.bind("<<ComboboxSelected>>", _load_prowess)
-        prow_combo.bind("<Return>", _load_prowess)
-        tk.Button(prow_top, text="Laden / Neu", command=_load_prowess
-                  ).pack(side="left", padx=4)
-        if existing:
-            _load_prowess()
+        # ── Prowess tab — exactly the same shape as an Element tab ───────────
+        # Single global ranking list used by Prowess card generation. Stored
+        # under section="prowess_cards", key="Prowess" (kept for backward
+        # compatibility with the previous per-card-id storage).
+        _make_section_tab("prowess_cards", "Prowess", title="Prowess")
 
         # ── Refresh helpers (after type add/remove) ───────────────────────────
         def _refresh_section():
@@ -839,13 +726,227 @@ class ContentManager:
         bottom = tk.Frame(dlg); bottom.pack(fill="x", padx=6, pady=4)
         tk.Button(bottom, text="Fertig", command=dlg.destroy).pack(side="right")
 
-    # ── L: Interactable registry manager ─────────────────────────────────────
-    def _open_interactable_manager(self):
-        """L: Add/remove/edit registered Interactables.
+    # ── B): Sigil-Rules editor ───────────────────────────────────────────────
+    def _open_sigil_rules_editor(self):
+        """Edit cross-sigil rules stored in cc_data/sigil_rules.json.
 
-        These IDs power the ``\\Interactable`` template token. Each entry has
-        an id, a weight (0 = disabled), and a free-form description. Saved
-        immediately to ``cc_data/interactables.json`` on every change.
+        Each rule is a small if/require/or-fallback predicate evaluated
+        against a generated card. See ``sigil_rules.py`` for schema."""
+        try:
+            from CardContent import sigil_rules as srules
+        except Exception as e:
+            messagebox.showerror("Sigil Rules", f"Could not import: {e}")
+            return
+
+        try:
+            from CardContent.sigil_registry import get_sigil_names
+            SIGILS = get_sigil_names()
+        except Exception:
+            SIGILS = []
+        try:
+            from card_builder.constants import (ELEMENTS,
+                                                  SIGILS_FOR_CARD_TYPE)
+            ELEMS = list(ELEMENTS)
+            CARD_TYPES = list(SIGILS_FOR_CARD_TYPE.keys())
+        except Exception:
+            ELEMS, CARD_TYPES = [], []
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Sigil Rules")
+        dlg.geometry("780x540")
+        dlg.transient(self.root)
+
+        outer = tk.Frame(dlg)
+        outer.pack(fill="both", expand=True, padx=8, pady=8)
+
+        tk.Label(outer,
+                 text="Cross-Sigil-Regeln. Beispiel: 'Wenn Sacrifice auf "
+                      "Spell-Karte → muss Concentration sein, oder Source als "
+                      "Interactable'.",
+                 fg="#888", font=("Arial", 8, "italic"),
+                 wraplength=720, justify="left"
+                 ).pack(anchor="w", pady=(0, 8))
+
+        # Working copy of rules; only persisted on Save
+        rules_state: list = [dict(r) for r in srules.list_rules()]
+
+        list_frame = tk.Frame(outer); list_frame.pack(fill="both", expand=True)
+
+        canvas = tk.Canvas(list_frame, highlightthickness=0)
+        vsb    = ttk.Scrollbar(list_frame, orient="vertical",
+                                command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        rows_frame = tk.Frame(canvas)
+        win_id = canvas.create_window((0, 0), window=rows_frame, anchor="nw")
+        rows_frame.bind("<Configure>",
+                        lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>",
+                    lambda e: canvas.itemconfig(win_id, width=e.width))
+
+        def _refresh():
+            for w in rows_frame.winfo_children():
+                w.destroy()
+            for idx, rule in enumerate(rules_state):
+                _make_rule_card(idx, rule)
+
+        def _make_clause_picker(parent, label: str, clause: dict):
+            """Render one clause editor (sigil OR card_type OR element OR
+            interactable). The user picks ONE field per clause; the others
+            stay empty."""
+            row = tk.Frame(parent)
+            row.pack(fill="x", padx=6, pady=1)
+            tk.Label(row, text=label, width=14, anchor="w",
+                     font=("Arial", 8, "bold"), fg="#ccc"
+                     ).pack(side="left")
+
+            # sigil
+            sig_var = tk.StringVar(value=clause.get("sigil", ""))
+            tk.Label(row, text="Sigil:", font=("Arial", 8)).pack(side="left")
+            ttk.Combobox(row, textvariable=sig_var,
+                         values=[""] + SIGILS, state="readonly",
+                         width=12).pack(side="left", padx=2)
+
+            # card_type
+            ct_var = tk.StringVar(value=clause.get("card_type", ""))
+            tk.Label(row, text="CardType:", font=("Arial", 8)).pack(side="left")
+            ttk.Combobox(row, textvariable=ct_var,
+                         values=[""] + CARD_TYPES, state="readonly",
+                         width=10).pack(side="left", padx=2)
+
+            # element
+            el_var = tk.StringVar(value=clause.get("element", ""))
+            tk.Label(row, text="Elem:", font=("Arial", 8)).pack(side="left")
+            ttk.Combobox(row, textvariable=el_var,
+                         values=[""] + ELEMS, state="readonly",
+                         width=8).pack(side="left", padx=2)
+
+            # interactable (free text)
+            in_var = tk.StringVar(value=clause.get("interactable", ""))
+            tk.Label(row, text="Inter:", font=("Arial", 8)).pack(side="left")
+            tk.Entry(row, textvariable=in_var, width=12).pack(side="left", padx=2)
+
+            def _commit(_=None):
+                clause.clear()
+                v = sig_var.get().strip()
+                if v: clause["sigil"] = v
+                v = ct_var.get().strip()
+                if v: clause["card_type"] = v
+                v = el_var.get().strip()
+                if v: clause["element"] = v
+                v = in_var.get().strip()
+                if v: clause["interactable"] = v
+
+            for var in (sig_var, ct_var, el_var, in_var):
+                var.trace_add("write", lambda *_: _commit())
+
+        def _make_rule_card(idx, rule):
+            card = tk.LabelFrame(rows_frame,
+                                  text=f"Rule #{idx+1}",
+                                  fg="#ffcc66", font=("Arial", 9, "bold"))
+            card.pack(fill="x", padx=4, pady=4)
+
+            # ID + delete
+            top = tk.Frame(card); top.pack(fill="x", padx=6, pady=4)
+            tk.Label(top, text="ID:", font=("Arial", 8, "bold")
+                     ).pack(side="left")
+            id_var = tk.StringVar(value=rule.get("id", ""))
+            tk.Entry(top, textvariable=id_var, width=24
+                     ).pack(side="left", padx=4)
+            id_var.trace_add("write",
+                             lambda *_: rule.update({"id": id_var.get()}))
+
+            tk.Label(top, text="Message:", font=("Arial", 8, "bold")
+                     ).pack(side="left", padx=(12, 2))
+            msg_var = tk.StringVar(value=rule.get("message", ""))
+            tk.Entry(top, textvariable=msg_var, width=32
+                     ).pack(side="left", padx=2, fill="x", expand=True)
+            msg_var.trace_add("write",
+                              lambda *_: rule.update({"message": msg_var.get()}))
+
+            def _del(i=idx):
+                rules_state.pop(i)
+                _refresh()
+            tk.Button(top, text="✕", fg="white", bg="#6e1a1a",
+                      font=("Arial", 8, "bold"),
+                      command=_del).pack(side="right")
+
+            # IF clause
+            if_clause = rule.setdefault("if", {})
+            tk.Label(card, text="WENN  (eine Klausel)",
+                     fg="#88ccff", font=("Arial", 8, "bold")
+                     ).pack(anchor="w", padx=6, pady=(4, 0))
+            _make_clause_picker(card, "if:", if_clause)
+
+            # REQUIRE clauses
+            req = rule.setdefault("require", [])
+            tk.Label(card, text="MUSS  (alle erfüllen — AND)",
+                     fg="#88ff88", font=("Arial", 8, "bold")
+                     ).pack(anchor="w", padx=6, pady=(4, 0))
+            for i, cl in enumerate(list(req)):
+                _make_clause_picker(card, f"req[{i}]:", cl)
+            def _add_req():
+                req.append({}); _refresh()
+            tk.Button(card, text="+ require Klausel",
+                      command=_add_req,
+                      bg="#1a3a1a", fg="white", font=("Arial", 8)
+                      ).pack(anchor="w", padx=6, pady=(2, 4))
+
+            # OR-satisfy clauses
+            alt = rule.setdefault("or_satisfy_by", [])
+            tk.Label(card, text="ODER  (eine reicht — OR-Fallback)",
+                     fg="#ffcc88", font=("Arial", 8, "bold")
+                     ).pack(anchor="w", padx=6, pady=(4, 0))
+            for i, cl in enumerate(list(alt)):
+                _make_clause_picker(card, f"alt[{i}]:", cl)
+            def _add_alt():
+                alt.append({}); _refresh()
+            tk.Button(card, text="+ OR Klausel",
+                      command=_add_alt,
+                      bg="#3a2a1a", fg="white", font=("Arial", 8)
+                      ).pack(anchor="w", padx=6, pady=(2, 6))
+
+        _refresh()
+
+        # bottom bar
+        bar = tk.Frame(dlg); bar.pack(fill="x", padx=8, pady=6)
+
+        def _add_rule():
+            rules_state.append({"id": "", "message": "",
+                                 "if": {}, "require": [],
+                                 "or_satisfy_by": []})
+            _refresh()
+
+        def _save():
+            srules.save_rules(rules_state)
+            messagebox.showinfo("Sigil Rules",
+                                  f"{len(rules_state)} Regeln gespeichert.")
+            dlg.destroy()
+
+        tk.Button(bar, text="+ Neue Regel", command=_add_rule,
+                  bg="#1a6e3c", fg="white",
+                  font=("Arial", 9, "bold")).pack(side="left", padx=4)
+        tk.Button(bar, text="💾 Speichern", command=_save,
+                  bg="#1a3e8e", fg="white",
+                  font=("Arial", 9, "bold")).pack(side="right", padx=4)
+        tk.Button(bar, text="Abbrechen", command=dlg.destroy
+                  ).pack(side="right", padx=4)
+
+    # ── L: Master Registry (formerly Interactable Manager) ───────────────────
+    def _open_interactable_manager(self):
+        """Master registry browser.
+
+        One window with five tabs:
+          • Custom         – editable interactables (the only tab with
+                             add/edit/remove). Powers ``\\Interactable``.
+          • Sigils         – read-only listing of all registered sigils.
+          • Elements       – read-only listing of all elements.
+          • Card Types     – read-only listing of all card types.
+          • Marked Effects – read-only listing of every Content Item with
+                             ``show_in_interactables: true`` (toggled in the
+                             Content Editor checkbox).
         """
         try:
             from CardContent import interactable_registry as ireg
@@ -855,43 +956,147 @@ class ContentManager:
             return
 
         dlg = tk.Toplevel(self.root)
-        dlg.title("Interactables verwalten")
-        dlg.geometry("560x460")
+        dlg.title("Master Registry")
+        dlg.geometry("640x520")
         dlg.transient(self.root)
 
-        outer = tk.Frame(dlg)
-        outer.pack(fill="both", expand=True, padx=8, pady=8)
+        nb = ttk.Notebook(dlg)
+        nb.pack(fill="both", expand=True, padx=6, pady=6)
 
-        tk.Label(outer,
-                 text=r"Registrierte Interactables – nutzbar via [\Interactable] in Sigils.",
-                 font=("Arial", 9, "italic"), fg="#888").pack(anchor="w", pady=(0, 6))
+        # ── Tab: Custom interactables (editable) ────────────────────────────
+        self._build_master_custom_tab(nb, ireg)
+        # ── Tab: Sigils (read-only) ─────────────────────────────────────────
+        self._build_master_readonly_tab(
+            nb, "Sigils",
+            getter=lambda: self._master_sigils(),
+            color="#88ccff",
+            help_text="Sigils stammen aus box_config.json und dem Sigil Manager.")
+        # ── Tab: Elements (read-only) ───────────────────────────────────────
+        self._build_master_readonly_tab(
+            nb, "Elements",
+            getter=lambda: self._master_elements(),
+            color="#ffcc66",
+            help_text="Elemente sind in card_builder/constants.py festgelegt.")
+        # ── Tab: Card Types (read-only) ─────────────────────────────────────
+        self._build_master_readonly_tab(
+            nb, "Card Types",
+            getter=lambda: self._master_card_types(),
+            color="#cc88ff",
+            help_text="Karten-Typen aus den Generator-Profilen.")
+        # ── Tab: Marked Effects (read-only) ─────────────────────────────────
+        self._build_master_readonly_tab(
+            nb, "Marked Effects",
+            getter=lambda: self._master_marked_effects(),
+            color="#88eecc",
+            help_text="Items mit Häkchen 'In Master-Liste anzeigen' im Content Editor.")
 
-        # ── Header row ──────────────────────────────────────────────────────
-        hdr = tk.Frame(outer)
-        hdr.pack(fill="x")
+        bottom = tk.Frame(dlg); bottom.pack(fill="x", padx=8, pady=6)
+        tk.Button(bottom, text="Fertig", command=dlg.destroy).pack(side="right")
+
+    # ── master menu helpers ───────────────────────────────────────────────────
+
+    def _master_sigils(self) -> list:
+        try:
+            from CardContent.sigil_registry import get_sigil_names
+            return [{"id": s, "description": ""} for s in get_sigil_names()]
+        except Exception:
+            return []
+
+    def _master_elements(self) -> list:
+        try:
+            from card_builder.constants import ELEMENTS
+            return [{"id": el, "description": ""} for el in ELEMENTS]
+        except Exception:
+            return []
+
+    def _master_card_types(self) -> list:
+        try:
+            from card_builder.constants import SIGILS_FOR_CARD_TYPE
+            return [{"id": ct, "description": ""}
+                    for ct in SIGILS_FOR_CARD_TYPE.keys()]
+        except Exception:
+            return [{"id": ct, "description": ""}
+                    for ct in ("Spells", "Prowess", "Potions", "Equipment")]
+
+    def _master_marked_effects(self) -> list:
+        out: list = []
+        for type_name in ("Effect", "Trigger", "Condition", "Cost", "Insert"):
+            for it in (self.data.get(type_name) or []):
+                if it.get("show_in_interactables"):
+                    out.append({
+                        "id": it.get("id", ""),
+                        "description": f"[{type_name}]",
+                    })
+        return out
+
+    def _build_master_readonly_tab(self, nb, title, getter,
+                                    color="#cccccc", help_text=""):
+        page = tk.Frame(nb)
+        nb.add(page, text=title)
+
+        if help_text:
+            tk.Label(page, text=help_text, fg="#888",
+                     font=("Arial", 8, "italic")
+                     ).pack(anchor="w", padx=8, pady=(6, 0))
+
+        list_frame = tk.Frame(page)
+        list_frame.pack(fill="both", expand=True, padx=8, pady=6)
+
+        lb = tk.Listbox(list_frame, font=("Consolas", 10),
+                        bg="#1a1a1a", fg=color, selectbackground="#2a4a6e")
+        sb = ttk.Scrollbar(list_frame, orient="vertical",
+                            command=lb.yview)
+        lb.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        lb.pack(side="left", fill="both", expand=True)
+
+        def _refresh(_e=None):
+            lb.delete(0, tk.END)
+            items = getter() or []
+            for it in items:
+                iid  = it.get("id", "")
+                desc = it.get("description", "")
+                line = f"{iid:24}  {desc}" if desc else iid
+                lb.insert(tk.END, line)
+            if not items:
+                lb.insert(tk.END, "(leer)")
+
+        _refresh()
+        # Refresh whenever the user switches to this tab
+        nb.bind("<<NotebookTabChanged>>", _refresh, add="+")
+
+    def _build_master_custom_tab(self, nb, ireg):
+        """The original editable interactables list, hosted as a tab."""
+        page = tk.Frame(nb)
+        nb.add(page, text="Custom")
+
+        tk.Label(page,
+                 text=r"Editierbare Interactables — nutzbar via [\Interactable].",
+                 fg="#888", font=("Arial", 9, "italic")
+                 ).pack(anchor="w", padx=8, pady=(6, 0))
+
+        # Header row
+        hdr = tk.Frame(page); hdr.pack(fill="x", padx=8, pady=(4, 0))
         for txt, w in [("ID", 16), ("Weight", 8), ("Beschreibung", 30), ("", 4)]:
             tk.Label(hdr, text=txt, font=("Arial", 9, "bold"),
                      width=w, anchor="w").pack(side="left", padx=2)
 
-        # ── Scrollable list of rows ─────────────────────────────────────────
-        list_frame = tk.Frame(outer)
-        list_frame.pack(fill="both", expand=True, pady=(2, 4))
-
+        # Scrollable list
+        list_frame = tk.Frame(page)
+        list_frame.pack(fill="both", expand=True, padx=8, pady=4)
         canvas = tk.Canvas(list_frame, highlightthickness=0)
         vsb    = ttk.Scrollbar(list_frame, orient="vertical",
-                               command=canvas.yview)
+                                command=canvas.yview)
         canvas.configure(yscrollcommand=vsb.set)
         vsb.pack(side="right", fill="y")
         canvas.pack(side="left", fill="both", expand=True)
 
         rows_frame = tk.Frame(canvas)
-        win_id     = canvas.create_window((0, 0), window=rows_frame, anchor="nw")
+        win_id = canvas.create_window((0, 0), window=rows_frame, anchor="nw")
         rows_frame.bind("<Configure>",
                         lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.bind("<Configure>",
                     lambda e: canvas.itemconfig(win_id, width=e.width))
-        canvas.bind_all("<MouseWheel>",
-                        lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
 
         def _refresh():
             for w in rows_frame.winfo_children():
@@ -899,92 +1104,64 @@ class ContentManager:
             for it in ireg.get_interactables():
                 _make_row(it)
 
-        def _make_row(it: dict):
+        def _make_row(it):
             iid  = it.get("id", "")
             wval = it.get("weight", ireg.DEFAULT_WEIGHT)
             dval = it.get("description", "")
 
             row = tk.Frame(rows_frame, relief="groove", bd=1)
             row.pack(fill="x", pady=1)
-
             tk.Label(row, text=iid, width=16, anchor="w",
-                     fg="#88eecc", font=("Arial", 9, "bold")).pack(
-                side="left", padx=4)
+                     fg="#88eecc", font=("Arial", 9, "bold")
+                     ).pack(side="left", padx=4)
 
             wv = tk.StringVar(value=str(wval))
             we = tk.Entry(row, textvariable=wv, width=8)
             we.pack(side="left", padx=2)
-
             def _on_w_save(_e=None, name=iid, var=wv):
-                raw = var.get().strip()
-                try:
-                    ireg.set_weight(name, float(raw))
-                except ValueError:
-                    pass
-            we.bind("<FocusOut>", _on_w_save)
-            we.bind("<Return>",   _on_w_save)
+                try:    ireg.set_weight(name, float(var.get().strip()))
+                except ValueError: pass
+            we.bind("<FocusOut>", _on_w_save); we.bind("<Return>", _on_w_save)
 
             dv = tk.StringVar(value=dval)
             de = tk.Entry(row, textvariable=dv, width=30)
             de.pack(side="left", padx=2, fill="x", expand=True)
-
             def _on_d_save(_e=None, name=iid, var=dv):
                 ireg.set_description(name, var.get())
-            de.bind("<FocusOut>", _on_d_save)
-            de.bind("<Return>",   _on_d_save)
+            de.bind("<FocusOut>", _on_d_save); de.bind("<Return>", _on_d_save)
 
             def _del(name=iid):
-                if not messagebox.askyesno(
-                        "Interactable löschen",
-                        f"'{name}' wirklich entfernen?"):
-                    return
-                ireg.remove_interactable(name)
-                _refresh()
-
+                if messagebox.askyesno("Interactable löschen",
+                                        f"'{name}' wirklich entfernen?"):
+                    ireg.remove_interactable(name); _refresh()
             tk.Button(row, text="✕", width=2, fg="white", bg="#6e1a1a",
-                      font=("Arial", 8, "bold"),
-                      command=_del).pack(side="left", padx=2)
+                      font=("Arial", 8, "bold"), command=_del
+                      ).pack(side="left", padx=2)
 
-        # ── Add row ─────────────────────────────────────────────────────────
-        add_row = tk.Frame(outer)
-        add_row.pack(fill="x", pady=(4, 4))
-
-        new_id_var  = tk.StringVar()
-        new_w_var   = tk.StringVar(value=str(ireg.DEFAULT_WEIGHT))
-        new_d_var   = tk.StringVar()
-
-        tk.Entry(add_row, textvariable=new_id_var, width=16).pack(side="left", padx=2)
-        tk.Entry(add_row, textvariable=new_w_var, width=8).pack(side="left", padx=2)
-        tk.Entry(add_row, textvariable=new_d_var, width=30).pack(
-            side="left", padx=2, fill="x", expand=True)
-
+        # Add row
+        add_row = tk.Frame(page); add_row.pack(fill="x", padx=8, pady=4)
+        new_id  = tk.StringVar()
+        new_w   = tk.StringVar(value=str(ireg.DEFAULT_WEIGHT))
+        new_d   = tk.StringVar()
+        tk.Entry(add_row, textvariable=new_id, width=16).pack(side="left", padx=2)
+        tk.Entry(add_row, textvariable=new_w,  width=8 ).pack(side="left", padx=2)
+        tk.Entry(add_row, textvariable=new_d,  width=30
+                  ).pack(side="left", padx=2, fill="x", expand=True)
         def _add():
-            name = new_id_var.get().strip()
-            if not name:
-                return
-            try:
-                w = float(new_w_var.get().strip() or ireg.DEFAULT_WEIGHT)
-            except ValueError:
-                w = ireg.DEFAULT_WEIGHT
+            name = new_id.get().strip()
+            if not name: return
+            try:    w = float(new_w.get().strip() or ireg.DEFAULT_WEIGHT)
+            except ValueError: w = ireg.DEFAULT_WEIGHT
             if not ireg.add_interactable(name, weight=w,
-                                          description=new_d_var.get().strip()):
+                                          description=new_d.get().strip()):
                 messagebox.showerror("Interactables",
                                       f"'{name}' existiert bereits.")
                 return
-            new_id_var.set("")
-            new_w_var.set(str(ireg.DEFAULT_WEIGHT))
-            new_d_var.set("")
+            new_id.set(""); new_w.set(str(ireg.DEFAULT_WEIGHT)); new_d.set("")
             _refresh()
-
         tk.Button(add_row, text="＋ Add", command=_add,
                   bg="#1a6e3c", fg="white",
                   font=("Arial", 9, "bold")).pack(side="left", padx=4)
-
-        # ── Footer ──────────────────────────────────────────────────────────
-        bottom = tk.Frame(dlg)
-        bottom.pack(fill="x", padx=8, pady=6)
-        tk.Button(bottom, text="Fertig", command=dlg.destroy
-                  ).pack(side="right")
 
         _refresh()
 

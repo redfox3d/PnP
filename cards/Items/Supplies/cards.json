@@ -10,7 +10,8 @@
             "effect_text": "",
             "value": 0,
             "equip_text": "",
-            "equip_cost_text": ""
+            "equip_cost_text": "",
+            "blocks": []
         },
         {
             "name": "Loaf of Bread",
@@ -21,10 +22,19 @@
             ],
             "object_type": [],
             "materials": [],
-            "effect_text": "rgdfg ",
             "value": 0,
-            "equip_text": "",
-            "equip_cost_text": ""
+            "blocks": [
+                {
+                    "type": "Play",
+                    "abilities": [
+                        {
+                            "raw_text": "rgdfg",
+                            "effect_groups": [],
+                            "costs": []
+                        }
+                    ]
+                }
+            ]
         },
         {
             "name": "Gold Coin",
@@ -37,7 +47,8 @@
             "value": 0,
             "equip_text": "",
             "equip_cost_text": "",
-            "anzahl": 1
+            "anzahl": 1,
+            "blocks": []
         },
         {
             "name": "Wismut Crystal",
@@ -52,7 +63,8 @@
             "value": 0,
             "equip_text": "",
             "equip_cost_text": "",
-            "anzahl": 1
+            "anzahl": 1,
+            "blocks": []
         }
     ]
 }

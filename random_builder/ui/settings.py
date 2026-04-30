@@ -285,7 +285,13 @@ class SettingsPanel(tk.Frame):
         self._vars["block_rules"] = {}
         block_rules = {r["block_type"]: r["probability"]
                        for r in self._gen_config.get("block_rules", [])}
-        for bt in BOX_TYPES:
+        # Use live sigil registry so a removed sigil disappears here too.
+        try:
+            from CardContent.sigil_registry import get_sigil_names as _gsn
+            _bt_list = _gsn()
+        except Exception:
+            _bt_list = list(BOX_TYPES)
+        for bt in _bt_list:
             row = tk.Frame(f, bg="#1a1a1a")
             row.pack(fill="x", padx=12, pady=1)
             tk.Label(row, text=bt, bg="#1a1a1a", fg="#ccc",
@@ -296,6 +302,69 @@ class SettingsPanel(tk.Frame):
             tk.Entry(row, textvariable=v, width=6,
                      bg="#2a2a2a", fg="white", font=("Arial", 8)).pack(
                 side="left", padx=2)
+
+        # Sigil count weights (1..6 sigils per card) — mirrors element_count_weights
+        tk.Label(f, text="Sigil Anzahl pro Karte (Gewichte):",
+                 bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+        sc_frame = tk.Frame(f, bg="#1a1a1a")
+        sc_frame.pack(fill="x", **pad)
+        sc_cfg = self._gen_config.get("sigil_count_weights",
+                                       {"1": 100, "2": 50, "3": 25, "4": 12,
+                                        "5": 0, "6": 0})
+        self._vars["sigil_count_weights"] = {}
+        for n in range(1, 7):
+            row = tk.Frame(sc_frame, bg="#1a1a1a")
+            row.pack(fill="x", pady=1)
+            tk.Label(row, text=f"{n} Sigil{'e' if n != 1 else ''}",
+                     bg="#1a1a1a", fg="#888",
+                     width=12, anchor="w", font=("Arial", 8)).pack(side="left")
+            v = tk.StringVar(value=str(sc_cfg.get(str(n), 0)))
+            v.trace_add("write", self._schedule_autosave)
+            self._vars["sigil_count_weights"][str(n)] = v
+            tk.Entry(row, textvariable=v, width=6,
+                     bg="#2a2a2a", fg="white").pack(side="left", padx=2)
+
+        # Max effects per sigil (where same target_type counts as 1)
+        mx_row = tk.Frame(f, bg="#1a1a1a"); mx_row.pack(fill="x", **pad)
+        tk.Label(mx_row, text="Max Effekte pro Sigil:",
+                 bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(side="left")
+        mx_var = tk.StringVar(value=str(self._gen_config.get(
+            "max_effects_per_sigil", 3)))
+        mx_var.trace_add("write", self._schedule_autosave)
+        self._vars["max_effects_per_sigil"] = mx_var
+        tk.Entry(mx_row, textvariable=mx_var, width=4,
+                 bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+        tk.Label(mx_row,
+                 text="(gleiches target_type = 1 Effekt)",
+                 bg="#1a1a1a", fg="#555", font=("Arial", 8, "italic")
+                 ).pack(side="left", padx=4)
+
+        # Range value weights — distribution of Ranged.X
+        tk.Label(f, text="Range-Werte (Gewichte):",
+                 bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+        tk.Label(f,
+                 text="0/1 = 'kein Range'-Text. Höhere Werte = explizites Range N.",
+                 bg="#1a1a1a", fg="#555", font=("Arial", 7, "italic")).pack(
+            anchor="w", padx=16)
+        rv_frame = tk.Frame(f, bg="#1a1a1a")
+        rv_frame.pack(fill="x", **pad)
+        rv_cfg = self._gen_config.get("range_value_weights",
+                                       {"0": 30, "1": 0, "2": 30, "3": 20,
+                                        "4": 15, "5": 5})
+        self._vars["range_value_weights"] = {}
+        for n in range(0, 7):
+            row = tk.Frame(rv_frame, bg="#1a1a1a")
+            row.pack(fill="x", pady=1)
+            tk.Label(row, text=f"Range {n}", bg="#1a1a1a", fg="#888",
+                     width=12, anchor="w", font=("Arial", 8)).pack(side="left")
+            v = tk.StringVar(value=str(rv_cfg.get(str(n), 0)))
+            v.trace_add("write", self._schedule_autosave)
+            self._vars["range_value_weights"][str(n)] = v
+            tk.Entry(row, textvariable=v, width=6,
+                     bg="#2a2a2a", fg="white").pack(side="left", padx=2)
 
         self._sep(f)
 
@@ -361,6 +430,58 @@ class SettingsPanel(tk.Frame):
             self._vars[key] = v
             tk.Entry(sig_row, textvariable=v, width=5,
                      bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+
+        # Primary CV minimum — excludes sub-sigil contribution. Stops the
+        # generator from producing cards that have value only AFTER you
+        # enhance them (e.g. card with only "Forget this Card" + paid sub-sigil).
+        prim_row = tk.Frame(f, bg="#1a1a1a")
+        prim_row.pack(fill="x", padx=12, pady=2)
+        tk.Label(prim_row, text="Primär-CV (ohne Sub-Sigil) ≥",
+                 bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 8, "bold")).pack(side="left")
+        v = tk.StringVar(value=str(self._gen_config.get(
+            "cv_primary_per_sigil_min", 0.5)))
+        v.trace_add("write", self._schedule_autosave)
+        self._vars["cv_primary_per_sigil_min"] = v
+        tk.Entry(prim_row, textvariable=v, width=5,
+                 bg="#2a2a2a", fg="white").pack(side="left", padx=4)
+        tk.Label(prim_row,
+                 text="(Karten ohne nutzbaren Effekt vor Enhance ablehnen)",
+                 bg="#1a1a1a", fg="#555", font=("Arial", 7, "italic")
+                 ).pack(side="left", padx=4)
+
+        # Sub-Sigil CV ranges per target type
+        tk.Label(f, text="Sub-Sigil CV pro Target Type (min / max):",
+                 bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9, "bold")).pack(anchor="w", **pad)
+        sst_frame = tk.Frame(f, bg="#1a1a1a")
+        sst_frame.pack(fill="x", **pad)
+        # Target Neutral is a permission tag, not a bucket → omit from list.
+        sst_cfg = self._gen_config.get("sub_sigil_cv_per_target", {
+            "Target Enemy":  {"min": 1.0, "max": 3.0},
+            "Target Ally":   {"min": 1.0, "max": 2.5},
+            "Non Targeting": {"min": 0.5, "max": 2.0},
+        })
+        self._vars["sub_sigil_cv_per_target"] = {}
+        for tt in ("Target Enemy", "Target Ally", "Non Targeting"):
+            row = tk.Frame(sst_frame, bg="#1a1a1a")
+            row.pack(fill="x", pady=1)
+            tk.Label(row, text=tt, bg="#1a1a1a", fg="#888",
+                     width=14, anchor="w", font=("Arial", 8)).pack(side="left")
+            cur = sst_cfg.get(tt, {})
+            min_v = tk.StringVar(value=str(cur.get("min", "")))
+            max_v = tk.StringVar(value=str(cur.get("max", "")))
+            min_v.trace_add("write", self._schedule_autosave)
+            max_v.trace_add("write", self._schedule_autosave)
+            tk.Label(row, text="min", bg="#1a1a1a", fg="#666",
+                     font=("Arial", 7)).pack(side="left")
+            tk.Entry(row, textvariable=min_v, width=5,
+                     bg="#2a2a2a", fg="white").pack(side="left", padx=2)
+            tk.Label(row, text="max", bg="#1a1a1a", fg="#666",
+                     font=("Arial", 7)).pack(side="left")
+            tk.Entry(row, textvariable=max_v, width=5,
+                     bg="#2a2a2a", fg="white").pack(side="left", padx=2)
+            self._vars["sub_sigil_cv_per_target"][tt] = (min_v, max_v)
 
         self._sep(f)
 
@@ -474,7 +595,11 @@ class SettingsPanel(tk.Frame):
         bt_names = [r["block_type"] for r in self._gen_config.get("block_rules", [])
                     if r.get("block_type")]
         if not bt_names:
-            bt_names = list(BOX_TYPES)
+            try:
+                from CardContent.sigil_registry import get_sigil_names as _gsn
+                bt_names = _gsn()
+            except Exception:
+                bt_names = list(BOX_TYPES)
 
         all_eids = []
         if self._content_data:
@@ -678,6 +803,40 @@ class SettingsPanel(tk.Frame):
                 block_rules.append({"block_type": bt, "probability": p})
         cfg["block_rules"] = block_rules
 
+        # Sigil count weights (1..6)
+        sc = {}
+        for n_str, v in self._vars.get("sigil_count_weights", {}).items():
+            try:
+                sc[n_str] = float(v.get())
+            except Exception:
+                sc[n_str] = 0.0
+        sc = {k: w for k, w in sc.items() if w > 0}
+        if sc:
+            cfg["sigil_count_weights"] = sc
+        else:
+            cfg.pop("sigil_count_weights", None)
+
+        # Max effects per sigil
+        try:
+            mx = int(float(self._vars.get("max_effects_per_sigil",
+                                           tk.StringVar(value="3")).get()))
+            cfg["max_effects_per_sigil"] = max(1, mx)
+        except Exception:
+            cfg.pop("max_effects_per_sigil", None)
+
+        # Range value weights (0..6)
+        rv = {}
+        for n_str, v in self._vars.get("range_value_weights", {}).items():
+            try:
+                rv[n_str] = float(v.get())
+            except Exception:
+                rv[n_str] = 0.0
+        rv = {k: w for k, w in rv.items() if w > 0}
+        if rv:
+            cfg["range_value_weights"] = rv
+        else:
+            cfg.pop("range_value_weights", None)
+
         # Content rules
         content_rules = []
         for key, v in self._vars.get("content_rules", {}).items():
@@ -713,6 +872,7 @@ class SettingsPanel(tk.Frame):
         # Scalar vars
         float_keys = ["cv_target", "cv_per_box_max", "cv_card_min",
                        "cv_per_sigil_min",
+                       "cv_primary_per_sigil_min",
                        "mana_chance", "condition_chance", "choose_n_chance",
                        "chance_choose", "chance_enhance",
                        "chance_doublecast", "chance_multicast",
@@ -731,6 +891,27 @@ class SettingsPanel(tk.Frame):
                     cfg[key] = int(self._vars[key].get())
                 except Exception:
                     pass
+
+        # Sub-Sigil CV ranges per target type
+        sst_out = {}
+        for tt, (min_v, max_v) in self._vars.get(
+                "sub_sigil_cv_per_target", {}).items():
+            try:
+                mn_raw = min_v.get().strip()
+                mx_raw = max_v.get().strip()
+                entry = {}
+                if mn_raw:
+                    entry["min"] = float(mn_raw)
+                if mx_raw:
+                    entry["max"] = float(mx_raw)
+                if entry:
+                    sst_out[tt] = entry
+            except Exception:
+                pass
+        if sst_out:
+            cfg["sub_sigil_cv_per_target"] = sst_out
+        else:
+            cfg.pop("sub_sigil_cv_per_target", None)
 
         # Sigil rules
         try:

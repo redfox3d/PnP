@@ -236,10 +236,17 @@ class CardBuilder:
         self._autosave()
 
     def _autosave(self) -> None:
+        """Persist the current card on every change.
+
+        New cards (``current_idx is None``) are appended as a fresh entry
+        the first time autosave fires, then updated in place on subsequent
+        edits. Blank-name cards are accepted; the user can rename later.
+        """
         card = self.current_card
-        if not card.get("name", "").strip() or card.get("name") == "New Card":
-            return   # don't save blank/template cards
         card["card_type"] = self.current_type
+        # Keep at least a placeholder name so the listbox isn't empty.
+        if not card.get("name", "").strip():
+            card["name"] = "Unbenannt"
         if self.current_idx is not None:
             self.cards[self.current_idx] = card
         else:

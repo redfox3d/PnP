@@ -9,7 +9,8 @@
             "materials": [],
             "effect_text": "",
             "weight": 0,
-            "value": 0
+            "value": 0,
+            "blocks": []
         },
         {
             "name": "Silver Coin",
@@ -20,7 +21,44 @@
             "materials": [],
             "effect_text": "",
             "weight": 0,
-            "value": 0
+            "value": 0,
+            "blocks": []
+        },
+        {
+            "name": "Book",
+            "card_type": "Supplies",
+            "artwork": "",
+            "element_sources": [
+                "Fire"
+            ],
+            "object_type": [],
+            "materials": [
+                "Paper",
+                "Leather"
+            ],
+            "weight": 0,
+            "value": 0,
+            "_count": 1,
+            "blocks": []
+        },
+        {
+            "name": "Ancient Book",
+            "card_type": "Supplies",
+            "artwork": "",
+            "element_sources": [
+                "Fire",
+                "Metal"
+            ],
+            "object_type": [],
+            "materials": [
+                "Gold",
+                "Leather",
+                "Paper"
+            ],
+            "weight": 0,
+            "value": 0,
+            "_count": 1,
+            "blocks": []
         }
     ]
 }

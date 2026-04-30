@@ -84,11 +84,65 @@ def cv_for(element: str, type_id: str, section: str = "elements") -> float:
     return 1.0
 
 
+def get_range_for_type(type_id: str) -> tuple[int, int]:
+    """Return ``(range_min, range_max)`` for a damage type.
+
+    Defaults: min=0 (no lower bound), max=99 (effectively unlimited).
+    Used by the generator to skip damage types whose allowed range
+    interval doesn't include the chosen Range X.
+    """
+    for t in _load_types().get("types", []):
+        if t.get("id") == type_id:
+            try:
+                rmin = int(t.get("range_min", 0))
+            except (TypeError, ValueError):
+                rmin = 0
+            try:
+                rmax = int(t.get("range_max", 99))
+            except (TypeError, ValueError):
+                rmax = 99
+            return (rmin, rmax)
+    return (0, 99)
+
+
+def set_range_for_type(type_id: str, range_min: int | None,
+                        range_max: int | None) -> bool:
+    """Set/clear the allowed range interval for a damage type."""
+    d = _load_types()
+    for t in d.get("types", []):
+        if t.get("id") != type_id:
+            continue
+        if range_min is None:
+            t.pop("range_min", None)
+        else:
+            t["range_min"] = int(range_min)
+        if range_max is None:
+            t.pop("range_max", None)
+        else:
+            t["range_max"] = int(range_max)
+        _save_types(d)
+        return True
+    return False
+
+
+def _range_allows(type_id: str, range_x: int | None) -> bool:
+    """True if ``range_x`` falls inside the type's [range_min, range_max]."""
+    if range_x is None:
+        return True
+    rmin, rmax = get_range_for_type(type_id)
+    return rmin <= int(range_x) <= rmax
+
+
 def pick_damage_type(element: str, section: str = "elements",
-                     rng: random.Random | None = None) -> Tuple[str, float]:
-    """Pick a damage type for `element`. Returns (type_id, cv_mult).
+                     rng: random.Random | None = None,
+                     range_x: int | None = None) -> Tuple[str, float]:
+    """Pick a damage type for ``element``. Returns ``(type_id, cv_mult)``.
 
     Rank k is weighted 1/2**k; items inside a rank are uniform.
+
+    NEW: when ``range_x`` is given, types whose allowed range interval
+    excludes this value are skipped. If filtering removes ALL options,
+    we fall back to the unfiltered pool so we never return empty.
     """
     rng = rng or random
     ranks = get_rankings(element, section)
@@ -104,6 +158,14 @@ def pick_damage_type(element: str, section: str = "elements",
             flat.append((entry, per))
     if not flat:
         return ("", 1.0)
+
+    if range_x is not None:
+        filtered = [(e, w) for e, w in flat
+                    if _range_allows(e.get("type", ""), range_x)]
+        if filtered:
+            flat = filtered
+        # else: keep the unfiltered list as a soft fallback
+
     items, weights = zip(*flat)
     pick = rng.choices(items, weights=weights, k=1)[0]
     return (pick.get("type", ""), float(pick.get("cv", 1.0)))

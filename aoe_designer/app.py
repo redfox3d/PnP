@@ -298,6 +298,19 @@ class AoEDesigner(tk.Frame):
         sb.pack(side="left", padx=(6, 0))
         self._radius_var.trace_add("write", lambda *_: self._on_radius_change())
 
+        # ── Pattern CV (used by spell generator when AoE replaces Range) ─────
+        cv_f = tk.Frame(parent, bg="#1a1a1a")
+        cv_f.pack(fill="x", padx=6, pady=4)
+        tk.Label(cv_f, text="CV:", bg="#1a1a1a", fg="#aaa",
+                 font=("Arial", 9)).pack(side="left")
+        self._cv_var = tk.StringVar(value="")
+        tk.Entry(cv_f, textvariable=self._cv_var,
+                  width=6, bg="#2a2a2a", fg="white",
+                  insertbackground="white").pack(side="left", padx=(6, 0))
+        tk.Label(cv_f, text="(leer = 0.5 × Zellenanzahl)",
+                  bg="#1a1a1a", fg="#666",
+                  font=("Arial", 8, "italic")).pack(side="left", padx=8)
+
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
 
         # ── Saved patterns list ───────────────────────────────────────────────
@@ -379,11 +392,26 @@ class AoEDesigner(tk.Frame):
                 parent=self)
             return
 
-        self._patterns[pid] = {
+        # CV: blank → use default (0.5 × cell count); non-blank → parse
+        cv_raw = self._cv_var.get().strip()
+        cv_val = None
+        if cv_raw:
+            try:
+                cv_val = float(cv_raw)
+            except ValueError:
+                messagebox.showwarning("Ungültige CV",
+                                        f"Konnte CV '{cv_raw}' nicht parsen — "
+                                        "verwende Default.",
+                                        parent=self)
+
+        entry = {
             "id":          pid,
             "cells":       self._grid.get_cells(),
             "grid_radius": int(self._radius_var.get()),
         }
+        if cv_val is not None:
+            entry["cv"] = cv_val
+        self._patterns[pid] = entry
         save_patterns(self._patterns)
         self._refresh_list()
         self._set_status(f"✓ Gespeichert: {pid}", "#1a6e3c")
@@ -427,6 +455,12 @@ class AoEDesigner(tk.Frame):
         self._radius_var.set(r)
         self._grid.set_radius(r)
         self._grid.set_cells(pat.get("cells", {}))
+        # CV: blank field if not stored explicitly (default kicks in on save)
+        cv = pat.get("cv")
+        if cv is None:
+            self._cv_var.set("")
+        else:
+            self._cv_var.set(str(cv))
         self._set_status(f"Geladen: {pid}", "#1a3e8e")
 
     def _set_status(self, msg: str, color: str = "#1a1a1a"):

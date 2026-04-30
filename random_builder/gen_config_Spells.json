@@ -2,7 +2,7 @@
   "count": 100,
   "element_mode": "custom",
   "element_count_weights": {
-    "1": 55.0,
+    "1": 100.0,
     "2": 25.0,
     "3": 12.0,
     "4": 5.0,
@@ -41,10 +41,6 @@
     {
       "block_type": "Exhausted",
       "probability": 0.01
-    },
-    {
-      "block_type": "Discard",
-      "probability": 0.5
     }
   ],
   "content_rules": [
@@ -141,6 +137,14 @@
       "probability": 1.0
     },
     {
+      "effect_id": "Copy",
+      "probability": 1.0
+    },
+    {
+      "effect_id": "Uncopyable",
+      "probability": 1.0
+    },
+    {
       "cost_id": "Mana",
       "probability": 1.0
     },
@@ -217,7 +221,7 @@
         "Discard_This_Card"
       ]
     },
-    "Discard": {
+    "Exhausted": {
       "forbidden": [
         "Loose_This_Card"
       ]
@@ -251,5 +255,34 @@
   "chance_enhance": 0.2,
   "chance_doublecast": 0.1,
   "chance_multicast": 0.05,
-  "chance_no_subsigil": 0.6
+  "chance_no_subsigil": 0.6,
+  "max_effects_per_sigil": 3,
+  "sigil_count_weights": {
+    "1": 100.0,
+    "2": 50.0,
+    "3": 25.0,
+    "4": 12.0
+  },
+  "range_value_weights": {
+    "0": 30.0,
+    "2": 30.0,
+    "3": 20.0,
+    "4": 15.0,
+    "5": 5.0
+  },
+  "sub_sigil_cv_per_target": {
+    "Target Enemy": {
+      "min": 1.0,
+      "max": 3.0
+    },
+    "Target Ally": {
+      "min": 1.0,
+      "max": 2.5
+    },
+    "Non Targeting": {
+      "min": 0.5,
+      "max": 2.0
+    }
+  },
+  "cv_primary_per_sigil_min": 0.5
 }

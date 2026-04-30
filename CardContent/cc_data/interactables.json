@@ -1,11 +1,6 @@
 {
   "interactables": [
     {
-      "id": "Source",
-      "weight": 10,
-      "description": "Resource node"
-    },
-    {
       "id": "Door",
       "weight": 6,
       "description": "Passage that can be opened/closed"

@@ -56,14 +56,24 @@ class SigilConstraintsWindow(tk.Toplevel):
     # ── helpers ───────────────────────────────────────────────────────────────
 
     def _collect_bt_names(self):
-        from card_builder.constants import BOX_TYPES
+        # Live sigil registry first; fall back to gen_config's snapshot.
+        try:
+            from CardContent.sigil_registry import get_sigil_names as _gsn
+            live = _gsn()
+            if live:
+                return list(live)
+        except Exception:
+            pass
         box_cfg = self._gen_config.get("box_config", {})
         if box_cfg:
             return sorted(box_cfg.keys())
         from_rules = [r["block_type"]
                       for r in self._gen_config.get("block_rules", [])
                       if r.get("block_type")]
-        return from_rules or list(BOX_TYPES)
+        if from_rules:
+            return from_rules
+        from card_builder.constants import BOX_TYPES
+        return list(BOX_TYPES)
 
     def _load_data(self) -> dict:
         """Build internal {bt: {forbidden, required_groups}} from gen_config."""

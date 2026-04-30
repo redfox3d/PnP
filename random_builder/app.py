@@ -540,11 +540,14 @@ class RandomBuilder(tk.Frame):
                      anchor="w").pack(fill="x", padx=8, pady=2)
 
     def _show_spell_detail(self, card: dict):
-        from card_builder.constants import BOX_COLORS as BLOCK_COLORS, BOX_SYMBOLS as BLOCK_SYMBOLS
+        from card_builder.constants import (BOX_COLORS as BLOCK_COLORS,
+                                              BOX_SYMBOLS as BLOCK_SYMBOLS,
+                                              sigil_label as _sigil_label)
 
         BG  = "#1e1e2e"
         BG2 = "#161622"
 
+        ct = card.get("card_type", "")
         for block in card.get("blocks", []):
             btype = block.get("type", "?")
             color = BLOCK_COLORS.get(btype, "#333")
@@ -552,7 +555,7 @@ class RandomBuilder(tk.Frame):
 
             bh = tk.Frame(self._detail_inner, bg=color)
             bh.pack(fill="x", padx=8, pady=(8, 0))
-            tk.Label(bh, text=f" {sym}  {btype}",
+            tk.Label(bh, text=f" {sym}  {_sigil_label(btype, ct)}",
                      bg=color, fg="white",
                      font=("Arial", 10, "bold")).pack(side="left", padx=6, pady=3)
 

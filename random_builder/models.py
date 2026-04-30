@@ -47,10 +47,10 @@ _DEFAULT_GEN_CONFIG = {
     "recipe_type_mode": "equal",    # "equal" | "custom"  (Recipes profile only)
     "recipe_type_weights": {},      # {recipe_type: weight}
     "block_rules": [
-        {"block_type": "Play",    "probability": 0.95},
-        {"block_type": "Hand",    "probability": 0.15},
-        {"block_type": "Lost",    "probability": 0.15},
-        {"block_type": "Discard","probability": 0.10},
+        {"block_type": "Play",      "probability": 0.95},
+        {"block_type": "Hand",      "probability": 0.15},
+        {"block_type": "Forgotten", "probability": 0.10},
+        {"block_type": "Exhausted", "probability": 0.10},
     ],
     "content_rules": [],   # [{container: str, probability: float}]
     "cost_rules":    [],   # [{cost_id: str, probability: float}]  (Mana excluded – see below)
@@ -68,23 +68,58 @@ _DEFAULT_GEN_CONFIG = {
     "min_groups":      1,    # min effect groups per ability
     "max_groups":      3,    # max effect groups per ability
     "min_blocks":      1,    # min sigils per card      (1 = no minimum extra)
+    # Distinct target_type buckets per sigil (groups with the same
+    # target_type count as ONE effect because they merge in display).
+    "max_effects_per_sigil": 3,
+    # Number-of-sigils per card distribution. Same shape as
+    # element_count_weights — {"1": 100, "2": 50, ...}. When unset, the
+    # legacy independent block_rules rolls are used instead.
+    "sigil_count_weights": {"1": 100, "2": 50, "3": 25, "4": 12,
+                              "5": 0,   "6": 0},
+    # Range-value distribution for force-attached Ranged modifier.
+    # Values 0/1 are rendered as "no range text" by the card renderer.
+    "range_value_weights": {"0": 30, "1": 0, "2": 30, "3": 20,
+                              "4": 15, "5": 5},
     # ── Modifiers ──────────────────────────────────────────────────────────────
     "modifier_chance":          0.3,   # probability a group gains modifiers
     "max_modifiers_per_group":  2,     # hard cap on modifiers within one group
+    "multi_primary_chance":     0.30,  # per slot — adds a 2nd/3rd primary
+    "multi_primary_max":        2,     # max EXTRA primaries beyond the first
     # ── Target type weights ────────────────────────────────────────────────────
+    # Note: "Target Neutral" is intentionally omitted — it is a permission
+    # tag (effects with primary_types=["Target Neutral"] become eligible in
+    # both Target Enemy AND Target Ally groups), never its own bucket.
     "target_type_weights": {
         "Target Enemy":   10,
         "Target Ally":     8,
         "Non Targeting":  10,
-        "Target Neutral":  3,
     },
     # ── Conditions / Choose N ──────────────────────────────────────────────────
     "condition_chance": 0.15,  # probability a sigil gets a condition
     "choose_n_chance":  0.10,  # probability a sigil uses "choose N of effects"
+    # Max CV spread among choose options. (hi - lo) / hi must be <= this,
+    # otherwise the choose is silently dropped — choosing only matters
+    # when all options are roughly comparable.
+    "choose_cv_tolerance": 0.20,
     # ── Sub-Sigils ─────────────────────────────────────────────────────────────
     "sub_sigil_chance":          0.10,  # max 10% of cards get a sub-sigil
     "sub_sigil_max_groups":      1,     # max effect groups in a sub-sigil
     "sub_sigil_cv_budget_frac":  0.3,   # fraction of remaining CV budget for sub-sigil
+    # Sub-sigil flavor weights (mutually exclusive with each other and choose).
+    "chance_sub_target_enemy":   0.05,
+    "chance_sub_target_ally":    0.04,
+    "chance_sub_choose":         0.04,
+    # Per-target_type CV ranges for sub-sigils (overrides the global budget
+    # frac when present). Target Neutral is NOT listed: it's a permission tag.
+    "sub_sigil_cv_per_target": {
+        "Target Enemy":  {"min": 1.0, "max": 3.0},
+        "Target Ally":   {"min": 1.0, "max": 2.5},
+        "Non Targeting": {"min": 0.5, "max": 2.0},
+    },
+    # Minimum CV of the *primary* part of a sigil (sub-sigil contribution
+    # excluded). Cards whose only value is locked behind a paid sub-sigil
+    # are rejected when this is > 0.
+    "cv_primary_per_sigil_min": 0.5,
     # ── Sigil Constraints ──────────────────────────────────────────────────────
     # sigil_rules: {block_type: [{container, probability, min, max}, ...]}
     "sigil_rules": {},

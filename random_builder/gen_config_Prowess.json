@@ -27,7 +27,7 @@
       "probability": 0.08
     },
     {
-      "block_type": "Discard",
+      "block_type": "Exhausted",
       "probability": 0.15
     }
   ],

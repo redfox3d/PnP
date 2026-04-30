@@ -21,8 +21,9 @@ try:
 except ImportError:
     # Fallback if run standalone without proper project path
     BOX_TYPES = [
-        "Play", "Excavate", "Hand", "Concentration",
-        "Enchantment", "Equipped", "Exhausted", "Fleeting", "Discard",
+        "Play", "Excavate", "Hand", "Concentration", "Enchant",
+        "Equipped", "Exhausted", "Forgotten", "Sacrifice",
+        "Ingredient", "Materials",
     ]
 
 DATA_DIR = "cc_data"

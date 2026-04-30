@@ -959,12 +959,14 @@ class BoxEditor(tk.LabelFrame):
     """
 
     def __init__(self, parent: tk.Widget, block: dict,
-                 on_change: Callable, on_delete: Callable, **kw) -> None:
+                 on_change: Callable, on_delete: Callable,
+                 card_type: str = "", **kw) -> None:
         btype = block.get("type", "?")
         color = BOX_COLORS.get(btype, "#333")
         super().__init__(
             parent,
-            text=f" {BOX_SYMBOLS.get(btype, '?')} {sigil_label(btype)} ",
+            text=f" {BOX_SYMBOLS.get(btype, '?')} "
+                 f"{sigil_label(btype, card_type)} ",
             fg=color, font=("Arial", 9, "bold"),
             relief="groove", bd=2, **kw,
         )

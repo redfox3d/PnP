@@ -1,0 +1,25 @@
+{
+    "cards": [
+        {
+            "name": "Poison",
+            "card_type": "StatusEffects",
+            "artwork": "",
+            "element_sources": [],
+            "tags": [],
+            "blocks": [
+                {
+                    "type": "Play",
+                    "abilities": [
+                        {
+                            "raw_text": "",
+                            "effect_groups": [],
+                            "costs": []
+                        }
+                    ]
+                }
+            ],
+            "duration": 1,
+            "subtype": "Condition"
+        }
+    ]
+}

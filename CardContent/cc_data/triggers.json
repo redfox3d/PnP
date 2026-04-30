@@ -200,8 +200,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true
+        "Forgotten": true
       },
       "element_weights": {}
     },
@@ -387,8 +386,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true
+        "Forgotten": true
       }
     },
     {
@@ -537,8 +535,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true
+        "Forgotten": true
       }
     },
     {
@@ -571,8 +568,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true
+        "Forgotten": true
       }
     },
     {
@@ -605,8 +601,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true
+        "Forgotten": true
       }
     },
     {
@@ -639,8 +634,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true
+        "Forgotten": true
       }
     },
     {
@@ -811,9 +805,7 @@
         "Concentration": true,
         "Equipped": true,
         "Exhausted": true,
-        "Fleeting": true,
-        "Discard": true,
-        "Lost": true
+        "Forgotten": true
       },
       "weights_open": false,
       "cv": 1.0,
